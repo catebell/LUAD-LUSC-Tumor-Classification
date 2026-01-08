@@ -74,7 +74,7 @@ SORT IN CLASSES LUAD/LUSC:
    - Extract file_id from filename in files -> put in omics_files.tsv (extract_file_id.py)
    - Search the file_id in the LUAD_LUSC_metadata.json file and take the corresponding case_id -> put in file_case_mapping.tsv (extract_file_id_case_id.py)
    - Search the case_id (cases.case_id) in clinical.tsv/exposure.tsv (when created use features.tsv) and take the corresponding project.project_id (LUAD/LUSC label) -> put in file_case_with_project.tsv (extract_project_id.py)
-   - Create a dataframe: LUAD/LUSC, file_id, case_id, omics, filename
+   - Create a dataframe: LUAD/LUSC, file_id, case_id, omics, filename -> put in dataframe.tsv (dataframe_classes.py)
 
 DA CHIEDERE:
 
