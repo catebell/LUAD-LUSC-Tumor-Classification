@@ -1,1 +1,0 @@
-# convertire il nome del file in un'etichetta (colonna aggiuntiva)

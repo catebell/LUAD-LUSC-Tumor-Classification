@@ -1,2 +1,86 @@
+Labels:
 0 LUDA
 1 LUSC
+
+dataset/
+
+    clinical/
+        clinical.tsv
+        exposure.tsv
+        family_history.tsv  : empty
+        follow_up.tsv   : basically empty and not useful
+        LUAD_LUSC_manifest.tsv  : file list, don't use
+        LUAD_LUSC_metadata.json : file mapping, necessary to map exposure and clinical to CNV,RNA and methylation data (different file_id)
+        pathology_details.tsv   : empty
+
+    CNV/
+        722 patients folders
+
+    methylation/
+        758 patients folders
+
+    RNA/
+        757 patients folders
+
+
+Preprocessing:
+- keep columns (features) with >50% of values present
+
+
+Features kept:
+
+[exposure.tsv (741 cases)]
+- project.project_id
+- cases.case_id
+- cases.submitter_id
+- exposures.exposure_type, all Tobacco + 1 null
+- exposures.pack_years_smoked, 166 nulls
+- exposures.tobacco_smoking_onset_year, 287 null
+- exposures.tobacco_smoking_quit_year, 334 null --> non considerare quelli che non hanno entrambi i valori
+- exposures.tobacco_smoking_status, 8 valori (di cui 3 tutti unknown) da estrarre e mappare (può aiutare a capire se quit_year è unknown o non ha proprio smesso, oppure è già stato fatto we don't know yet)
+
+[clinical.tsv (741 cases)]
+- project.project_id (=)
+- cases.case_id (=)
+- cases.submitter_id (=)
+- cases.desease_type
+- cases.primary_site, all Bronchus and lung
+- demographic.age_at_index
+- demographic.cause_of_death (prob vuoto)
+- demographic.country_of_residence_at_enrollment
+- demographic.ethnicity (check if utile and 50%)
+- demographic.gender
+- demographic.race (check if utile and 50%)
+
+tissue specific features (more values for each patient):
+- diagnoses.age_at_diagnosis (in days)
+- diagnoses.ajcc_pathologic_m
+- diagnoses.ajcc_pathologic_n
+- diagnoses.ajcc_pathologic_stage
+- diagnoses.ajcc_pathologic_t
+...
+- diagnoses.classification_of_tumor
+- diagnoses.laterality
+- diagnoses.primary_diagnosis, check unique_values = 2 and correspondence with LUSC or LUAD labels from other files
+- diagnoses.sites_of_involvement
+- diagnoses.tissue_or_organ_of_origin
+
+x demographic.vital_status, not useful for our specific task
+x diagnoses.days_to_diagnosis and others are not useful for our task
+--> utili per preedirre sopravvivenza, ma non classificare
+
+SORT IN CLASSES LUAD/LUSC:
+   - Extract all files from the directories CNV, RNA and methylation -> put in files (extract_files.py)
+   - Extract file_id from filename in files -> put in omics_files.tsv (extract_file_id.py)
+   - Search the file_id in the LUAD_LUSC_metadata.json file and take the corresponding case_id -> put in file_case_mapping.tsv (extract_file_id_case_id.py)
+   - Search the case_id (cases.case_id) in clinical.tsv/exposure.tsv (when created use features.tsv) and take the corresponding project.project_id (LUAD/LUSC label) -> put in file_case_with_project.tsv (extract_project_id.py)
+   - Create a dataframe: LUAD/LUSC, file_id, case_id, omics, filename
+
+DA CHIEDERE:
+
+- In exposure.tsv una riga è formattata male e i valori sono sfasati (e l'ultimo risulta null). Eliminare?
+--> in clinical sono presenti i dati del paziente, li teniamo e consideriamo di non avere dati di exposure per lui?
+
+- Features che non sappiamo se sono utili: cases.lost_tofollowup e altre in clinical
+
+- nella cartella methylation ci sono dei file che si chiamano annotation e quindi non hanno file_id nel nome

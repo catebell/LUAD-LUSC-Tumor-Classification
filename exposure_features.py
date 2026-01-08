@@ -1,0 +1,33 @@
+import pandas as pd
+
+df = pd.read_csv("dataset/clinical/exposure.tsv", sep="\t")
+df.dropna(inplace=True)
+print("Shape: ", df.shape)
+
+print("Null values: ")
+print("exposures.asbestos_exposure: ", len(df[df["exposures.asbestos_exposure"] == "\'--"]))
+print("exposures.asbestos_exposure_type: ", len(df[df["exposures.asbestos_exposure_type"] == "\'--"]))
+print("exposures.asbestos_exposure: ", len(df[df["exposures.chemical_exposure_type"] == "\'--"]))
+print("exposures.cigarettes_per_day: ", len(df[df["exposures.cigarettes_per_day"] == "\'--"]))
+print("exposures.coal_dust_exposure: ", len(df[df["exposures.coal_dust_exposure"] == "\'--"]))
+print("exposures.environmental_tobacco_smoke_exposure: ", len(df[df["exposures.environmental_tobacco_smoke_exposure"] == "\'--"]))
+print("exposures.exposure_type: ", len(df[df["exposures.exposure_type"] == "\'--"]))
+print("exposures.pack_years_smoked: ", len(df[df["exposures.pack_years_smoked"] == "\'--"]))
+print("exposures.radon_exposure: ", len(df[df["exposures.radon_exposure"] == "\'--"]))
+print("exposures.respirable_crystalline_silica_exposure: ", len(df[df["exposures.respirable_crystalline_silica_exposure"] == "\'--"]))
+print("exposures.secondhand_smoke_as_child: ", len(df[df["exposures.secondhand_smoke_as_child"] == "\'--"]))
+print("exposures.smoking_frequency: ", len(df[df["exposures.smoking_frequency"] == "\'--"]))
+print("exposures.time_between_waking_and_first_smoke: ", len(df[df["exposures.time_between_waking_and_first_smoke"] == "\'--"]))
+print("exposures.tobacco_smoking_onset_year: ", len(df[df["exposures.tobacco_smoking_onset_year"] == "\'--"]))
+print("exposures.tobacco_smoking_quit_year ", len(df[df["exposures.tobacco_smoking_quit_year"] == "\'--"]))
+print("exposures.tobacco_smoking_status: ", len(df[df["exposures.tobacco_smoking_status"] == "\'--"]))
+print("exposures.type_of_smoke_exposure: ", len(df[df["exposures.type_of_smoke_exposure"] == "\'--"]))
+print("exposures.type_of_tobacco_used: ", len(df[df["exposures.type_of_tobacco_used"] == "\'--"]))
+print("exposures.use_per_day: ", len(df[df["exposures.use_per_day"] == "\'--"]))
+print("exposures.years_smoked: ", len(df[df["exposures.years_smoked"] == "\'--"]))
+
+
+print("Data values: ")
+print("exposures.exposure_type: ", df["exposures.exposure_type"].unique())
+print("exposures.exposure_type: ", len(df[df["exposures.exposure_type"] == "Tobacco"]))
+print("exposures.tobacco_smoking_status: ", df["exposures.tobacco_smoking_status"].unique())
