@@ -1,5 +1,5 @@
 Labels:
-0 LUDA
+0 LUAD
 1 LUSC
 
 dataset/
@@ -33,41 +33,50 @@ Features kept:
 - project.project_id
 - cases.case_id
 - cases.submitter_id
-- exposures.exposure_type, all Tobacco + 1 null
 - exposures.pack_years_smoked, 166 nulls
-- exposures.tobacco_smoking_onset_year, 287 null
-- exposures.tobacco_smoking_quit_year, 334 null --> non considerare quelli che non hanno entrambi i valori
-- exposures.tobacco_smoking_status, 8 valori (di cui 3 tutti unknown) da estrarre e mappare (può aiutare a capire se quit_year è unknown o non ha proprio smesso, oppure è già stato fatto we don't know yet)
 
-[clinical.tsv (741 cases)]
+Drop them but useful information:
+- exposures.tobacco_smoking_onset_year, 287 null
+- exposures.tobacco_smoking_quit_year, 334 null
+- exposures.tobacco_smoking_status, 8 valori
+
+Add columns:
+ - exposures.tobacco_smoker, Null, True, False
+ - exposures.tobacco_years, Null, count_years (True)
+
+
+[clinical.tsv (741 distinct cases)]
+--> not considered also columns with data not useful for our specific task (classification)
+
 - project.project_id (=)
 - cases.case_id (=)
 - cases.submitter_id (=)
-- cases.desease_type
-- cases.primary_site, all Bronchus and lung
+
 - demographic.age_at_index
-- demographic.cause_of_death (prob vuoto)
+- demographic.age_is_obfuscated
+
 - demographic.country_of_residence_at_enrollment
-- demographic.ethnicity (check if utile and 50%)
+- demographic.ethnicity
 - demographic.gender
-- demographic.race (check if utile and 50%)
+- demographic.race
 
 tissue specific features (more values for each patient):
 - diagnoses.age_at_diagnosis (in days)
+
 - diagnoses.ajcc_pathologic_m
 - diagnoses.ajcc_pathologic_n
 - diagnoses.ajcc_pathologic_stage
 - diagnoses.ajcc_pathologic_t
-...
-- diagnoses.classification_of_tumor
+- diagnoses.ajcc_staging_system_edition
+    - diagnoses.classification_of_tumor (used to keep only one row for patient, where tumor is primary)
+    - diagnosis.diagnosis_is_primary_disease (same thing as classification_of_tumor)
+- diagnosis.icd_10_code
 - diagnoses.laterality
+- diagnoses.morphology
 - diagnoses.primary_diagnosis, check unique_values = 2 and correspondence with LUSC or LUAD labels from other files
 - diagnoses.sites_of_involvement
 - diagnoses.tissue_or_organ_of_origin
 
-x demographic.vital_status, not useful for our specific task
-x diagnoses.days_to_diagnosis and others are not useful for our task
---> utili per preedirre sopravvivenza, ma non classificare
 
 SORT IN CLASSES LUAD/LUSC:
    - Extract all files from the directories CNV, RNA and methylation -> put in files (extract_files.py)
@@ -77,10 +86,5 @@ SORT IN CLASSES LUAD/LUSC:
    - Create a dataframe: LUAD/LUSC, file_id, case_id, omics, filename -> put in dataframe.tsv (dataframe_classes.py)
 
 DA CHIEDERE:
-
-- In exposure.tsv una riga è formattata male e i valori sono sfasati (e l'ultimo risulta null). Eliminare?
---> in clinical sono presenti i dati del paziente, li teniamo e consideriamo di non avere dati di exposure per lui?
-
-- Features che non sappiamo se sono utili: cases.lost_tofollowup e altre in clinical
-
-- nella cartella methylation ci sono dei file che si chiamano annotation e quindi non hanno file_id nel nome
+- Teniamo in considerazione le colonne degli anni (start/stop smoking) o la colonna dello smoking status se ci sono discrepanze?
+  --> forse meglio anni per stare sul sicuro, per ora abbiamo considerato quelli
