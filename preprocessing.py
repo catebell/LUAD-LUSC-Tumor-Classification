@@ -65,6 +65,7 @@ features_df.drop(['exposures.tobacco_smoking_quit_year'], axis=1, inplace=True)
 features_df.drop(['exposures.tobacco_smoking_status'], axis=1, inplace=True)
 
 print("DEBUG:" + str(features_df.iloc[7]))  # TODO check strange formatting in table visualization, print is ok
+print("DEBUG:" + str(features_df.iloc[90]))
 
 # DEBUG
 '''
@@ -79,6 +80,7 @@ for i in features_df.columns:
 '''
 
 features_df.to_csv(r"files/clinical/features.tsv", sep="\t", index=False)
+features_df.to_csv(r"files/clinical/features.csv", index=False)
 
 
 # CLINICAL.TSV
