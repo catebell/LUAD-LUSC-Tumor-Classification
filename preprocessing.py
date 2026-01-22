@@ -1,6 +1,4 @@
 import pandas as pd
-from pandocfilters import Null
-import numpy as np
 
 # EXPOSURE.TSV
 
@@ -26,43 +24,50 @@ mapping_project_id = {
 features_df['project.project_id'] = features_df['project.project_id'].map(mapping_project_id)
 
 # add cols
-features_df['exposures.tobacco_smoker'] = '\'--' # Null, True or False
-features_df['exposures.tobacco_years'] = '\'--' # Null, count_years (int)
+new_col_smoker = features_df.loc[:,'project.project_id'].astype(str).copy()
+new_col_smoker.loc[:] = '\'--' # Null, True or False
+new_col_years = features_df.loc[:,'project.project_id'].astype(str).copy()
+new_col_years.loc[:] = '\'--' # Null, count_years (int)
 
 
 # change obj type to int
 columns_smoking_years = ["exposures.tobacco_smoking_onset_year", "exposures.tobacco_smoking_quit_year"]
 
 for i in columns_smoking_years:
-    features_df.replace('\'--', 0, inplace=True)
-    features_df[i] = features_df[i].values.astype(str).astype(int)
-    print("Column ", i, " values: ", features_df[i].nunique())
-print("Dtype Features:\n",features_df.dtypes)
-
-# TODO sistemare il calcolo
+    features_df[i] = features_df[i].astype(str)
+    features_df.loc[features_df[i] == '\'--', i] = '0'
+    features_df[i] = features_df[i].astype(int)
+#print("Dtype Features:\n",features_df.dtypes)
 
 # if both years not null --> True, data_stop - data_start
-features_df[(features_df['exposures.tobacco_smoking_quit_year'] != 0) & (features_df['exposures.tobacco_smoking_onset_year'] != 0)]['exposures.tobacco_smoker'] = 1
-features_df[(features_df['exposures.tobacco_smoking_quit_year'] != 0) & (features_df['exposures.tobacco_smoking_onset_year'] != 0)]['exposures.tobacco_years'] = features_df['exposures.tobacco_smoking_quit_year'] - features_df['exposures.tobacco_smoking_onset_year']
+new_col_smoker.loc[(features_df['exposures.tobacco_smoking_quit_year'] != 0) & (features_df['exposures.tobacco_smoking_onset_year'] != 0)] = True
+new_col_years.loc[(features_df['exposures.tobacco_smoking_quit_year'] != 0) & (features_df['exposures.tobacco_smoking_onset_year'] != 0)] = features_df['exposures.tobacco_smoking_quit_year'] - features_df['exposures.tobacco_smoking_onset_year']
 
 # if only one year missing --> True, Null
-features_df[
+new_col_smoker.loc[
     ((features_df['exposures.tobacco_smoking_quit_year'] != 0) & (features_df['exposures.tobacco_smoking_onset_year'] == 0))
     | ((features_df['exposures.tobacco_smoking_quit_year'] == 0) & (features_df['exposures.tobacco_smoking_onset_year'] != 0)
-        )]['exposures.tobacco_smoker'] = 1
+        )] = True
 
 # if both years missing --> check status: if 'Lifelong Non-Smoker' --> False, else Null
-features_df[
+new_col_smoker.loc[
     (features_df['exposures.tobacco_smoking_quit_year'] == 0) &
     (features_df['exposures.tobacco_smoking_onset_year'] == 0) &
-    (features_df['exposures.tobacco_smoking_status'] == 'Lifelong Non-Smoker')]['exposures.tobacco_smoker'] = 0
+    (features_df['exposures.tobacco_smoking_status'] == 'Lifelong Non-Smoker')] = False
+
+# add new cols
+features_df['exposures.tobacco_smoker'] = new_col_smoker # Null, True or False
+features_df['exposures.tobacco_years'] = new_col_years # Null, count_years (int)
 
 # drop cols used and not more useful
 features_df.drop(['exposures.tobacco_smoking_onset_year'], axis=1, inplace=True)
 features_df.drop(['exposures.tobacco_smoking_quit_year'], axis=1, inplace=True)
 features_df.drop(['exposures.tobacco_smoking_status'], axis=1, inplace=True)
 
+print("DEBUG:" + str(features_df.iloc[7]))  # TODO check strange formatting in table visualization, print is ok
+
 # DEBUG
+'''
 print("Features Shape: ", features_df.shape)
 print("Null values: ")
 for i in features_df.columns:
@@ -71,6 +76,7 @@ print("Data unique values: ")
 for i in features_df.columns:
     if features_df[i].nunique() != features_df.shape[0]:
         print("\t", i, ": ", features_df[i].unique())
+'''
 
 features_df.to_csv(r"files/clinical/features.tsv", sep="\t", index=False)
 
