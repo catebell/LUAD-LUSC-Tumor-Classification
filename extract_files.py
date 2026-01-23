@@ -7,17 +7,14 @@ OUTPUT_DIR = "files"
 TSV_EXT = ".tsv"
 TXT_EXT = ".txt"
 
+
 def safe_copy(src, dst_dir):
     os.makedirs(dst_dir, exist_ok=True)
 
     base = os.path.basename(src)
-    name, ext = os.path.splitext(base)
     dst = os.path.join(dst_dir, base)
-
-    counter = 1
-    while os.path.exists(dst):
-        dst = os.path.join(dst_dir, f"{name}_{counter}{ext}")
-        counter += 1
+    if os.path.exists(dst):
+        return
 
     shutil.copy2(src, dst)
 
@@ -28,6 +25,9 @@ def extract_files(base_dir, extension, out_dir):
         dirs[:] = [d for d in dirs if d.lower() != "logs"]
 
         for file in files:
+            if "annotation" in file.lower():
+                continue
+
             if file.lower().endswith(extension):
                 src_path = os.path.join(root, file)
                 safe_copy(src_path, out_dir)
@@ -50,7 +50,6 @@ def main():
             print(f"Directory not found: {base_path}")
 
     print("Completed")
-
 
 if __name__ == "__main__":
     main()

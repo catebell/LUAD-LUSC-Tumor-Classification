@@ -5,7 +5,7 @@ df = pd.read_csv(r"files/clinical/file_case_with_project.tsv", sep="\t")
 df = df.drop_duplicates()
 df.dropna(inplace=True)
 
-df = df[["project_id", "file_id", "case_id", "omic", "filename"]]
+df = df.drop(columns=['filename'])
 
 df = df.sort_values(by="project_id").reset_index(drop=True)
 
