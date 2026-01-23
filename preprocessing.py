@@ -10,18 +10,10 @@ columns = []
 for i in df_exposure.columns:
     if len(df_exposure[df_exposure[i] == "\'--"]) <= df_exposure.shape[0]/2:
         columns.append(i)
-print("Columns kept: " + str(columns))
+print("Columns kept from exposure.tsv: " + str(columns))
 
 features_df = pd.DataFrame(data=df_exposure, columns = columns)
 features_df.drop(['exposures.exposure_type'], axis=1, inplace=True)
-
-# for project.project_id
-mapping_project_id = {
-    'TCGA-LUAD': 0,
-    'TCGA-LUSC': 1
-}
-
-features_df['project.project_id'] = features_df['project.project_id'].map(mapping_project_id)
 
 # add cols
 new_col_smoker = features_df.loc[:,'project.project_id'].astype(str).copy()
@@ -58,14 +50,12 @@ new_col_smoker.loc[
 # add new cols
 features_df['exposures.tobacco_smoker'] = new_col_smoker # Null, True or False
 features_df['exposures.tobacco_years'] = new_col_years # Null, count_years (int)
+print("Columns added: ['exposures.tobacco_smoker', 'exposures.tobacco_years']")
 
 # drop cols used and not more useful
 features_df.drop(['exposures.tobacco_smoking_onset_year'], axis=1, inplace=True)
 features_df.drop(['exposures.tobacco_smoking_quit_year'], axis=1, inplace=True)
 features_df.drop(['exposures.tobacco_smoking_status'], axis=1, inplace=True)
-
-print("DEBUG:" + str(features_df.iloc[7]))  # TODO check strange formatting in table visualization, print is ok
-print("DEBUG:" + str(features_df.iloc[90]))
 
 # DEBUG
 '''
@@ -79,13 +69,53 @@ for i in features_df.columns:
         print("\t", i, ": ", features_df[i].unique())
 '''
 
-features_df.to_csv(r"files/clinical/features.tsv", sep="\t", index=False)
-features_df.to_csv(r"files/clinical/features.csv", index=False)
-
 
 # CLINICAL.TSV
 
 df_clinical = pd.read_csv("dataset/clinical/clinical.tsv", sep="\t")
 df_exposure.dropna(inplace=True) # remove rows with wrong formatting
 
-# for each patient (case_id) keep first row with classification_of_tumor == 'primary'
+# for each patient (case_id) keep only first row with classification_of_tumor == 'primary'
+only_primary_df = df_clinical[df_clinical["diagnoses.classification_of_tumor"] == "primary"]
+no_duplicates_primary_df = only_primary_df.drop_duplicates(subset=["cases.case_id"])
+
+cols = [
+    'project.project_id',
+    'cases.case_id',
+    'cases.submitter_id',
+    'demographic.age_at_index',
+    'demographic.age_is_obfuscated',
+    'demographic.country_of_residence_at_enrollment',
+    'demographic.ethnicity',
+    'demographic.gender',
+    'demographic.race',
+    'diagnoses.ajcc_pathologic_m',
+    'diagnoses.ajcc_pathologic_n',
+    'diagnoses.ajcc_pathologic_stage',
+    'diagnoses.ajcc_pathologic_t',
+    'diagnoses.ajcc_staging_system_edition',
+    'diagnoses.icd_10_code',
+    'diagnoses.laterality',
+    'diagnoses.morphology',
+    'diagnoses.sites_of_involvement',
+    'diagnoses.tissue_or_organ_of_origin']
+
+index_cols = ['project.project_id', 'cases.case_id', 'cases.submitter_id']
+
+features_df = features_df.join(no_duplicates_primary_df[cols].set_index(index_cols), on=index_cols)
+print("Columns joined from clinical.tsv: " + str(cols))
+
+# for project.project_id
+mapping_project_id = {
+    'TCGA-LUAD': 0,
+    'TCGA-LUSC': 1
+}
+# remap tumor class to 0-1
+features_df['project.project_id'] = features_df['project.project_id'].map(mapping_project_id)
+
+
+# CREATE FILE
+features_df.to_csv(r"files/clinical/features.tsv", sep="\t", index=False)
+features_df.to_csv(r"files/clinical/features.csv", index=False)
+
+print("DONE")
