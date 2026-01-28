@@ -24,68 +24,76 @@ dataset/
 
 --> we will use files extracted into files/
 
-Preprocessing:
+PREPROCESSING:
 - keep columns (features) with >50% of values present
 
+    Features kept:
 
-Features kept:
+    [exposure.tsv (741 cases)]
+    - project.project_id
+    - cases.case_id
+    - cases.submitter_id
+    - exposures.pack_years_smoked, 166 nulls
 
-[exposure.tsv (741 cases)]
-- project.project_id
-- cases.case_id
-- cases.submitter_id
-- exposures.pack_years_smoked, 166 nulls
+    Drop them but useful information:
+    - exposures.tobacco_smoking_onset_year, 287 null
+    - exposures.tobacco_smoking_quit_year, 334 null
+    - exposures.tobacco_smoking_status, 8 valori
 
-Drop them but useful information:
-- exposures.tobacco_smoking_onset_year, 287 null
-- exposures.tobacco_smoking_quit_year, 334 null
-- exposures.tobacco_smoking_status, 8 valori
-
-Add columns:
- - exposures.tobacco_smoker, Null, True, False
- - exposures.tobacco_years, Null, count_years (True)
+    Add columns:
+     - exposures.tobacco_smoker, Null, True, False
+     - exposures.tobacco_years, Null, count_years (True)
 
 
-[clinical.tsv (741 distinct cases)]
---> not considered also columns with data not useful for our specific task (classification)
+    [clinical.tsv (741 distinct cases)]
+    --> not considered also columns with data not useful for our specific task (classification)
 
-- project.project_id (=)
-- cases.case_id (=)
-- cases.submitter_id (=)
+    - project.project_id (=)
+    - cases.case_id (=)
+    - cases.submitter_id (=)
 
-- demographic.age_at_index
-- demographic.age_is_obfuscated
+    - demographic.age_at_index
+    - demographic.age_is_obfuscated
 
-- demographic.country_of_residence_at_enrollment
-- demographic.ethnicity
-- demographic.gender
-- demographic.race
+    - demographic.country_of_residence_at_enrollment
+    - demographic.ethnicity
+    - demographic.gender
+    - demographic.race
 
-tissue specific features (more values for each patient):
-- diagnoses.age_at_diagnosis (in days)
+    tissue specific features (more values for each patient):
+    - diagnoses.age_at_diagnosis (in days)
 
-- diagnoses.ajcc_pathologic_m
-- diagnoses.ajcc_pathologic_n
-- diagnoses.ajcc_pathologic_stage
-- diagnoses.ajcc_pathologic_t
-- diagnoses.ajcc_staging_system_edition
-    - diagnoses.classification_of_tumor (used to keep only one row for patient, where tumor is primary)
-    - diagnosis.diagnosis_is_primary_disease (same thing as classification_of_tumor)
-- diagnosis.icd_10_code
-- diagnoses.laterality
-- diagnoses.morphology
-- diagnoses.primary_diagnosis, check unique_values = 2 and correspondence with LUSC or LUAD labels from other files
-- diagnoses.sites_of_involvement
-- diagnoses.tissue_or_organ_of_origin
+    - diagnoses.ajcc_pathologic_m
+    - diagnoses.ajcc_pathologic_n
+    - diagnoses.ajcc_pathologic_stage
+    - diagnoses.ajcc_pathologic_t
+    - diagnoses.ajcc_staging_system_edition
+        - diagnoses.classification_of_tumor (used to keep only one row for patient, where tumor is primary)
+        - diagnosis.diagnosis_is_primary_disease (same thing as classification_of_tumor)
+    - diagnosis.icd_10_code
+    - diagnoses.laterality
+    - diagnoses.morphology
+    - diagnoses.primary_diagnosis, check unique_values = 2 and correspondence with LUSC or LUAD labels from other files
+    - diagnoses.sites_of_involvement
+    - diagnoses.tissue_or_organ_of_origin
+
+
+PROCEDIMENTO PER CREAZIONE GRAFO:
+- (mRNA <--> mRNA) correlazione biologica (co-expression) tra i geni, considerando tutti i pazienti o no, db STRING e WGCNA
+- (CNV --> mRNA) in base al gene_id
+- (methylation --> mRNA) in base al gene_id  [se b-value alto e mRNA alta espressione --> gene represso]
+
+Un grafo per ogni paziente poi da classificare (graph classification)
 
 
 SORT IN CLASSES LUAD/LUSC:
    - Extract all files from the directories CNV, RNA and methylation -> put in files (extract_files.py)
    - Extract file_id from filename in files -> put in omics_files.tsv (extract_file_id.py)
    - Search the file_id in the LUAD_LUSC_metadata.json file and take the corresponding case_id -> put in file_case_mapping.tsv (extract_file_id_case_id.py)
-   - Search the case_id (cases.case_id) in clinical.tsv/exposure.tsv (when created use features.tsv) and take the corresponding project.project_id (LUAD/LUSC label) -> put in file_case_with_project.tsv (extract_project_id.py)
-   - Create a dataframe: LUAD/LUSC, file_id, case_id, omics, filename -> put in dataframe.tsv (dataframe_classes.py)
+   - Search the case_id (cases.case_id) in features.tsv and take the corresponding project.project_id (LUAD/LUSC label) -> put in file_case_with_project.tsv (extract_project_id.py)
+
 
 DA CHIEDERE:
 - Teniamo in considerazione le colonne degli anni (start/stop smoking) o la colonna dello smoking status se ci sono discrepanze?
   --> forse meglio anni per stare sul sicuro, per ora abbiamo considerato quelli
+- methylation manifest problem

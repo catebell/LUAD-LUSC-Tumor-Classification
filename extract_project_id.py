@@ -13,6 +13,7 @@ merged = pd.merge(
 
 merged = merged.drop(columns=['cases.case_id'])
 merged = merged.rename(columns={'project.project_id': 'project_id'})
+merged = merged.sort_values(by="project_id").reset_index(drop=True)
 
 final_df = merged.to_csv(
     r"files/clinical/file_case_with_project.tsv",
