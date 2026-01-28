@@ -22,6 +22,7 @@ dataset/
     RNA/
         757 patients folders
 
+--> we will use files extracted into files/
 
 Preprocessing:
 - keep columns (features) with >50% of values present

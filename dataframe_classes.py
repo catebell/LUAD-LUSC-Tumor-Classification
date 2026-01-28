@@ -5,8 +5,6 @@ df = pd.read_csv(r"files/clinical/file_case_with_project.tsv", sep="\t")
 df = df.drop_duplicates()
 df.dropna(inplace=True)
 
-df = df.drop(columns=['filename'])
-
 df = df.sort_values(by="project_id").reset_index(drop=True)
 
 df.to_csv(r"files/clinical/dataframe.tsv", sep="\t", index=False)

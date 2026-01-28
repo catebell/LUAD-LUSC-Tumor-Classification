@@ -116,6 +116,5 @@ features_df['project.project_id'] = features_df['project.project_id'].map(mappin
 
 # CREATE FILE
 features_df.to_csv(r"files/clinical/features.tsv", sep="\t", index=False)
-features_df.to_csv(r"files/clinical/features.csv", index=False)
 
 print("DONE")
