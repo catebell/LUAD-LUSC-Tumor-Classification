@@ -64,15 +64,49 @@ PREPROCESSING:
     - diagnoses.age_at_diagnosis (in days)
 
     - diagnoses.ajcc_pathologic_m
+        from https://www.facs.org/media/j30havyf/ajcc_7thed_cancer_staging_manual.pdf
+            Distant Metastasis (M)
+                M0 No distant metastases
+                M1 Distant metastases present
+                    M1 is divided into M1a and M1b where pseudomyxoma peritonei, M1a, is separated from
+                    nonperitoneal metastasis, M1b
+                The MX designation has been eliminated from the AJCC/UICC TNM system
     - diagnoses.ajcc_pathologic_n
+        from https://www.facs.org/media/j30havyf/ajcc_7thed_cancer_staging_manual.pdf
+            Regional Lymph Nodes (N)
+                N0 No regional lymph node metastases
+                N1, N2, N3 Increasing number or extent of regional lymph node involvement
+                NX Regional lymph nodes cannot be assessed (use of NX should be minimized)
     - diagnoses.ajcc_pathologic_stage
     - diagnoses.ajcc_pathologic_t
+        from https://www.facs.org/media/j30havyf/ajcc_7thed_cancer_staging_manual.pdf
+            Primary Tumor (T)
+                TX Primary tumor cannot be assessed
+                T0 No evidence of primary tumor
+                Tis Carcinoma in situ (intraductal tumor)
+                T1 Solitary tumor without vascular invasion
+                T2 Tumor with parapharyngeal extension
+                T2a Solitary tumor with vascular invasion
+                T2b Multiple tumors, with or without vascular invasion
+                T3 Tumor perforating the visceral peritoneum or involving the local extra hepatic structures by direct invasion
+                T4 Tumor with periductal invasion
     - diagnoses.ajcc_staging_system_edition
         - diagnoses.classification_of_tumor (used to keep only one row for patient, where tumor is primary)
         - diagnosis.diagnosis_is_primary_disease (same thing as classification_of_tumor)
     - diagnosis.icd_10_code
+        from https://www.facs.org/media/j30havyf/ajcc_7thed_cancer_staging_manual.pdf
+            C34.0 Main bronchus
+            C34.1 Upper lobe, lung
+            C34.2 Middle lobe, lung
+            C34.3 Lower lobe, lung
+            C34.8 Overlapping lesion of lung
+            C34.9 Lung, NOS
     - diagnoses.laterality
     - diagnoses.morphology
+        from https://www.facs.org/media/j30havyf/ajcc_7thed_cancer_staging_manual.pdf
+            Squamous cell carcinoma         8070/3
+            Adenocarcinoma                  8140/3
+            Adenocarcinoma, mixed subtype   8255/3
     - diagnoses.primary_diagnosis, check unique_values = 2 and correspondence with LUSC or LUAD labels from other files
     - diagnoses.sites_of_involvement
     - diagnoses.tissue_or_organ_of_origin
@@ -92,8 +126,132 @@ SORT IN CLASSES LUAD/LUSC:
    - Search the file_id in the LUAD_LUSC_metadata.json file and take the corresponding case_id -> put in file_case_mapping.tsv (extract_file_id_case_id.py)
    - Search the case_id (cases.case_id) in features.tsv and take the corresponding project.project_id (LUAD/LUSC label) -> put in file_case_with_project.tsv (extract_project_id.py)
 
+RNA:
+  WGCNA
+   - Open files from directory RNA (ignore comment # and metadata),
+        keep just gene_type = protein_coding and drop duplicates based on gene_name,
+        remove .version from gene_id
+   - Use file_case_mapping.tsv to match the case_id with the filename (take omic = RNA)
+   - Build expression matrix with genes as rows (gene_id) and samples as columns (case_id)
+   - Fill the matrix with the values log2(TPM + 1) (tpm_unstranded)
+   - Filter the genes less expressed
+   - Substitute the column gene_id with gene_name (otherwise STRING couldn't recognize them)
+   - Create a CSV for STRING (https://string-db.org/cgi/input?sessionId=bwrTOSYjtgG7&input_page_active_form=multiple_identifiers)
+  STRING
+   - Upload the CSV created and select Organisms: Homo sapiens, Confidence score: high 0.7
+   - Creates a graph PPI (protein-protein interactions)
+
+METHYLATION:
+   - Open files from directory methylation (.txt so header = None),
+        transform them into .csv with 2 columns: cpg_IlmnID and beta_value
+   - Use file_case_mapping.tsv to match the case_id with the filename (take omic = methylation)
+   - Use matched_cpg_genes_converted.csv to match cpg_IlmnID
+   - Set the promoter_upstream = 1500 and the promoter_downstream = 500
+   - Select CpG in the promoter window, using:
+        - start = [gene] - promoter_upstream
+        - end = [gene] + promoter_downstream
+        substitute [gene] with: if gene_strand = + use gene_start while if gene_strand = - use gene_end
+        if start <= cpg_island <= end it's in the promoter so take only these
+   - Compute average beta value per gene [0 - 1]
+        {
+          - average beta value >= 0.6 methylated -> gene expression repressed
+          - average beta value <= 0.3 unmethylated -> gene expression active
+        }
+   - Save this value to add to the nodes of the graph
+   - Use Pearson to compute correlation between beta and gene expression
+        if the edge already exists increase its weight otherwise create it
+        {
+          repression isn't in the node but in the relation beta->expression so use Pearson
+          gene repressed if high average beta value and correlation(beta, expression) < 0
+        }
+
+CNV:
+   - Open files from directory CNV and remove .version from gene_id
+   - Use file_case_mapping.tsv to match the case_id with the filename (take omic = CNV)
+   - Convert to numeric the columns copy_number, min_copy_number and max_copy_number (NaN for missing values)
+   - Compute the diff = max - min, only if min and max exist
+        {
+          - copy_number = 2: normal state
+                - if diff = 0: neutral
+                - if diff != 0: complex rearrangement (common in tumors)
+          - copy_number < 2 (so, 0 and 1): deletion
+                - if diff = 0: whole-gene deletion
+                - if diff != 0: partial deletion / intragenic
+          - copy_number > 2 (so, 3, 4, ...): duplication
+                - if diff = 0: whole-gene gain
+                - if diff != 0: partial gain / focal amplification
+        }
+   - Save these values to add to the nodes in the graph
+   - Use Pearson to compute correlation (CNV -> RNA)
+
+GIATConv:
+    LP:
+    G concatenation:
+    MLP encoder:
+
+CLINICAL DATA:
+  PREPROCESSING:
+        TARGET COLUMN:
+            - project.project_id, where 0->LUAD and 1->LUSC
+        DATA CLEANING:
+            - Remove identifiers: cases.case_id and cases.submitter_id
+            - Remove demographic.age_is_obfuscated, it represents technical information about privacy
+            - Remove diagnoses.ajcc_staging_system_edition, it represents just the version of the manual used
+        NUMERICAL COLUMNS, manage missing values (NaN) and dtype object, StandardScaler (average 0, variance 1):
+            - exposures.pack_years_smoked
+            - exposures.tobacco_years
+            - demographic.age_at_index
+        CATEGORIC COLUMNS, '-- replace with Unknown, One-Hot Encoding:
+            - demographic.country_of_residence_at_enrollment
+                ['Australia' 'Germany' 'United States' 'Switzerland' 'Russia' 'Canada' 'Ukraine' 'Romania' 'Vietnam' "'--"]
+            - demographic.ethnicity
+                ['not reported' 'not hispanic or latino' 'hispanic or latino' 'Unknown']
+            - demographic.race
+                ['not reported' 'white' 'black or african american' 'asian' 'Unknown']
+            - diagnoses.ajcc_pathologic_stage
+                ['Stage IIA' 'Stage IIB' 'Stage IB' 'Stage IIIA' 'Stage IV' "'--" 'Stage IA' 'Stage I' 'Stage IIIB' 'Stage II' 'Stage III']
+            - diagnoses.ajcc_pathologic_t
+                ['T2a' 'T2b' 'T2' 'T3' 'T4' 'T1b' 'T1' 'T1a' 'TX']
+            - diagnoses.ajcc_pathologic_n
+                ['N1' 'N0' 'N2' 'NX' 'N3' "'--"]
+            - diagnoses.ajcc_pathologic_m
+                ['M0' 'MX' 'M1a' 'M1' "'--" 'M1b']
+            - diagnoses.icd_10_code
+                ['C34.3' 'C34.1' 'C34.2' 'C34.9' 'C34.8' 'C34.0']
+            - diagnoses.laterality
+                ['Left' 'Right' "'--"]
+            - diagnoses.morphology
+                ['8070/3' '8140/3' '8255/3']
+            - diagnoses.sites_of_involvement
+                ['Peripheral Lung' 'Central Lung' "'--"]
+            - diagnoses.tissue_or_organ_of_origin
+                ['Lower lobe, lung' 'Upper lobe, lung' 'Middle lobe, lung' 'Lung, NOS' 'Overlapping lesion of lung' 'Main bronchus']
+            - exposures.tobacco_smoker
+                ['False' 'True' "'--"]
+        BINARY COLUMNS:
+            - demographic.gender, male-> 0 and female->1
+  MULTI-LAYER PERCEPTRON:
+
+C concatenation:
+    MLP-cox layer:
+    PREDICTION:
+
+TRAINING
+    prediction = model(omics_data, clinical_data)
+    loss = Cross-entropy loss(prediction, column_class_LUAD/LUSC), need to do classification
+    loss.backward(), to let the model learn
+TEST
+    final_output = model(new_omics_data, new_clinical_data), compare
 
 DA CHIEDERE:
 - Teniamo in considerazione le colonne degli anni (start/stop smoking) o la colonna dello smoking status se ci sono discrepanze?
   --> forse meglio anni per stare sul sicuro, per ora abbiamo considerato quelli
 - methylation manifest problem
+- 22 pazienti con solo 2 omics su 3 -> da eliminare o li teniamo?
+- per i file RNA togliamo i metadati iniziali e teniamo come gene_type solo protein_coding?
+- per filtrare i geni poco espressi che threshold prendiamo?
+- STRING automaticamente classifica con il colore grey  quelli con rumore o geni non correlati
+    -> da scartare oppure no?
+- promoter window in bp
+- teniamo tutti i beta values del gene oppure filtriamo solo quelle nelle isole/promotori?
+- per i valori di CNV va bene se teniamo sia il copy_number che la diff?
