@@ -251,7 +251,6 @@ DA CHIEDERE:
 - Teniamo in considerazione le colonne degli anni (start/stop smoking) o la colonna dello smoking status se ci sono discrepanze?
   --> forse meglio anni per stare sul sicuro, per ora abbiamo considerato quelli
 
-- methylation manifest problem
 - 22 pazienti con solo 2 omics su 3 -> da eliminare o li teniamo?
 - per i file RNA togliamo i metadati iniziali e teniamo come gene_type solo protein_coding? // potremmo fare le prove con entrambi, ma chiediamo
 - per filtrare i geni poco espressi che threshold prendiamo?
