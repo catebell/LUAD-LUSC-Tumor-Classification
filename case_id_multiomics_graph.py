@@ -2,6 +2,8 @@ import pandas as pd
 import torch
 import torch_geometric.data
 
+from methylation_manifest_to_tsv import df_meth450_manifest
+
 pd.set_option('display.max_colwidth', None)
 
 case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb' # for example
@@ -9,6 +11,7 @@ case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb' # for example
 def create_multiomics_graph(case_id):
     file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
 
+    """
     df_rna = pd.read_csv(f"files/RNA/{file_mapping_df[
     (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'RNA')
     ]['filename'].to_string(index=False)}", sep='\t' ,comment='#')  # 'comment=' to ignore the first line in RNA files
@@ -29,22 +32,28 @@ def create_multiomics_graph(case_id):
     print("CNV df created:")
     print(df_cnv.head(1))
     print("...")
+    """
 
     # TODO Methylation (richiede una mappatura sonda -> gene)
-    df_meth_manifest = pd.read_csv("dataset/matched_cpg_genes_converted.csv", dtype=str)
-    df_meth_manifest.rename(columns={"cpg_IlmnID": "cg_id"}, inplace=True)
+    #df_meth_manifest = pd.read_csv("dataset/matched_cpg_genes_converted.csv", dtype=str)
+    df_meth_manifest = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t')
+    df_meth_manifest.rename(columns={"gene_id2": "gene_symbol"}, inplace=True)
 
     df_meth = pd.read_csv(f"files/methylation/{file_mapping_df[
     (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'methylation')
-    ]['filename'].to_string(index=False)}", sep='\t', names=['cg_id', 'beta_value'])
+    ]['filename'].to_string(index=False)}", sep='\t', names=['cpg_IlmnID', 'beta_value'])
+
+    df_meth = pd.merge(df_meth, df_meth_manifest[['cpg_IlmnID', 'gene_symbol']], on='cpg_IlmnID', how='left')
+    print(df_meth['gene_symbol'].isna().sum())
 
     # merge data of methylated gene
-    df_meth = pd.merge(df_meth,df_meth_manifest[['cg_id', 'gene_id', 'gene_symbol', 'gene_chr', 'gene_strand', 'gene_start',
-                                             'gene_end', 'cpg_island', 'cpg_chr']],on='cg_id', how='left')
+    df_meth = pd.merge(df_meth,df_meth_manifest[['cpg_IlmnID', 'gene_id', 'gene_symbol', 'gene_chr', 'gene_strand', 'gene_start',
+                                             'gene_end', 'cpg_island', 'cpg_chr']],on='cpg_IlmnID', how='left')
     print("Methylation df created:")
-    print(df_meth.head(1))
+    print(df_meth['gene_symbol'].isna().sum())
     print("...")
 
+    """
     # unified df
     df_omics = pd.merge(df_rna[['gene_id', 'gene_name', 'tpm_unstranded']],
                        df_cnv[['gene_id', 'gene_name', 'copy_number']],
@@ -66,3 +75,6 @@ def create_multiomics_graph(case_id):
     data = torch_geometric.data.Data(x=x, edge_index=edge_index) # graph of case_id omics
 
     print(data)
+    """
+
+create_multiomics_graph(case_id)
