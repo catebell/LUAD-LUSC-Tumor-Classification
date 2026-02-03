@@ -24,7 +24,17 @@ dataset/
 
 --> we will use files extracted into files/
 
-PREPROCESSING:
+SORT IN CLASSES LUAD/LUSC AND FILE EXTRACTION/CREATION:
+   - Extract all files from the directories CNV, RNA and methylation
+        -> put in files (files_extraction_and_mapping.py --> files_extraction() in main())
+   - Extract file_id from filename in files
+        -> put in omics_files.tsv (files_extraction_and_mapping.py --> extract_file_id() in main())
+   - Search the file_id in the LUAD_LUSC_metadata.json file and take the corresponding case_id
+        -> put in file_case_mapping.tsv (files_extraction_and_mapping.py --> extract_file_id_case_id())
+   - Search the case_id (cases.case_id) in features.tsv and take the corresponding project.project_id (LUAD/LUSC label)
+        -> put in file_case_with_project.tsv (files_extraction_and_mapping.py --> extract_project_id())
+
+PATIENT DATA PREPROCESSING:
 - keep columns (features) with >50% of values present
 
     Features kept:
@@ -119,12 +129,6 @@ PROCEDIMENTO PER CREAZIONE GRAFO:
 
 Un grafo per ogni paziente poi da classificare (graph classification)
 
-
-SORT IN CLASSES LUAD/LUSC:
-   - Extract all files from the directories CNV, RNA and methylation -> put in files (extract_files.py)
-   - Extract file_id from filename in files -> put in omics_files.tsv (extract_file_id.py)
-   - Search the file_id in the LUAD_LUSC_metadata.json file and take the corresponding case_id -> put in file_case_mapping.tsv (extract_file_id_case_id.py)
-   - Search the case_id (cases.case_id) in features.tsv and take the corresponding project.project_id (LUAD/LUSC label) -> put in file_case_with_project.tsv (extract_project_id.py)
 
 RNA:
   WGCNA
@@ -246,9 +250,10 @@ TEST
 DA CHIEDERE:
 - Teniamo in considerazione le colonne degli anni (start/stop smoking) o la colonna dello smoking status se ci sono discrepanze?
   --> forse meglio anni per stare sul sicuro, per ora abbiamo considerato quelli
+
 - methylation manifest problem
 - 22 pazienti con solo 2 omics su 3 -> da eliminare o li teniamo?
-- per i file RNA togliamo i metadati iniziali e teniamo come gene_type solo protein_coding?
+- per i file RNA togliamo i metadati iniziali e teniamo come gene_type solo protein_coding? // potremmo fare le prove con entrambi, ma chiediamo
 - per filtrare i geni poco espressi che threshold prendiamo?
 - STRING automaticamente classifica con il colore grey  quelli con rumore o geni non correlati
     -> da scartare oppure no?
