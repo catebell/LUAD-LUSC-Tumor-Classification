@@ -7,6 +7,7 @@ import numpy as np
 
 df = pd.read_csv("dataset/clinical/exposure.tsv", sep="\t")
 df.dropna(inplace=True)
+df.reset_index(inplace=True, drop=True)
 print("Shape: ", df.shape)
 
 print("Null values: ")

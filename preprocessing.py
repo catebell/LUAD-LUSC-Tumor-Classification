@@ -77,7 +77,8 @@ df_exposure.dropna(inplace=True) # remove rows with wrong formatting
 
 # for each patient (case_id) keep only first row with classification_of_tumor == 'primary'
 only_primary_df = df_clinical[df_clinical["diagnoses.classification_of_tumor"] == "primary"]
-no_duplicates_primary_df = only_primary_df.drop_duplicates(subset=["cases.case_id"])
+only_primary_df.drop_duplicates(subset=["cases.case_id"], inplace=True)
+only_primary_df.reset_index(inplace=True, drop=True)
 
 cols = [
     'project.project_id',

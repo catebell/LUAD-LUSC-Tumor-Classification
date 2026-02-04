@@ -12,6 +12,8 @@ print("Shape: ", df.shape)
 primary = df[df["diagnoses.classification_of_tumor"] == "primary"]
 print("Primary shape: ", primary.shape)
 no_duplicates = primary.drop_duplicates(subset=["cases.case_id"])
+no_duplicates.reset_index(inplace=True, drop=True)
+
 print("No duplicates shape: ", no_duplicates.shape)
 print("Classification of tumor: ", no_duplicates['diagnoses.classification_of_tumor'].unique())
 
