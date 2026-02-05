@@ -4,7 +4,7 @@ import shutil
 
 import pandas as pd
 
-""" Extract files into files/ and into clinical/ """
+""" Extract files from dataset/ into files/ """
 
 # EXTRACT_FILES
 
