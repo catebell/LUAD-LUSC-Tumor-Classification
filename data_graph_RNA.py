@@ -53,6 +53,9 @@ def create_ppi_graph(case_id: str):
     :return torch_geometric.data.Data:
     """
 
+    import time
+    start_time = time.time()
+
     print('Reading RNA genes-reads data...')
 
     df_rna = pd.read_csv(f"files/RNA/{file_mapping_df[
@@ -64,12 +67,12 @@ def create_ppi_graph(case_id: str):
 
     print("Removing non protein-coding genes...")
     df_rna.drop(df_rna[df_rna['gene_type'] != "protein_coding"].index, inplace=True)
-    print("--> " + str(len(df_rna)) + " rows\n")
+    print("--> " + str(len(df_rna)) + " actual rows\n")
 
     print("Removing genes with expression (tpm_unstranded) under " + str(tpm_unstranded_threshold) + "...")
     df_rna.drop(df_rna[df_rna['tpm_unstranded'].astype(float) < tpm_unstranded_threshold].index, inplace=True)
     df_rna.reset_index(inplace=True, drop=True)
-    print("--> " + str(len(df_rna)) + " rows\n")
+    print("--> " + str(len(df_rna)) + " actual rows\n")
 
     # remove ids (Ensembl) version (ENSG00000000003.15 --> ENSG00000000003)
     df_rna['gene_id'] = df_rna.gene_id.str.split('.', expand=True)[0]
@@ -87,23 +90,17 @@ def create_ppi_graph(case_id: str):
     print("\nRetrieving genes Ensembl ids from STRING...")
     string_ids = stringdb.get_string_ids(genes)
 
-    # drop genes not found in string
+    # drop genes not found in string db
     df_rna.drop(df_rna[df_rna['gene_name'].isin(string_ids['queryItem']) == False].index, inplace=True)
     df_rna.reset_index(inplace=True, drop=True)
 
     print("\nRetrieving protein-protein interactions from file protein.links...")
-    # interactions are retrieved in both ways
+    # retrieve only interactions between genes both present in df_rna
     network_df = protein_links_df[(protein_links_df['protein1'].isin(string_ids['stringId'])) &
                                 (protein_links_df['protein2'].isin(string_ids['stringId']))].copy()
     network_df.reset_index(inplace=True, drop=True)
 
-    # values are duplicated (both ways interactions), keep only one score for pair
-    cols = ['protein1', 'protein2']
-    network_df.loc[:, cols] = np.sort(network_df[cols].values, axis=1)
-    network_df.drop_duplicates(inplace=True)
-    network_df.reset_index(inplace=True, drop=True)
-
-    print("Found " + str(len(network_df)) + " interactions.\n")
+    print("Found " + str(len(network_df)/2) + " bidirectional interactions.\n")
 
     # nodes data integration
     df_rna['stringId'] = string_ids[string_ids['queryItem'] == df_rna['gene_name']]['stringId']
@@ -112,7 +109,12 @@ def create_ppi_graph(case_id: str):
     # TODO non so se serve, forse per una visualizzazione, per le GNN sembrerebbe bastare il torch_geometric graph
     '''
     print("Creating NetworkX graph...")
-    G = nx.from_pandas_edgelist(network_df, source='protein1', target='protein2', edge_attr='combined_score')
+    
+    # values are duplicated (both ways interactions), keep only one score for pair since nx.Graph() is undirected by default
+    cols = ['protein1', 'protein2']
+    network_df.loc[:, cols] = np.sort(network_df[cols].values, axis=1)
+
+    G = nx.from_pandas_edgelist(network_df.drop_duplicates(), source='protein1', target='protein2', edge_attr='combined_score')
     
     # adding features of a node (gene) and isolated nodes
     # TODO forse solo le features numeriche come per pytorch_geometric? o forse qui fa lo stesso non dovendolo usare per classificare
@@ -159,8 +161,13 @@ def create_ppi_graph(case_id: str):
 
     data = torch_geometric.data.Data(x=x, edge_index=edge_index, edge_attr=edge_attr) # graph of genes from patient 'case_id'
 
+    # by default, Data is not undirected; de-comment if df_network doesn't contain two-ways edges
+    #transform = torch_geometric.transforms.ToUndirected()
+    #data = transform(data)
+
     print(data)
 
+    print("--- %s seconds ---" % (time.time() - start_time))
     print("\nDONE\n")
 
     return data
