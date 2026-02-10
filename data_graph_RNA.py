@@ -4,6 +4,7 @@ import stringdb
 import networkx as nx
 import torch
 import torch_geometric
+import time
 
 pd.set_option('display.max_colwidth', None)
 
@@ -53,10 +54,9 @@ def create_ppi_graph(case_id: str):
     :return torch_geometric.data.Data:
     """
 
-    import time
-    start_time = time.time()
-
     print('Reading RNA genes-reads data...')
+
+    start_time = time.time()
 
     df_rna = pd.read_csv(f"files/RNA/{file_mapping_df[
         (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'RNA')
@@ -168,7 +168,7 @@ def create_ppi_graph(case_id: str):
     print(data)
 
     print("--- %s seconds ---" % (time.time() - start_time))
-    print("\nDONE\n")
+    print("\nPROCESSED RNA DATA\n")
 
     return data
 
