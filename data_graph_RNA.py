@@ -13,22 +13,39 @@ ppi_score_threshold = 0.5  # minimum interaction probability score to create edg
 
 file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
 
-
+# Decided not to use STRING 9606.protein.info file because it lists only the preferred String names (genes std names),
+# being of no use for mapping genes aliases or finding different proteins (ENSP ids) coded by the same genes.
+'''
 # PROTEINS INFO
 # file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
-# --> first file under ACCESSORY DATA, place the .txt extracted into dataset/
-print("Uploading protein-info file...")
+# --> 9606.protein.info file under ACCESSORY DATA, place the .txt extracted into dataset/
+print("Reading protein-info file...")
 protein_info_df = pd.read_csv('dataset/9606.protein.info.v12.0.txt', sep='\t')
 
 # unique stringIds mapping to numerical index
 unique_nodes = protein_info_df['#string_protein_id'].unique()
 node_map = {node: i for i, node in enumerate(unique_nodes)}  # TODO maybe with a LabelEncoder (https://stackoverflow.com/questions/44617871/how-to-convert-a-list-of-strings-into-a-tensor-in-pytorch)
+'''
+
+# PROTEINS ALIASES
+# file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
+# --> 9606.protein.aliases file under ACCESSORY DATA, place the .txt extracted into dataset/
+print("Reading protein-aliases file...")
+protein_aliases_df = pd.read_csv('dataset/9606.protein.aliases.v12.0.txt', sep='\t', usecols=['#string_protein_id', 'alias'])
+#protein_aliases_df['alias'] = protein_aliases_df.alias.str.split('.', expand=True)[0] # BOTTLENECK
+protein_aliases_df.drop_duplicates(inplace=True)
+protein_aliases_df.reset_index(drop=True, inplace=True)
+protein_aliases_df.rename(columns={'#string_protein_id': 'protein_id'}, inplace=True)
+
+# unique protein_ids mapping to numerical index
+unique_nodes = protein_aliases_df['protein_id'].unique()
+node_map = {node: i for i, node in enumerate(unique_nodes)}  # TODO maybe with a LabelEncoder (https://stackoverflow.com/questions/44617871/how-to-convert-a-list-of-strings-into-a-tensor-in-pytorch)
 
 
 # PROTEINS LINKS
 # file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
-# --> first file under INTERACTION DATA, place the .txt extracted into dataset/
-print("Uploading protein-links file...")
+# --> 9606.protein.links file under INTERACTION DATA, place the .txt extracted into dataset/
+print("Reading protein-links file...")
 protein_links_df = pd.read_csv('dataset/9606.protein.links.v12.0.txt', sep=' ')
 
 # refactor the score in a [0-1] interval, like returned by stringdb.get_network()
@@ -67,6 +84,7 @@ def create_ppi_graph(case_id: str):
 
     print("Removing non protein-coding genes...")
     df_rna.drop(df_rna[df_rna['gene_type'] != "protein_coding"].index, inplace=True)
+    df_rna.drop('gene_type', axis=1, inplace=True) # not useful anymore
     print("--> " + str(len(df_rna)) + " actual rows\n")
 
     print("Removing genes with expression (tpm_unstranded) under " + str(tpm_unstranded_threshold) + "...")
@@ -74,37 +92,51 @@ def create_ppi_graph(case_id: str):
     df_rna.reset_index(inplace=True, drop=True)
     print("--> " + str(len(df_rna)) + " actual rows\n")
 
-    # remove ids (Ensembl) version (ENSG00000000003.15 --> ENSG00000000003)
+    # remove gene_ids (Ensembl) version (ENSG00000000003.15 --> ENSG00000000003)
     df_rna['gene_id'] = df_rna.gene_id.str.split('.', expand=True)[0]
-    print("RNA df created:")
-    print(str(df_rna.head(3)))
+    print("\nRNA df created, like:")
+    print(str(df_rna.head(1)))
 
+    # Retrieves only preferred protein_ids mapped to preferred STRING gene_name (we lose eventual aliases info)
+    # Might be fine for RNA data, but for other omics a lot of genes get grouped as one, and eventual multiple proteins
+    # are not retrieved by the string function alone. Moreover, it's a bottleneck operation.
+    '''
     #genes = ['TP53', 'BRCA1', 'FANCD1', 'FANCL']  # example
     genes = list(df_rna['gene_name'].astype(str))
 
     # STRING REQ. SUPPORTS 2000 NODES AT MOST, CANNOT USE THIS METHOD
     # network = stringdb.get_network(genes) # ppi
     # columns = ['stringId1', 'stringId2', 'preferredName_A', 'preferredName_B', 'score']
-    ''' ErrorMessage input too large. STRING website does not support networks larger than 2000 nodes. '''
+    # --> ErrorMessage input too large. STRING website does not support networks larger than 2000 nodes.
 
-    print("\nRetrieving genes Ensembl ids from STRING...")
+    print("\nRetrieving gene proteins ids from STRING...")
     string_ids = stringdb.get_string_ids(genes)
 
     # drop genes not found in string db
     df_rna.drop(df_rna[df_rna['gene_name'].isin(string_ids['queryItem']) == False].index, inplace=True)
     df_rna.reset_index(inplace=True, drop=True)
 
+    # nodes data integration
+    df_rna['protein_id'] = string_ids[string_ids['queryItem'] == df_rna['gene_name']]['stringId']
+    df_rna['preferredName'] = string_ids[string_ids['queryItem'] == df_rna['gene_name']]['preferredName']
+    '''
+
+    # nodes data integration
+    print("\nAdding matches from protein.aliases file...")
+    protein_aliases_df.rename(columns={"alias": "gene_name"}, inplace=True)
+    # add all protein_ids associated to a gene as multiple rows
+    df_rna = pd.merge(df_rna, protein_aliases_df, how='left', on=['gene_name'])
+    df_rna.dropna(subset=['protein_id'], inplace=True)
+    df_rna.reset_index(drop=True, inplace=True)
+    print("--> " + str(len(df_rna)) + " actual rows\n")
+
     print("\nRetrieving protein-protein interactions from file protein.links...")
     # retrieve only interactions between genes both present in df_rna
-    network_df = protein_links_df[(protein_links_df['protein1'].isin(string_ids['stringId'])) &
-                                (protein_links_df['protein2'].isin(string_ids['stringId']))].copy()
+    network_df = protein_links_df[(protein_links_df['protein1'].isin(df_rna['protein_id'])) &
+                                (protein_links_df['protein2'].isin(df_rna['protein_id']))].copy()
     network_df.reset_index(inplace=True, drop=True)
 
     print("Found " + str(len(network_df)/2) + " bidirectional interactions.\n")
-
-    # nodes data integration
-    df_rna['stringId'] = string_ids[string_ids['queryItem'] == df_rna['gene_name']]['stringId']
-    df_rna['preferredName'] = string_ids[string_ids['queryItem'] == df_rna['gene_name']]['preferredName']
 
     # TODO non so se serve, forse per una visualizzazione, per le GNN sembrerebbe bastare il torch_geometric graph
     '''
@@ -117,9 +149,9 @@ def create_ppi_graph(case_id: str):
     G = nx.from_pandas_edgelist(network_df.drop_duplicates(), source='protein1', target='protein2', edge_attr='combined_score')
     
     # adding features of a node (gene) and isolated nodes
-    # TODO forse solo le features numeriche come per pytorch_geometric? o forse qui fa lo stesso non dovendolo usare per classificare
-    df_nodes_features = df_rna[['gene_name', 'gene_id', 'preferredName', 'stringId', 'tpm_unstranded', 'fpkm_unstranded', 'fpkm_uq_unstranded']]
-    df_nodes_features.set_index('stringId', inplace=True)
+    # TODO maybe only numerical features like for pytorch_geometric, or maybe here we don't mind
+    df_nodes_features = df_rna[['gene_name', 'gene_id', 'protein_id', 'tpm_unstranded', 'fpkm_unstranded', 'fpkm_uq_unstranded']]
+    df_nodes_features.set_index('protein_id', inplace=True)
     G.add_nodes_from((n, dict(d)) for n, d in df_nodes_features.iterrows())
     '''
 
@@ -127,9 +159,9 @@ def create_ppi_graph(case_id: str):
     # data = torch_geometric.utils.from_networkx(G)  # TOO SLOW, INTERNAL CONVERSION  TO TENSORS IS BOTTLENECK
 
     # only numerical features assigned to nodes, to be used for classification
-    df_rna['stringId_mapped'] = df_rna['stringId'].map(node_map)
+    df_rna['protein_id_mapped'] = df_rna['protein_id'].map(node_map)
     features_cols = ['tpm_unstranded', 'fpkm_unstranded', 'fpkm_uq_unstranded']
-    df_rna.set_index('stringId_mapped', inplace=True)
+    df_rna.set_index('protein_id_mapped', inplace=True)
     x = torch.tensor(df_rna.loc[df_rna.index, features_cols].values.astype(float), dtype=torch.float)
 
     edge_index = torch.as_tensor(np.stack([
@@ -167,7 +199,7 @@ def create_ppi_graph(case_id: str):
 
     print(data)
 
-    print("--- %s seconds ---" % (time.time() - start_time))
+    print("\n--- %s seconds ---" % (time.time() - start_time))
     print("\nPROCESSED RNA DATA\n")
 
     return data
