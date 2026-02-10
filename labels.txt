@@ -201,6 +201,7 @@ CLINICAL DATA:
             - Remove identifiers: cases.case_id and cases.submitter_id
             - Remove demographic.age_is_obfuscated, it represents technical information about privacy
             - Remove diagnoses.ajcc_staging_system_edition, it represents just the version of the manual used
+            - Remove diagnoses.morphology, it represents too much the class of tumor
         NUMERICAL COLUMNS, manage missing values (NaN) and dtype object, StandardScaler (average 0, variance 1):
             - exposures.pack_years_smoked
             - exposures.tobacco_years
@@ -224,8 +225,6 @@ CLINICAL DATA:
                 ['C34.3' 'C34.1' 'C34.2' 'C34.9' 'C34.8' 'C34.0']
             - diagnoses.laterality
                 ['Left' 'Right' "'--"]
-            - diagnoses.morphology
-                ['8070/3' '8140/3' '8255/3']
             - diagnoses.sites_of_involvement
                 ['Peripheral Lung' 'Central Lung' "'--"]
             - diagnoses.tissue_or_organ_of_origin
@@ -240,11 +239,13 @@ C concatenation:
     MLP-cox layer:
     PREDICTION:
 
-TRAINING
+741 patients but 22 without all the 3 omics so 719 patients
+TRAINING (70%, 530 patients [227 LUAD, 276 LUSC]):
     prediction = model(omics_data, clinical_data)
     loss = Cross-entropy loss(prediction, column_class_LUAD/LUSC), need to do classification
     loss.backward(), to let the model learn
-TEST
+VALIDATION (10%, 72 patients [33 LUAD, 39 LUSC]):
+TEST (20%, 144 patients [65 LUAD, 79 LUSC]):
     final_output = model(new_omics_data, new_clinical_data), compare
 
 DA CHIEDERE:

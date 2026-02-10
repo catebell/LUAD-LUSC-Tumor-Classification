@@ -103,7 +103,7 @@ cols = [
 
 index_cols = ['project.project_id', 'cases.case_id', 'cases.submitter_id']
 
-features_df = features_df.join(no_duplicates_primary_df[cols].set_index(index_cols), on=index_cols)
+features_df = features_df.join(only_primary_df[cols].set_index(index_cols), on=index_cols)
 print("Columns joined from clinical.tsv: " + str(cols))
 
 # for project.project_id

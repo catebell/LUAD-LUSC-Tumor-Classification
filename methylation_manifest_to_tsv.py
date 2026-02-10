@@ -14,8 +14,8 @@ df_meth27_manifest.to_csv(r"methylation_manifests/methylation_manifest27.tsv", s
 # DE-COMMENT TO EXTRACT TSV
 
 df_meth450_manifest = pd.read_csv('methylation_manifests/originals/humanmethylation450_15017482_v1-2.csv',
-                                  comment='#', usecols=['IlmnID', 'CHR', 'Strand', 'UCSC_RefGene_Name'], dtype=str)
-df_meth450_manifest.rename(columns={"IlmnID": "cpg_IlmnID", "CHR": "gene_chr", "Strand":"gene_strand", "UCSC_RefGene_Name":"gene_symbol"}, inplace=True)
+                                  comment='#', usecols=['IlmnID', 'CHR', 'Strand', 'UCSC_RefGene_Name', 'Relation_to_UCSC_CpG_Island', 'UCSC_CpG_Islands_Name', 'MAPINFO'], dtype=str)
+df_meth450_manifest.rename(columns={"IlmnID": "cpg_IlmnID", "CHR": "gene_chr", "Strand":"gene_strand", "UCSC_RefGene_Name":"gene_symbol", "Relation_to_UCSC_CpG_Island":"cpg_island_pos", "UCSC_CpG_Islands_Name":"cpg_island_info", "MAPINFO":"cpg_island"}, inplace=True)
 # drop rows not about 'cg...'
 df_meth450_manifest.drop(df_meth450_manifest[df_meth450_manifest['cpg_IlmnID'].str.startswith('cg') == False].index, inplace=True)
 # drop rows with no cpg_IlmnID or no gene_symbol (not useful)
@@ -26,8 +26,14 @@ mapping = {
     'R': '-'
 }
 df_meth450_manifest['gene_strand'] = df_meth450_manifest['gene_strand'].map(mapping)
+# transform cpg_island_info into cpg_chr, gene_start, gene_end
+tmp = df_meth450_manifest['cpg_island_info'].str.split(':', expand=True)
+df_meth450_manifest['cpg_chr'] = tmp[0].str.replace('chr', '', regex=False)
+coords = tmp[1].str.split('-', expand=True)
+df_meth450_manifest['gene_start'] = pd.to_numeric(coords[0], errors='coerce')
+df_meth450_manifest['gene_end'] = pd.to_numeric(coords[1], errors='coerce')
+df_meth450_manifest.drop(columns='cpg_island_info', inplace=True)
 df_meth450_manifest.to_csv(r"methylation_manifests/methylation_manifest450.tsv", sep="\t", index=False)
-
 
 '''
 df_methEPICb4_manifest = pd.read_csv('methylation_manifests/originals/MethylationEPIC_v-1-0_B4.csv',
@@ -95,3 +101,7 @@ print("Correspondences cpgIDs-symbols missing with only 450k: " + str(df_meth.il
 #df_meth['gene_symbol'] = symbols.copy()
 
 #print("Correspondences cpgIDs-symbols still missing: " + str(df_meth['gene_symbol'].isna().sum()))
+
+# EXAMPLE TO SEE COLUMN CPG_ISLAND_POS
+print("Values in cpg_island_pos: ", df_meth450_manifest['cpg_island_pos'].unique())
+

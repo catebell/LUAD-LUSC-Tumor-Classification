@@ -7,8 +7,14 @@ from sklearn.pipeline import Pipeline
 from MLP_clinical import ClinicalMLP
 import torch
 
+split_df = pd.read_csv("files/clinical/patient_split_cleaned.csv")
+
+train_case_ids = split_df.loc[ split_df["split"] == "train", "cases.case_id"]
+
 df = pd.read_csv(r"files/clinical/features.tsv", sep="\t")
 # print(df.dtypes)
+
+df = df[df["cases.case_id"].isin(train_case_ids)].reset_index(drop=True)
 
 y = df["project.project_id"].astype(int) # target
 
@@ -43,7 +49,6 @@ categorical_cols = [
     "diagnoses.ajcc_pathologic_m",
     "diagnoses.icd_10_code",
     "diagnoses.laterality",
-    "diagnoses.morphology",
     "diagnoses.sites_of_involvement",
     "diagnoses.tissue_or_organ_of_origin",
     "exposures.tobacco_smoker"
