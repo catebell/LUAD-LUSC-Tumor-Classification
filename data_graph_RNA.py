@@ -80,6 +80,8 @@ def create_ppi_graph(case_id: str):
         ]['filename'].to_string(index=False)}", sep='\t', dtype=str, comment='#')  # 'comment=' to ignore the first line in RNA files
 
     df_rna.drop(df_rna[df_rna['gene_id'].str.startswith('ENSG') == False].index, inplace=True) # drop metadata
+    df_rna.dropna(inplace=True)
+    df_rna.reset_index(inplace=True, drop=True)
     print(str(len(df_rna)) + " rows\n")
 
     print("Removing non protein-coding genes...")
