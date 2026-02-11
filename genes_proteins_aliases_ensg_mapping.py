@@ -40,6 +40,10 @@ print(mapping_dict)
 # Output: {'ARF5': 'ENSG00000000233', 'TSPAN6': 'ENSG00000000003', ...}
 '''
 
+# PROTEINS ALIASES
+# file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
+# --> 9606.protein.aliases file under ACCESSORY DATA, place the .txt extracted into dataset/
+print("Reading protein-aliases file...")
 df_iter = pd.read_csv('dataset/9606.protein.aliases.v12.0.txt', sep='\t',
                                  usecols=['#string_protein_id', 'alias'], chunksize=50000)  # Process 50000 rows at a time
 
