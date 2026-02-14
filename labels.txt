@@ -176,22 +176,34 @@ CNV:
    - Compute the diff = max - min, only if min and max exist
         {
           - copy_number = 2: normal state
-                - if diff = 0: neutral
-                - if diff != 0: complex rearrangement (common in tumors)
+                - if diff = 0: neutral -> normal gene
+                - if diff != 0: complex rearrangement (common in tumors) -> possible oncogene activation
           - copy_number < 2 (so, 0 and 1): deletion
-                - if diff = 0: whole-gene deletion
-                - if diff != 0: partial deletion / intragenic
+                - if diff = 0: whole-gene deletion -> TP53, CDKN2A absent (complete deletion of these genes causes tumor progression)
+                - if diff != 0: partial deletion / intragenic -> gene fragments, loss of function
           - copy_number > 2 (so, 3, 4, ...): duplication
-                - if diff = 0: whole-gene gain
-                - if diff != 0: partial gain / focal amplification
+                - if diff = 0: whole-gene gain -> EGFR (LUAD), MET amplified (increase gene expression and tumor growth, used as biomarkers)
+                - if diff != 0: partial gain / focal amplification -> selective increase of functional domains
         }
    - Save these values to add to the nodes in the graph
    - Use Pearson to compute correlation (CNV -> RNA)
 
+Obtain Multi-omics graphs:
+    h0 -> [num_nodes, 3]
+        - Nodes = genes
+        - Edges = biologic network (PPI, ...)
+        - Features nodes = [RNA, methylation, CNV]
+
 GIATConv:
-    LP:
-    G concatenation:
-    MLP encoder:
+    h1 = GIATConv(h0) -> LP: h1 = LabelPropagation(h1) -> [num_nodes, hidden * heads]
+    h2 = GIATConv(h1) -> LP: h2 = LabelPropagation(h2) -> [num_nodes, hidden * heads]
+
+G concatenation (Jump Knowledge):
+    G = concat(h0, h1, h2) -> [num_nodes, 3 + hidden * heads + hidden * heads]
+    graph embedding = global_pool(G) -> [batch_size, graph_dim]
+
+MLP encoder:
+    v_graph = post_pool_MLP(graph_embedding) -> [batch_size, 128]
 
 CLINICAL DATA:
   PREPROCESSING:
@@ -233,11 +245,14 @@ CLINICAL DATA:
                 ['False' 'True' "'--"]
         BINARY COLUMNS:
             - demographic.gender, male-> 0 and female->1
-  MULTI-LAYER PERCEPTRON:
+  MULTI-LAYER PERCEPTRON (clinical):
+        v_clinical = ClinicalMLP(clinical_features) -> [batch_size, 32]
 
 C concatenation:
-    MLP-cox layer:
-    PREDICTION:
+    combined = concat(v_graph, v_clinical) -> [batch_size, 160]
+
+FINAL MLP:
+    MLP(combined) -> logits -> [batch_size, 2]
 
 741 patients but 22 without all the 3 omics so 719 patients
 TRAINING (70%, 530 patients [227 LUAD, 276 LUSC]):

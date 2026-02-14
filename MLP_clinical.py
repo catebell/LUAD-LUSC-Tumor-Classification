@@ -1,6 +1,10 @@
 import torch.nn as nn
 
 class ClinicalMLP(nn.Module):
+    """
+        Input: [batch_size, num_clinical_features]
+        Output: embedding [batch_size, 32]
+    """
     def __init__(self, input_dim):
         super().__init__()
 
