@@ -11,7 +11,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 MAPPING_FILE = "files/clinical/file_case_mapping.tsv"
 SPLIT_FILE = "files/clinical/patient_split_cleaned.csv"
-CPG_GENE_MAP_FILE = "dataset/matched_cpg_genes_converted.csv"
+CPG_GENE_MAP_FILE = "original_dataset/matched_cpg_genes_converted.csv" # TODO
 STRING_GENES_FILE = "WGCNA/WGCNA_selected_genes_for_STRING.tsv"
 
 EDGE_THRESHOLD = 0.1
@@ -48,6 +48,8 @@ for _, row in meth_mapping.iterrows():
 
     # join con mapping CpG-gene
     df_annot = df_cpg.merge(cpg_map, on="cpg_IlmnID", how="inner")
+
+# TODO guarda extract_methylation_data
 
     # calcola promoter start/end
     df_annot["prom_start"] = np.where(df_annot["gene_strand"]=="+",

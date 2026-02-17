@@ -5,27 +5,15 @@ from sklearn.compose import ColumnTransformer
 
 def process_clinical_data():
 
-    # =========================
-    # 1️⃣ Load split
-    # =========================
-
     split_df = pd.read_csv("files/clinical/patient_split_cleaned.csv")
 
     train_ids = split_df.loc[split_df["split"] == "train", "cases.case_id"].tolist()
     val_ids   = split_df.loc[split_df["split"] == "val", "cases.case_id"].tolist()
     test_ids  = split_df.loc[split_df["split"] == "test", "cases.case_id"].tolist()
 
-    # =========================
-    # 2️⃣ Load clinical features
-    # =========================
-
     df = pd.read_csv("files/clinical/features.tsv", sep="\t")
 
     df["project.project_id"] = df["project.project_id"].astype(int)
-
-    # =========================
-    # 3️⃣ Column definitions
-    # =========================
 
     numerical_cols = [
         "exposures.pack_years_smoked",
@@ -50,10 +38,6 @@ def process_clinical_data():
 
     binary_cols = ["demographic.gender"]
 
-    # =========================
-    # 4️⃣ Basic cleaning
-    # =========================
-
     df["demographic.gender"] = df["demographic.gender"].map({
         "male": 0,
         "female": 1
@@ -65,17 +49,9 @@ def process_clinical_data():
     for col in numerical_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # =========================
-    # 5️⃣ Split dataframe
-    # =========================
-
     df_train = df[df["cases.case_id"].isin(train_ids)].reset_index(drop=True)
     df_val   = df[df["cases.case_id"].isin(val_ids)].reset_index(drop=True)
     df_test  = df[df["cases.case_id"].isin(test_ids)].reset_index(drop=True)
-
-    # =========================
-    # 6️⃣ Preprocessor (FIT SOLO SU TRAIN)
-    # =========================
 
     preprocessor = ColumnTransformer([
         ("num", StandardScaler(), numerical_cols),

@@ -7,7 +7,7 @@ data not useful. Output will be save in 'output_filepath'.
 Takes a lot of time.
 '''
 
-output_filepath = "dataset/9606.protein.aliases.gene.tsv"
+output_filepath = "downloaded_files/9606.protein.aliases.gene.tsv"
 
 def map_symbols_to_ensg(gene_symbols):
     mg = mygene.MyGeneInfo()
@@ -42,10 +42,10 @@ print(mapping_dict)
 
 # PROTEINS ALIASES
 # file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
-# --> 9606.protein.aliases file under ACCESSORY DATA, place the .txt extracted into dataset/
+# --> 9606.protein.aliases file under ACCESSORY DATA, place the .txt extracted into original_dataset/
 print("Reading protein-aliases file...")
-df_iter = pd.read_csv('dataset/9606.protein.aliases.v12.0.txt', sep='\t',
-                                 usecols=['#string_protein_id', 'alias'], chunksize=50000)  # Process 50000 rows at a time
+df_iter = pd.read_csv('downloaded_files/9606.protein.aliases.v12.0.txt', sep='\t',
+                      usecols=['#string_protein_id', 'alias'], chunksize=10000)  # Process 50000 rows at a time
 
 protein_aliases_df = pd.DataFrame(columns=['protein_id', 'alias', 'gene_id'])
 

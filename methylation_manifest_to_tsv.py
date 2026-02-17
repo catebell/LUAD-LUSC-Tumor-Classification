@@ -14,11 +14,10 @@ df_meth27_manifest.to_csv(r"methylation_manifests/methylation_manifest27.tsv", s
 
 # DE-COMMENT TO EXTRACT TSV
 
-cols = ['IlmnID','Forward_Sequence', 'CHR', 'Strand', 'UCSC_RefGene_Name', 'Relation_to_UCSC_CpG_Island', 'UCSC_CpG_Islands_Name', 'MAPINFO']
-cols = ['IlmnID','CHR','Strand','UCSC_RefGene_Name','UCSC_RefGene_Group','Relation_to_UCSC_CpG_Island','UCSC_CpG_Islands_Name']
+cols = ['IlmnID','CHR','Strand','UCSC_RefGene_Name','UCSC_RefGene_Group','Relation_to_UCSC_CpG_Island']
 df_meth450_manifest = pd.read_csv('methylation_manifests/originals/humanmethylation450_15017482_v1-2.csv',
                                   comment='#', usecols=cols, dtype=str)
-df_meth450_manifest.rename(columns={"IlmnID": "cpg_IlmnID", "CHR": "gene_chr", "Strand":"gene_strand", "UCSC_RefGene_Name":"gene_symbol", "Relation_to_UCSC_CpG_Island":"cpg_position", "UCSC_CpG_Islands_Name":"cpg_island_info", "UCSC_RefGene_Group":"cpg_region"}, inplace=True)
+df_meth450_manifest.rename(columns={"IlmnID": "cpg_IlmnID", "CHR": "gene_chr", "Strand":"gene_strand", "UCSC_RefGene_Name":"gene_symbol", "Relation_to_UCSC_CpG_Island":"cpg_position", "UCSC_RefGene_Group":"cpg_region"}, inplace=True)
 # drop rows not about 'cg...'
 df_meth450_manifest.drop(df_meth450_manifest[df_meth450_manifest['cpg_IlmnID'].str.startswith('cg') == False].index, inplace=True)
 # drop rows with no cpg_IlmnID or no gene_symbol (not useful)
@@ -29,20 +28,6 @@ mapping = {
     'R': '-'
 }
 df_meth450_manifest['gene_strand'] = df_meth450_manifest['gene_strand'].map(mapping)
-
-
-# TODO check
-'''
-# Splitting the string column into separate columns
-df[['Name1', 'Name2', 'Name3']] = df['Names'].str.split(',', expand=True)
-'''
-# transform cpg_island_info into cpg_chr, gene_start, gene_end
-#tmp = df_meth450_manifest['cpg_island_info'].str.split(':', expand=True)
-#df_meth450_manifest['cpg_chr'] = tmp[0].str.replace('chr', '', regex=False)
-#coords = tmp[1].str.split('-', expand=True)
-#df_meth450_manifest['gene_start'] = pd.to_numeric(coords[0], errors='coerce')
-#df_meth450_manifest['gene_end'] = pd.to_numeric(coords[1], errors='coerce')
-df_meth450_manifest.drop(columns='cpg_island_info', inplace=True)
 df_meth450_manifest.to_csv(r"methylation_manifests/methylation_manifest450.tsv", sep="\t", index=False)
 
 # probably not useful, 450k is enough
@@ -69,6 +54,7 @@ df_methEPICb5_manifest.dropna(subset=["cpg_IlmnID", "gene_symbol"], inplace=True
 df_methEPICb5_manifest.to_csv(r"methylation_manifests/methylation_manifestEPICb5.tsv", sep="\t", index=False)
 '''
 
+
 # EXAMPLE TO SEE VALUES
 
 pd.set_option('display.max_colwidth', None) # or else it can't take whole filename from file_case_mapping.tsv
@@ -81,37 +67,18 @@ df_meth = pd.read_csv(f"files/methylation/{file_mapping_df[
     (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'methylation')
     ]['filename'].to_string(index=False)}", sep='\t', names=['cpg_IlmnID', 'beta_value'], dtype=str)
 
-df_match_cpg_gene = pd.read_csv("dataset/matched_cpg_genes_converted.csv", dtype=str)
+df_match_cpg_gene = pd.read_csv("original_dataset/matched_cpg_genes_converted.csv", dtype=str)
 df_meth = pd.merge(df_meth, df_match_cpg_gene[['cpg_IlmnID', 'gene_chr', 'gene_id', 'gene_symbol']], on='cpg_IlmnID', how='left')
 print("Added symbols from matched_cpg_genes_converted.csv")
 print("Tot cpgIDs: " + str(len(df_meth)))
 print("Correspondences cpgIDs-symbols still missing: " + str(df_meth['gene_symbol'].isna().sum()))
 
-df_meth_manifest450 = pd.read_csv("methylation_manifests/methylation_manifest450_V1.tsv", sep='\t', dtype=str)
+df_meth_manifest450 = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 df_meth = pd.merge(df_meth, df_meth_manifest450[['cpg_IlmnID', 'gene_symbol']], on='cpg_IlmnID', how='left')
 print("Added symbols from methylation_manifest450_V1.tsv")
 #print("Correspondences cpgIDs-symbols missing with only 450k: " + str(df_meth['gene_symbol'].isna().sum()))
 print("Correspondences cpgIDs-symbols missing with only 450k: " + str(df_meth.iloc[:,-1].isna().sum()))
 
-
-#inner_joined = pd.merge(df_meth, df_meth_manifest450[['cpg_IlmnID', 'gene_symbol']], on='cpg_IlmnID', how='inner')
-# concatenare  quelli presenti in entrambi e trovare un modo per tenere solo i not na tra le due colonne dai due file
-
-
-# not working:
-
-#df_meth['gene_symbol'] = df_meth['gene_symbol'].fillna(' ')
-#symbols = df_meth['gene_symbol'].copy()
-
-
-#print("Correspondences cpgIDs-symbols still missing: " + str(df_meth.iloc[:,-1].isna().sum()))
-#df_meth.iloc[:,-1] = df_meth.iloc[:,-1].fillna(' ')
-# now the last 2 cols are symbols from the different files, we need to unify them
-#symbols = symbols + ";" + df_meth.iloc[:,-1]
-#df_meth.drop(axis=1, columns=df_meth.columns[-2:], inplace=True)
-#df_meth['gene_symbol'] = symbols.copy()
-
-#print("Correspondences cpgIDs-symbols still missing: " + str(df_meth['gene_symbol'].isna().sum()))
 
 # EXAMPLE TO SEE COLUMN CPG_POSITION
 print("Values in cpg_position: ", df_meth450_manifest['cpg_position'].unique())

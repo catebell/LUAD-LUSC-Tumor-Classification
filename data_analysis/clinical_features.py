@@ -5,7 +5,7 @@ import pandas as pd
     rimozione duplicati case_id e tenere dati solo relativi a tumori primary
 '''
 
-df = pd.read_csv("dataset/clinical/clinical.tsv", sep="\t")
+df = pd.read_csv("../original_dataset/clinical/clinical.tsv", sep="\t")
 df.dropna(inplace=True)
 print("Shape: ", df.shape)
 

@@ -2,7 +2,7 @@ import pandas as pd
 
 # EXPOSURE.TSV
 
-df_exposure = pd.read_csv("dataset/clinical/exposure.tsv", sep="\t")
+df_exposure = pd.read_csv("original_dataset/clinical/exposure.tsv", sep="\t")
 df_exposure.dropna(inplace=True) # remove rows with wrong formatting ()
 
 # consider only columns with >50% of data not null
@@ -72,20 +72,18 @@ for i in features_df.columns:
 
 # CLINICAL.TSV
 
-df_clinical = pd.read_csv("dataset/clinical/clinical.tsv", sep="\t")
+df_clinical = pd.read_csv("original_dataset/clinical/clinical.tsv", sep="\t")
 df_exposure.dropna(inplace=True) # remove rows with wrong formatting
 
 # for each patient (case_id) keep only first row with classification_of_tumor == 'primary'
 only_primary_df = df_clinical[df_clinical["diagnoses.classification_of_tumor"] == "primary"]
-only_primary_df.drop_duplicates(subset=["cases.case_id"], inplace=True)
+only_primary_df = only_primary_df.drop_duplicates(subset=["cases.case_id"])
 only_primary_df.reset_index(inplace=True, drop=True)
 
 cols = [
     'project.project_id',
     'cases.case_id',
-    'cases.submitter_id',
     'demographic.age_at_index',
-    'demographic.age_is_obfuscated',
     'demographic.country_of_residence_at_enrollment',
     'demographic.ethnicity',
     'demographic.gender',
@@ -94,10 +92,8 @@ cols = [
     'diagnoses.ajcc_pathologic_n',
     'diagnoses.ajcc_pathologic_stage',
     'diagnoses.ajcc_pathologic_t',
-    'diagnoses.ajcc_staging_system_edition',
     'diagnoses.icd_10_code',
     'diagnoses.laterality',
-    'diagnoses.morphology',
     'diagnoses.sites_of_involvement',
     'diagnoses.tissue_or_organ_of_origin']
 
@@ -106,6 +102,7 @@ index_cols = ['project.project_id', 'cases.case_id', 'cases.submitter_id']
 features_df = features_df.join(only_primary_df[cols].set_index(index_cols), on=index_cols)
 print("Columns joined from clinical.tsv: " + str(cols))
 
+'''
 # for project.project_id
 mapping_project_id = {
     'TCGA-LUAD': 0,
@@ -113,7 +110,7 @@ mapping_project_id = {
 }
 # remap tumor class to 0-1
 features_df['project.project_id'] = features_df['project.project_id'].map(mapping_project_id)
-
+'''
 
 # CREATE FILE
 features_df.to_csv(r"files/clinical/features.tsv", sep="\t", index=False)

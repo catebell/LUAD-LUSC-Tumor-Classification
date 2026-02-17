@@ -23,7 +23,7 @@ def load_graph_for_patient(case_id):
 
 
 # =========================
-# Build dataset completo
+# Build original_dataset completo
 # =========================
 
 def build_full_dataset():

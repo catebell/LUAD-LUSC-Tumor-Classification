@@ -5,7 +5,7 @@ import numpy as np
     print e controlli sui dati del file exposure_features.tsv
 '''
 
-df = pd.read_csv("dataset/clinical/exposure.tsv", sep="\t")
+df = pd.read_csv("../original_dataset/clinical/exposure.tsv", sep="\t")
 df.dropna(inplace=True)
 df.reset_index(inplace=True, drop=True)
 print("Shape: ", df.shape)

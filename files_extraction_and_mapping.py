@@ -4,7 +4,7 @@ import shutil
 
 import pandas as pd
 
-""" Extract files from dataset/ into files/ """
+""" Extract files from original_dataset/ into files/ """
 
 # EXTRACT_FILES
 
@@ -36,7 +36,7 @@ def extract_files(base_dir, extension, out_dir):
 def files_extraction():
     """Extract all files from the directories CNV, RNA and methylation -> put in files"""
 
-    ROOT_DIR = "dataset"
+    ROOT_DIR = "original_dataset"
     OUTPUT_DIR = "files"
     TSV_EXT = ".tsv"
     TXT_EXT = ".txt"
@@ -120,7 +120,7 @@ def extract_file_id_case_id():
     """Search the file_id in the LUAD_LUSC_metadata.json file and take the corresponding case_id -> put in file_case_mapping.tsv"""
 
     tsv_file = r"files/clinical/omics_files.tsv"
-    json_file = r"dataset/clinical/LUAD_LUSC_metadata.json"
+    json_file = r"original_dataset/clinical/LUAD_LUSC_metadata.json"
 
     df = pd.read_csv(tsv_file, sep="\t")
 

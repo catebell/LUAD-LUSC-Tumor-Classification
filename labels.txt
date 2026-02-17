@@ -87,7 +87,7 @@ PATIENT DATA PREPROCESSING:
                 N0 No regional lymph node metastases
                 N1, N2, N3 Increasing number or extent of regional lymph node involvement
                 NX Regional lymph nodes cannot be assessed (use of NX should be minimized)
-    - diagnoses.ajcc_pathologic_stage
+    - diagnoses.ajc c_pathologic_stage
     - diagnoses.ajcc_pathologic_t
         from https://www.facs.org/media/j30havyf/ajcc_7thed_cancer_staging_manual.pdf
             Primary Tumor (T)
@@ -210,15 +210,12 @@ CLINICAL DATA:
         TARGET COLUMN:
             - project.project_id, where 0->LUAD and 1->LUSC
         DATA CLEANING:
-            - Remove identifiers: cases.case_id and cases.submitter_id
-            - Remove demographic.age_is_obfuscated, it represents technical information about privacy
-            - Remove diagnoses.ajcc_staging_system_edition, it represents just the version of the manual used
-            - Remove diagnoses.morphology, it represents too much the class of tumor
+            - Remove identifiers: cases.case_id
         NUMERICAL COLUMNS, manage missing values (NaN) and dtype object, StandardScaler (average 0, variance 1):
             - exposures.pack_years_smoked
             - exposures.tobacco_years
             - demographic.age_at_index
-        CATEGORIC COLUMNS, '-- replace with Unknown, One-Hot Encoding:
+        CATEGORICAL COLUMNS, '-- replace with Unknown, One-Hot Encoding:
             - demographic.country_of_residence_at_enrollment
                 ['Australia' 'Germany' 'United States' 'Switzerland' 'Russia' 'Canada' 'Ukraine' 'Romania' 'Vietnam' "'--"]
             - demographic.ethnicity
@@ -263,15 +260,12 @@ VALIDATION (10%, 72 patients [33 LUAD, 39 LUSC]):
 TEST (20%, 144 patients [65 LUAD, 79 LUSC]):
     final_output = model(new_omics_data, new_clinical_data), compare
 
-DA CHIEDERE:
-- Teniamo in considerazione le colonne degli anni (start/stop smoking) o la colonna dello smoking status se ci sono discrepanze?
-  --> forse meglio anni per stare sul sicuro, per ora abbiamo considerato quelli
 
-- 22 pazienti con solo 2 omics su 3 -> da eliminare o li teniamo?
-- per i file RNA togliamo i metadati iniziali e teniamo come gene_type solo protein_coding? // potremmo fare le prove con entrambi, ma chiediamo
-- per filtrare i geni poco espressi che threshold prendiamo?
-- STRING automaticamente classifica con il colore grey  quelli con rumore o geni non correlati
-    -> da scartare oppure no?
-- promoter window in bp
-- teniamo tutti i beta values del gene oppure filtriamo solo quelle nelle isole/promotori?
-- per i valori di CNV va bene se teniamo sia il copy_number che la diff?
+TODO tests:
+- threshold RNA expression (0.7 per ora)
+- tpm_unstranded_threshold per valori di RNA
+- modifiche a 'copy_number' e 'cnv_min_max_diff'
+- provare non facendo media pesata beta_values ma solo normale mean()
+- feature cliniche toglibili o meno
+- modalità di fare gli edge (aggiungere edge_attr Pearson/Spearman/Kendall)
+- k per combinare cnv e diff

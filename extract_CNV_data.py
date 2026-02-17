@@ -14,7 +14,7 @@ def main():
     # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
     # file extracted using genes_proteins_aliases_ensg_mapping.py
     print("Reading protein-aliases-gene file...")
-    genes_mapping_df = pd.read_csv('dataset/9606.protein.aliases.gene.tsv', sep='\t')
+    genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
     create_cnv_df(example_case_id, genes_mapping_df)
 

@@ -13,7 +13,7 @@ def main():
     # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
     # file extracted using genes_proteins_aliases_ensg_mapping.py
     print("Reading protein-aliases-gene file...")
-    genes_mapping_df = pd.read_csv('dataset/9606.protein.aliases.gene.tsv', sep='\t')
+    genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
     # METHYLATION ILLUMINA MANIFEST FOR CpG-GENE MAPPING
     print("Reading Illumina manifest...")
@@ -55,9 +55,6 @@ def create_meth_df(case_id: str, genes_mapping_df: pd.DataFrame, meth_manifest_d
 
     print("\nMerging with data of methylated gene from Illumina Manifest file...")
     df_meth = pd.merge(df_meth, meth_manifest_df, on='cpg_IlmnID', how='left')
-
-    # df_meth = pd.merge(df_meth,df_meth_manifest[['cpg_IlmnID', 'gene_id', 'gene_symbol', 'gene_chr', 'gene_strand', 'gene_start', 'gene_end', 'cpg_island', 'cpg_chr']],on='cpg_IlmnID', how='left')
-    # TODO perhaps unire i dati da altri manifest? quali? strand +/- corrispondono?
 
     df_meth.rename(columns={'gene_symbol': 'gene_name'}, inplace=True)
 
