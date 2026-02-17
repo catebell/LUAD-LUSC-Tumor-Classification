@@ -19,7 +19,7 @@ def main():
     print("Reading Illumina manifest...")
     # file downloaded from https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html
     # place .csv file into methylation_manifests/originals, then run methylation_manifest_to_tsv.py
-    meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450_V1.tsv", sep='\t', dtype=str)
+    meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 
     create_meth_df(example_case_id, genes_mapping_df, meth_manifest_df)
 
