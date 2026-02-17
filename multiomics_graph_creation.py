@@ -67,12 +67,12 @@ df_rna['gene_id_mapped'] = df_rna['gene_id'].map(node_map)
 df_cnv = create_cnv_df(case_id, genes_mapping_df)
 
 node_features_df = pd.merge(df_rna, df_cnv, how='left', on=['gene_id'])
-node_features_df.dropna(inplace=True)  # TODO o fill?
 
 df_meth = create_meth_df(case_id, genes_mapping_df, meth_manifest_df)
 node_features_df = pd.merge(node_features_df, df_meth, how='left', on=['gene_id'])
 
-node_features_df['weighted_beta_value'] = node_features_df['weighted_beta_value'].fillna(0)
+node_features_df[['copy_number', 'cnv_min_max_diff', 'weighted_beta_value']] = node_features_df[['copy_number', 'cnv_min_max_diff', 'weighted_beta_value']].fillna(0)
+
 node_features_df['meth_data_present'] = np.where(node_features_df['weighted_beta_value'] > 0, 1, 0)
 # so the net should learn that when meth_data_present = 0 weighted_beta_value doesn't matter
 

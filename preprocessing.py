@@ -97,7 +97,7 @@ cols = [
     'diagnoses.sites_of_involvement',
     'diagnoses.tissue_or_organ_of_origin']
 
-index_cols = ['project.project_id', 'cases.case_id', 'cases.submitter_id']
+index_cols = ['project.project_id', 'cases.case_id']
 
 features_df = features_df.join(only_primary_df[cols].set_index(index_cols), on=index_cols)
 print("Columns joined from clinical.tsv: " + str(cols))
