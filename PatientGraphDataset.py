@@ -50,7 +50,7 @@ protein_links_df.reset_index(inplace=True, drop=True)
 print("Reading Illumina manifest...")
 # file downloaded from https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html
 # place .csv file into methylation_manifests/originals, then run methylation_manifest_to_tsv.py
-meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450_V1.tsv", sep='\t', dtype=str)
+meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 
 ###
 
@@ -63,7 +63,12 @@ class PatientGraphDataset(Dataset):
         Class for the LUAD/LUSC cancer patient graphs Dataset.
         :param root: directory where to save processed data
         """
-        self.patient_list = file_mapping_df['case_id'].dropna().unique()  # case_id list
+
+        # case_id list
+        self.patient_list = file_mapping_df.groupby('case_id').agg(num_omics_present=('filename', 'count'))
+        # drop patient with incorrect number if omic files (should be 3)
+        self.patient_list.drop(self.patient_list[self.patient_list['num_omics_present'] != 3].index, inplace=True)
+
         self.node_map = node_map  # global dictionary for Gene_ID -> Index mapping
         self.genes_mapping_df = genes_mapping_df  # proteins-genes mapping df
 
@@ -105,15 +110,15 @@ class PatientGraphDataset(Dataset):
 
     def process(self):
         # Single execution to convert everything in .pt
-        for case_id in self.patient_list:
-            df_rna, network_df = create_rna_df(case_id, genes_mapping_df, protein_links_df)
+        for case_id in self.patient_list.index:
+            df_rna, network_df = create_rna_df(case_id, file_mapping_df, genes_mapping_df, protein_links_df)
             df_rna['gene_id_mapped'] = df_rna['gene_id'].map(node_map)
 
-            df_cnv = create_cnv_df(case_id, genes_mapping_df)
+            df_cnv = create_cnv_df(case_id, file_mapping_df, genes_mapping_df)
 
             node_features_df = pd.merge(df_rna, df_cnv, how='left', on=['gene_id'])
 
-            df_meth = create_meth_df(case_id, genes_mapping_df, meth_manifest_df)
+            df_meth = create_meth_df(case_id, file_mapping_df, genes_mapping_df, meth_manifest_df)
             node_features_df = pd.merge(node_features_df, df_meth, how='left', on=['gene_id'])
 
             node_features_df[['copy_number', 'cnv_min_max_diff', 'weighted_beta_value']] = node_features_df[

@@ -7,11 +7,10 @@ pd.set_option('display.max_colwidth', None)
 
 tpm_unstranded_threshold = 0.1  # gene expression threshold to ignore low-expression genes
 
-file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
-
-
 # ISOLATED EXECUTION
 def main():
+    file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
+
     example_case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb'  # for example
     ppi_score_threshold = 0.7  # minimum interaction probability score to create edges
 
@@ -36,14 +35,15 @@ def main():
     protein_links_df.reset_index(inplace=True, drop=True)
 
 
-    create_rna_df(example_case_id, genes_mapping_df, protein_links_df)
+    create_rna_df(example_case_id, file_mapping_df, genes_mapping_df, protein_links_df)
 
 
-def create_rna_df(case_id: str, genes_mapping_df: pd.DataFrame, protein_links_df: pd.DataFrame):
+def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df: pd.DataFrame, protein_links_df: pd.DataFrame):
     """
     Computes and returns a pd.Dataframe with RNA filtered data and a pd.Dataframe of protein-protein interactions for
     the specified patient (case_id) using only protein-coding genes.
     :param case_id:
+    :param file_mapping_df:
     :param genes_mapping_df:
     :param protein_links_df:
     :return torch_geometric.data.Data:

@@ -5,10 +5,9 @@ import pandas as pd
 
 pd.set_option('display.max_colwidth', None)
 
-file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
-
 # ISOLATED EXECUTION
 def main():
+    file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
     example_case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb'
 
     # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
@@ -16,13 +15,14 @@ def main():
     print("Reading protein-aliases-gene file...")
     genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
-    create_cnv_df(example_case_id, genes_mapping_df)
+    create_cnv_df(example_case_id, file_mapping_df, genes_mapping_df)
 
 
-def create_cnv_df(case_id: str, genes_mapping_df: pd.DataFrame):
+def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df: pd.DataFrame):
     """
     Computes and returns a pd.Dataframe with CNV filtered data for the specified patient (case_id).
     :param case_id:
+    :param file_mapping_df:
     :param genes_mapping_df:
     :return pd.DataFrame:
     """

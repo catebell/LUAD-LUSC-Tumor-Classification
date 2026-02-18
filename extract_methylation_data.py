@@ -4,10 +4,9 @@ import time
 
 pd.set_option('display.max_colwidth', None)
 
-file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
-
 # ISOLATED EXECUTION
 def main():
+    file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
     example_case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb'
 
     # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
@@ -21,13 +20,14 @@ def main():
     # place .csv file into methylation_manifests/originals, then run methylation_manifest_to_tsv.py
     meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 
-    create_meth_df(example_case_id, genes_mapping_df, meth_manifest_df)
+    create_meth_df(example_case_id, file_mapping_df, genes_mapping_df, meth_manifest_df)
 
 
-def create_meth_df(case_id: str, genes_mapping_df: pd.DataFrame, meth_manifest_df: pd.DataFrame):
+def create_meth_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df: pd.DataFrame, meth_manifest_df: pd.DataFrame):
     """
     Computes and returns a pd.Dataframe with CNV filtered data for the specified patient (case_id).
     :param case_id:
+    :param file_mapping_df:
     :param genes_mapping_df:
     :param meth_manifest_df:
     :return pd.DataFrame:

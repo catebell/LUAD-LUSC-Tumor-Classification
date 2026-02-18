@@ -75,7 +75,7 @@ print("Correspondences cpgIDs-symbols still missing: " + str(df_meth['gene_symbo
 
 df_meth_manifest450 = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 df_meth = pd.merge(df_meth, df_meth_manifest450[['cpg_IlmnID', 'gene_symbol']], on='cpg_IlmnID', how='left')
-print("Added symbols from methylation_manifest450_V1.tsv")
+print("Added symbols from methylation_manifest450.tsv")
 #print("Correspondences cpgIDs-symbols missing with only 450k: " + str(df_meth['gene_symbol'].isna().sum()))
 print("Correspondences cpgIDs-symbols missing with only 450k: " + str(df_meth.iloc[:,-1].isna().sum()))
 

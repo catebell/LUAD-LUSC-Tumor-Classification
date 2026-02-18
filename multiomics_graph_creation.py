@@ -24,6 +24,8 @@ start_time = time.time()
 
 ppi_score_threshold = 0.7  # minimum interaction probability score to create edges
 
+file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
+
 
 # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
 # file extracted using genes_proteins_aliases_ensg_mapping.py
@@ -58,17 +60,24 @@ meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.ts
 
 ###
 
-case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb' # for example
+'''
+#patient_list = file_mapping_df['case_id'].dropna().unique()  # case_id list
+print(file_mapping_df['case_id'].value_counts())
+# there are some patients with more or less than 3 omics files: we leave them out
+patient_list = file_mapping_df.groupby('case_id').agg(num_omics_present=('filename', 'count'))
+patient_list.drop(patient_list[patient_list['num_omics_present'] != 3].index, inplace=True)
+'''
 
-df_rna, network_df = create_rna_df(case_id, genes_mapping_df, protein_links_df)
+case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb'  # for example
+
+df_rna, network_df = create_rna_df(case_id, file_mapping_df, genes_mapping_df, protein_links_df)
 df_rna['gene_id_mapped'] = df_rna['gene_id'].map(node_map)
 
-
-df_cnv = create_cnv_df(case_id, genes_mapping_df)
+df_cnv = create_cnv_df(case_id, file_mapping_df, genes_mapping_df)
 
 node_features_df = pd.merge(df_rna, df_cnv, how='left', on=['gene_id'])
 
-df_meth = create_meth_df(case_id, genes_mapping_df, meth_manifest_df)
+df_meth = create_meth_df(case_id, file_mapping_df, genes_mapping_df, meth_manifest_df)
 node_features_df = pd.merge(node_features_df, df_meth, how='left', on=['gene_id'])
 
 node_features_df[['copy_number', 'cnv_min_max_diff', 'weighted_beta_value']] = node_features_df[['copy_number', 'cnv_min_max_diff', 'weighted_beta_value']].fillna(0)
