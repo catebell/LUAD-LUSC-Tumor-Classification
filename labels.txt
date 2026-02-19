@@ -127,7 +127,7 @@ PROCEDIMENTO PER CREAZIONE GRAFO:
 - (CNV --> mRNA) in base al gene_id
 - (methylation --> mRNA) in base al gene_id  [se b-value alto e mRNA alta espressione --> gene represso]
 
-Un grafo per ogni paziente poi da classificare (graph classification)
+A graph for each patient, then graph classification.
 
 
 RNA:
@@ -188,11 +188,11 @@ CNV:
    - Save these values to add to the nodes in the graph
    - Use Pearson to compute correlation (CNV -> RNA)
 
-Obtain Multi-omics graphs:
+Obtain Multi-omics graphs and save them as Dataset objects into data_graph_processed/:
+    [multiomics_graph_creation.py, PatientGraphDataset.py]
     h0 -> [num_nodes, 3]
-        - Nodes = genes
-        - Edges = biologic network (PPI, ...)
-        - Features nodes = [RNA, methylation, CNV]
+        - Nodes = genes, features = [RNA, methylation, CNV]
+        - Edges = biologic network (PPI, ...), features = [avg_combined_score, max_combined_score, num_protein_links]
 
 GIATConv:
     h1 = GIATConv(h0) -> LP: h1 = LabelPropagation(h1) -> [num_nodes, hidden * heads]
@@ -269,4 +269,5 @@ TODO tests:
 - provare non facendo media pesata beta_values ma solo normale mean()
 - feature cliniche toglibili o meno
 - modalità di fare gli edge (aggiungere edge_attr Pearson/Spearman/Kendall)
+- rescale edge features per averle più bilanciate
 - k per combinare cnv e diff

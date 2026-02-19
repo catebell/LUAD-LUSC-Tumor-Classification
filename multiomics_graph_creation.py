@@ -64,8 +64,9 @@ meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.ts
 #patient_list = file_mapping_df['case_id'].dropna().unique()  # case_id list
 print(file_mapping_df['case_id'].value_counts())
 # there are some patients with more or less than 3 omics files: we leave them out
-patient_list = file_mapping_df.groupby('case_id').agg(num_omics_present=('filename', 'count'))
+patient_list = file_mapping_df.groupby('case_id').agg(case_id = ('case_id','first'), num_omics_present=('filename', 'count'))
 patient_list.drop(patient_list[patient_list['num_omics_present'] != 3].index, inplace=True)
+patient_list.reset_index(inplace=True, drop=True)
 '''
 
 case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb'  # for example
