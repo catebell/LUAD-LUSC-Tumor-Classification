@@ -251,13 +251,14 @@ C concatenation:
 FINAL MLP:
     MLP(combined) -> logits -> [batch_size, 2]
 
-741 patients but 22 without all the 3 omics so 719 patients
-TRAINING (70%, 530 patients [227 LUAD, 276 LUSC]):
+
+741 patients but 22 without all the 3 omics so 719 patients but 10 with duplicated omics so 709
+TRAINING (70%, 496 patients [221 LUAD, 275 LUSC]):
     prediction = model(omics_data, clinical_data)
     loss = Cross-entropy loss(prediction, column_class_LUAD/LUSC), need to do classification
     loss.backward(), to let the model learn
-VALIDATION (10%, 72 patients [33 LUAD, 39 LUSC]):
-TEST (20%, 144 patients [65 LUAD, 79 LUSC]):
+VALIDATION (10%, 71 patients [32 LUAD, 39 LUSC]):
+TEST (20%, 142 patients [63 LUAD, 79 LUSC]):
     final_output = model(new_omics_data, new_clinical_data), compare
 
 
