@@ -2,6 +2,7 @@ import torch
 from torch_geometric.loader import DataLoader
 
 from PatientGraphDataset import PatientGraphDataset
+from models.CancerGNN import CancerGNN
 from models.GCN import GCN
 
 '''
@@ -55,10 +56,15 @@ for step, data in enumerate(train_loader):
     print(data)
 '''
 
-model = GCN(dataset, hidden_channels=64)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+model = GCN(num_node_features=7, num_classes=2, hidden_channels=64).to(device)
 print(model)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
 criterion = torch.nn.CrossEntropyLoss()
+
 
 def train():
     model.train()
@@ -91,11 +97,9 @@ for epoch in range(1, 50):
 '''
 # train loop
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = CancerGNN(num_node_features=7, num_edge_features=3, hidden_channels=64).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 criterion = torch.nn.CrossEntropyLoss()
-
 
 def train():
     model.train()
