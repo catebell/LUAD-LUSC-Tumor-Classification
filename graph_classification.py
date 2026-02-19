@@ -1,6 +1,8 @@
+import torch
 from torch_geometric.loader import DataLoader
 
 from PatientGraphDataset import PatientGraphDataset
+from models.GCN import GCN
 
 '''
 # DataLoader
@@ -14,17 +16,7 @@ for batch in train_loader:
     # loss = ...
 '''
 
-
-# Inizializza il dataset (passa il path dove hai salvato i .pt)
-dataset = PatientGraphDataset(root='data_graphs_processed')
-
-# Shuffle e Split (80% train, 20% test)
-dataset = dataset.shuffle()
-train_dataset = dataset[:int(len(dataset) * 0.8)]
-test_dataset = dataset[int(len(dataset) * 0.8):]
-
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+dataset = PatientGraphDataset(root='data_graphs_processed')  # dataset initialization; if not exists, it gets created
 
 print()
 print(f'Dataset: {dataset}:')
@@ -33,7 +25,6 @@ print(f'Number of graphs: {len(dataset)}')
 print(f'Number of features: {dataset.num_features}')
 print(f'Number of classes: {dataset.num_classes}')
 
-print()
 print(dataset[0])
 print('=============================================================')
 
@@ -45,6 +36,56 @@ print(f'Has isolated nodes: {dataset[0].has_isolated_nodes()}')
 print(f'Has self-loops: {dataset[0].has_self_loops()}')
 print(f'Is undirected: {dataset[0].is_undirected()}')  # TODO non risulta undirected ma in teoria lo è, è un errore interno, anche facendo delle prove con ToUndirected() continuava a dare False
 
+
+
+# (80% train, 20% test)
+torch.manual_seed(12345)
+dataset = dataset.shuffle()
+train_dataset = dataset[:int(len(dataset) * 0.8)]
+test_dataset = dataset[int(len(dataset) * 0.8):]
+
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+
+'''
+for step, data in enumerate(train_loader):
+    print(f'\nStep {step + 1}:')
+    print('=======')
+    print(f'Number of graphs in the current batch: {data.num_graphs}')
+    print(data)
+'''
+
+model = GCN(dataset, hidden_channels=64)
+print(model)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+criterion = torch.nn.CrossEntropyLoss()
+
+def train():
+    model.train()
+
+    for data in train_loader:  # Iterate in batches over the training dataset.
+         out = model(data.x, data.edge_index, data.batch)  # Perform a single forward pass.
+         loss = criterion(out, data.y)  # Compute the loss.
+         loss.backward()  # Derive gradients.
+         optimizer.step()  # Update parameters based on gradients.
+         optimizer.zero_grad()  # Clear gradients.
+
+def test(loader):
+     model.eval()
+
+     correct = 0
+     for data in loader:  # Iterate in batches over the training/test dataset.
+         out = model(data.x, data.edge_index, data.batch)
+         pred = out.argmax(dim=1)  # Use the class with highest probability.
+         correct += int((pred == data.y).sum())  # Check against ground-truth labels.
+     return correct / len(loader.dataset)  # Derive ratio of correct predictions.
+
+
+for epoch in range(1, 50):
+    train()
+    train_acc = test(train_loader)
+    test_acc = test(test_loader)
+    print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
 
 
 '''
@@ -90,3 +131,4 @@ for epoch in range(1, 101):
     test_acc = test(test_loader)
     print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
 '''
+
