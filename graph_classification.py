@@ -2,20 +2,9 @@ import torch
 from torch_geometric.loader import DataLoader
 
 from PatientGraphDataset import PatientGraphDataset
-from models.CancerGNN import CancerGNN
 from models.GCN import GCN
+from models.CancerGNN import CancerGNN
 
-'''
-# DataLoader
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-
-for batch in train_loader:
-    # batch.x -> Feature di tutti i nodi del batch
-    # batch.edge_index -> Archi aggiornati per il batch
-    # batch.batch -> Vettore che indica a quale paziente appartiene ogni nodo
-    out = model(batch.x, batch.edge_index, batch.edge_attr, batch.batch)
-    # loss = ...
-'''
 
 dataset = PatientGraphDataset(root='data_graphs_processed')  # dataset initialization; if not exists, it gets created
 
@@ -38,7 +27,6 @@ print(f'Has self-loops: {dataset[0].has_self_loops()}')
 print(f'Is undirected: {dataset[0].is_undirected()}')  # TODO non risulta undirected ma in teoria lo è, è un errore interno, anche facendo delle prove con ToUndirected() continuava a dare False
 
 
-
 # (80% train, 20% test)
 torch.manual_seed(12345)
 dataset = dataset.shuffle()
@@ -56,77 +44,47 @@ for step, data in enumerate(train_loader):
     print(data)
 '''
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model = GCN(num_node_features=7, num_classes=2, hidden_channels=64).to(device)
-print(model)
-
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-
-criterion = torch.nn.CrossEntropyLoss()
-
-
-def train():
-    model.train()
-
-    for data in train_loader:  # Iterate in batches over the training dataset.
-         out = model(data.x, data.edge_index, data.batch)  # Perform a single forward pass.
-         loss = criterion(out, data.y)  # Compute the loss.
-         loss.backward()  # Derive gradients.
-         optimizer.step()  # Update parameters based on gradients.
-         optimizer.zero_grad()  # Clear gradients.
-
-def test(loader):
-     model.eval()
-
-     correct = 0
-     for data in loader:  # Iterate in batches over the training/test dataset.
-         out = model(data.x, data.edge_index, data.batch)
-         pred = out.argmax(dim=1)  # Use the class with highest probability.
-         correct += int((pred == data.y).sum())  # Check against ground-truth labels.
-     return correct / len(loader.dataset)  # Derive ratio of correct predictions.
-
-
-for epoch in range(1, 50):
-    train()
-    train_acc = test(train_loader)
-    test_acc = test(test_loader)
-    print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
-
-
-'''
 # train loop
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+#model = GCN(num_node_features=7, num_classes=2, hidden_channels=64).to(device)
 model = CancerGNN(num_node_features=7, num_edge_features=3, hidden_channels=64).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+
+optimizer = torch.optim.Adam(model.parameters(), lr=0.01)  # lr = Learning Rate, TODO try 0.001 too
+
 criterion = torch.nn.CrossEntropyLoss()
+
+print(model)
+
 
 def train():
     model.train()
     total_loss = 0
-    for data in train_loader:
-        data = data.to(device)
-        optimizer.zero_grad()
 
-        # Passiamo x, edge_index, edge_attr e il vettore batch
+    for data in train_loader:  # Iterate in batches over the training dataset.
+        #out = model(data.x, data.edge_index, data.batch)  # Perform a single forward pass.
         out = model(data.x, data.edge_index, data.edge_attr, data.batch)
 
-        loss = criterion(out, data.y)
-        loss.backward()
-        optimizer.step()
+        loss = criterion(out, data.y)  # Compute the loss.
+        loss.backward()  # Derive gradients.
+        optimizer.step()  # Update parameters based on gradients.
+        optimizer.zero_grad()  # Clear gradients.
         total_loss += loss.item() * data.num_graphs
     return total_loss / len(train_dataset)
 
 
 def test(loader):
-    model.eval()
-    correct = 0
-    for data in loader:
-        data = data.to(device)
-        out = model(data.x, data.edge_index, data.edge_attr, data.batch)
-        pred = out.argmax(dim=1)
-        correct += int((pred == data.y).sum())
-    return correct / len(loader.dataset)
+     model.eval()
+     correct = 0
+
+     for data in loader:  # Iterate in batches over the training/test dataset.
+         #out = model(data.x, data.edge_index, data.batch)
+         out = model(data.x, data.edge_index, data.edge_attr, data.batch)
+         pred = out.argmax(dim=1)  # Use the class with highest probability.
+         correct += int((pred == data.y).sum())  # Check against ground-truth labels.
+     return correct / len(loader.dataset)  # Derive ratio of correct predictions.
 
 
 for epoch in range(1, 101):
@@ -134,5 +92,3 @@ for epoch in range(1, 101):
     train_acc = test(train_loader)
     test_acc = test(test_loader)
     print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
-'''
-
