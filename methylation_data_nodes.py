@@ -1,142 +1,196 @@
 import os
+import glob
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 
-# --- Configurazioni ---
-METH_DIR = "files/methylation"
-OUTPUT_DIR = "WGCNA/methylation"
+# ===============================
+# CONFIGURAZIONE (meno restrittiva)
+# ===============================
+
+METHYLATION_DIR = "files/methylation"
+OUTPUT_DIR = "weight_edges/methylation"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-MAPPING_FILE = "files/clinical/file_case_mapping.tsv"
-SPLIT_FILE = "files/clinical/patient_split_cleaned.csv"
-CPG_GENE_MAP_FILE = "original_dataset/matched_cpg_genes_converted.csv" # TODO
-STRING_GENES_FILE = "WGCNA/WGCNA_selected_genes_for_STRING.tsv"
+MANIFEST_FILE = "methylation_manifests/methylation_manifest450.tsv"
+STRING_EDGES_FILE = "downloaded_files/9606.protein.links.v12.0.txt"
+STRING_ALIASES_FILE = "downloaded_files/9606.protein.aliases.gene.tsv"
 
-EDGE_THRESHOLD = 0.1
-MIN_SAMPLE_FRACTION = 0.2
-PROM_UP = 1500
-PROM_DOWN = 500
+MIN_PRESENCE = 0.6      # prima 0.8 → più inclusivo
+MIN_VARIANCE = 0        # rimosso filtro varianza
 
-sns.set_theme(style="white")
+# ===============================
+# 1️⃣ LOAD METHYLATION FILES
+# ===============================
 
-# --- Leggi mapping e split ---
-file_mapping_df = pd.read_csv(MAPPING_FILE, sep="\t")
-split_df = pd.read_csv(SPLIT_FILE)
-train_case_ids = split_df.loc[split_df["split"]=="train", "cases.case_id"].astype(str).unique()
+print("\nLoading methylation files...")
 
-meth_mapping = file_mapping_df[(file_mapping_df["omic"].str.lower()=="methylation") &
-                               (file_mapping_df["case_id"].isin(train_case_ids))][["case_id","filename"]].reset_index(drop=True)
-print(f"\nTrain methylation samples found: {len(meth_mapping)}")
+all_files = glob.glob(os.path.join(METHYLATION_DIR, "*.txt"))
+if len(all_files) == 0:
+    raise ValueError("No methylation .txt files found")
 
-# --- Leggi CpG-gene mapping ---
-cpg_map = pd.read_csv(CPG_GENE_MAP_FILE)
-# colonne usate: gene_id,gene_strand,gene_start,gene_end,cpg_island,cpg_IlmnID
+dfs = []
+for file in all_files:
+    sample = os.path.basename(file).replace(".txt", "")
+    df = pd.read_csv(file, sep="\t", header=None, names=["CpG", sample])
+    dfs.append(df)
 
-# --- Costruisci beta per gene per sample ---
-gene_beta = {}
+beta_matrix = dfs[0]
+for df in dfs[1:]:
+    beta_matrix = beta_matrix.merge(df, on="CpG", how="outer")
 
-for _, row in meth_mapping.iterrows():
-    case_id = row["case_id"]
-    filename = row["filename"].strip()
-    path = os.path.join(METH_DIR, filename)
+beta_matrix = beta_matrix.set_index("CpG")
+print("Initial CpG × sample shape:", beta_matrix.shape)
 
-    print(f"Processing methylation for {case_id}")
-    df_cpg = pd.read_csv(path, sep="\t", header=None, names=["cpg_IlmnID","beta_value"])
-    df_cpg["beta_value"] = df_cpg["beta_value"].astype(float)
+# ===============================
+# 2️⃣ CpG → gene_symbol
+# ===============================
 
-    # join con mapping CpG-gene
-    df_annot = df_cpg.merge(cpg_map, on="cpg_IlmnID", how="inner")
+manifest = pd.read_csv(MANIFEST_FILE, sep="\t", dtype=str, encoding="utf-8-sig")
+manifest.columns = manifest.columns.str.strip()
 
-# TODO guarda extract_methylation_data
+manifest = manifest[["cpg_IlmnID", "gene_symbol"]].dropna()
 
-    # calcola promoter start/end
-    df_annot["prom_start"] = np.where(df_annot["gene_strand"]=="+",
-                                      df_annot["gene_start"]-PROM_UP,
-                                      df_annot["gene_end"]-PROM_UP)
-    df_annot["prom_end"] = np.where(df_annot["gene_strand"]=="+",
-                                    df_annot["gene_start"]+PROM_DOWN,
-                                    df_annot["gene_end"]+PROM_DOWN)
+manifest["gene_symbol"] = manifest["gene_symbol"].str.split(";")
+manifest = manifest.explode("gene_symbol")
+manifest["gene_symbol"] = manifest["gene_symbol"].str.strip()
 
-    # seleziona CpG nel promotore
-    df_prom = df_annot[(df_annot["cpg_island"] >= df_annot["prom_start"]) &
-                       (df_annot["cpg_island"] <= df_annot["prom_end"])]
+beta_gene = beta_matrix.reset_index().merge(
+    manifest,
+    left_on="CpG",
+    right_on="cpg_IlmnID",
+    how="inner"
+)
 
-    # media beta per gene
-    beta_gene = df_prom.groupby("gene_id")["beta_value"].mean()
-    for gene, beta in beta_gene.items():
-        if gene not in gene_beta:
-            gene_beta[gene] = {}
-        gene_beta[gene][case_id] = beta
+# media CpG → gene
+gene_matrix = (
+    beta_gene
+    .drop(columns=["CpG", "cpg_IlmnID"])
+    .groupby("gene_symbol")
+    .mean()
+)
 
-# --- Trasforma in matrice gene x sample ---
-beta_matrix = pd.DataFrame(gene_beta).T.fillna(0)
+print("Gene_symbol × sample shape:", gene_matrix.shape)
 
-# --- Mantieni solo geni presenti in STRING ---
-selected_genes = pd.read_csv(STRING_GENES_FILE, header=None, names=["gene"])["gene"].values
-beta_matrix = beta_matrix.loc[beta_matrix.index.isin(selected_genes)]
+# ===============================
+# 3️⃣ gene_symbol → ENSG
+# ===============================
 
-# Filtri minima presenza campioni e varianza
-min_samples = int(np.ceil(MIN_SAMPLE_FRACTION * beta_matrix.shape[1]))
-beta_matrix = beta_matrix[(beta_matrix!=0).sum(axis=1)>=min_samples]
-beta_matrix = beta_matrix.loc[beta_matrix.var(axis=1)>0]
+aliases_df = pd.read_csv(STRING_ALIASES_FILE, sep="\t", dtype=str)
+aliases_df = aliases_df[["alias", "gene_id"]].dropna()
+aliases_df = aliases_df[aliases_df["gene_id"].str.startswith("ENSG")]
 
-print("\nFinal methylation matrix shape after filtering:", beta_matrix.shape)
-beta_matrix.to_csv(os.path.join(OUTPUT_DIR,"methylation_node_matrix_filtered.tsv"), sep="\t")
+gene_matrix.index = gene_matrix.index.str.strip()
 
-# --- Features nodi methylation ---
-nodes_df = pd.DataFrame({"gene": beta_matrix.index})
-nodes_df["METH_mean"] = beta_matrix.mean(axis=1).values
-nodes_df["METH_var"] = beta_matrix.var(axis=1).values
-nodes_df["METH_status"] = np.where(nodes_df["METH_mean"]>=0.6,"methylated",
-                                   np.where(nodes_df["METH_mean"]<=0.3,"unmethylated","intermediate"))
-nodes_df.to_csv(os.path.join(OUTPUT_DIR,"methylation_node_features.tsv"), sep="\t", index=False)
+gene_matrix = gene_matrix.reset_index().merge(
+    aliases_df,
+    left_on="gene_symbol",
+    right_on="alias",
+    how="inner"
+)
 
-# --- Funzione per calcolare matrice correlazione e edge list ---
-def compute_edges(matrix, method_name):
-    print(f"\nComputing {method_name} correlation...")
-    corr_matrix = matrix.T.corr(method=method_name)
+gene_matrix = gene_matrix.drop(columns=["gene_symbol", "alias"])
+gene_matrix = gene_matrix.groupby("gene_id").mean()
 
-    # Edge list filtrata
-    adj_sub = corr_matrix.copy()
-    adj_sub[adj_sub < EDGE_THRESHOLD] = 0
-    g_idx = np.where(adj_sub.values > EDGE_THRESHOLD)
-    edges = [(adj_sub.index[i], adj_sub.columns[j], adj_sub.iloc[i,j])
-             for i,j in zip(*g_idx) if i<j]
-    edges_df = pd.DataFrame(edges, columns=["gene1","gene2","weight"])
-    edges_df.to_csv(os.path.join(OUTPUT_DIR, f"methylation_edges_{method_name}_for_STRING.tsv"), sep="\t", index=False)
+print("Final ENSG × sample shape:", gene_matrix.shape)
 
-    print(f"{method_name} edges over threshold: {len(edges_df)}")
-    return edges_df
+# ===============================
+# 4️⃣ FILTRO PRESENZA (più permissivo)
+# ===============================
 
-# --- Pearson, Spearman, Kendall ---
-edges_pearson = compute_edges(beta_matrix, "pearson")
-edges_spearman = compute_edges(beta_matrix, "spearman")
-edges_kendall = compute_edges(beta_matrix, "kendall")
+presence = gene_matrix.notna().mean(axis=1)
+gene_matrix = gene_matrix.loc[presence >= MIN_PRESENCE]
 
-# --- Confronto qualità metrica ---
-summary = pd.DataFrame({
-    "method":["pearson","spearman","kendall"],
-    "n_edges":[len(edges_pearson), len(edges_spearman), len(edges_kendall)],
-    "mean_weight":[edges_pearson["weight"].mean(),
-                   edges_spearman["weight"].mean(),
-                   edges_kendall["weight"].mean()]
-})
-print("\nComparison of correlation methods:")
-print(summary)
+print("After relaxed filtering:", gene_matrix.shape)
 
-# --- Istogrammi dei pesi ---
-plt.figure(figsize=(12,4))
-for i,(edges_df,name) in enumerate(zip([edges_pearson, edges_spearman, edges_kendall],
-                                       ["Pearson","Spearman","Kendall"])):
-    plt.subplot(1,3,i+1)
-    plt.hist(edges_df["weight"], bins=50)
-    plt.title(f"{name} weight distribution")
-    plt.xlabel("Correlation")
-    plt.ylabel("Frequency")
-plt.tight_layout()
-plt.savefig(os.path.join(OUTPUT_DIR,"methylation_edge_weight_distributions_all_methods.png"), dpi=300)
-plt.show()
+# Riempimento NA con media del gene (aumenta copertura)
+gene_matrix = gene_matrix.apply(
+    lambda row: row.fillna(row.mean()),
+    axis=1
+)
 
-print("\nMethylation pipeline complete with Pearson, Spearman and Kendall correlations.")
+# ===============================
+# 5️⃣ LOAD STRING BACKBONE
+# ===============================
+
+print("\nLoading STRING backbone...")
+
+string_edges_df = pd.read_csv(STRING_EDGES_FILE, sep="\s+", dtype=str)
+
+protein2gene = pd.read_csv(STRING_ALIASES_FILE, sep="\t", dtype=str)
+protein2gene = protein2gene[["protein_id", "gene_id"]].dropna()
+protein2gene = protein2gene[protein2gene["gene_id"].str.startswith("ENSG")]
+
+# protein1 → gene1
+string_edges_df = string_edges_df.merge(
+    protein2gene,
+    left_on="protein1",
+    right_on="protein_id",
+    how="left"
+).rename(columns={"gene_id": "gene1"}).drop(columns="protein_id")
+
+# protein2 → gene2
+string_edges_df = string_edges_df.merge(
+    protein2gene,
+    left_on="protein2",
+    right_on="protein_id",
+    how="left"
+).rename(columns={"gene_id": "gene2"}).drop(columns="protein_id")
+
+string_edges_df = string_edges_df.dropna(subset=["gene1", "gene2"])
+
+# rendi non direzionale
+string_edges_df[["gene1","gene2"]] = pd.DataFrame(
+    string_edges_df[["gene1","gene2"]].apply(lambda x: sorted(x), axis=1).tolist(),
+    index=string_edges_df.index
+)
+
+string_edges_df = string_edges_df.drop_duplicates(subset=["gene1","gene2"])
+
+selected_genes = pd.unique(string_edges_df[["gene1","gene2"]].values.ravel())
+print(f"STRING backbone genes: {len(selected_genes)}")
+
+# ===============================
+# 6️⃣ Subset methylation genes
+# ===============================
+
+gene_matrix_sub = gene_matrix.loc[
+    gene_matrix.index.isin(selected_genes)
+]
+
+print(f"Methylation genes overlapping STRING: {gene_matrix_sub.shape[0]}")
+
+# ===============================
+# 7️⃣ Spearman correlation
+# ===============================
+
+print("\nComputing Spearman correlation matrix...")
+corr_matrix = gene_matrix_sub.T.corr(method="spearman")
+
+# ===============================
+# 8️⃣ Estrai coppie STRING
+# ===============================
+
+edges_df = string_edges_df[
+    string_edges_df["gene1"].isin(corr_matrix.index) &
+    string_edges_df["gene2"].isin(corr_matrix.index)
+].copy()
+
+edges_df["weight"] = [
+    corr_matrix.loc[g1, g2]
+    for g1, g2 in zip(edges_df["gene1"], edges_df["gene2"])
+]
+
+edges_df = edges_df[["gene1","gene2","weight"]]
+
+edges_df.to_csv(
+    os.path.join(
+        OUTPUT_DIR,
+        "methylation_edges_spearman2_for_STRING.tsv"
+    ),
+    sep="\t",
+    index=False
+)
+
+print(f"Edges extracted for STRING backbone: {len(edges_df)}")
+
+print("\nMethylation backbone-weighting complete (max gene coverage mode).")

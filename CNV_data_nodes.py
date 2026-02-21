@@ -6,12 +6,14 @@ import seaborn as sns
 
 # --- Configurazioni ---
 CNV_DIR = "files/CNV"
-OUTPUT_DIR = "WGCNA/CNV"
+OUTPUT_DIR = "weight_edges/CNV"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 MAPPING_FILE = "files/clinical/file_case_mapping.tsv"
 SPLIT_FILE = "files/clinical/patient_split_cleaned.csv"
-STRING_GENES_FILE = "WGCNA/WGCNA_selected_genes_for_STRING.tsv"
+
+STRING_EDGES_FILE = "downloaded_files/9606.protein.links.v12.0.txt"
+STRING_ALIASES_FILE = "downloaded_files/9606.protein.aliases.gene.tsv"
 
 k_diff = 0.3
 EDGE_THRESHOLD = 0.1
@@ -78,8 +80,29 @@ cnv_matrix = cnv_matrix.loc[cnv_matrix.var(axis=1) > 0]
 print("\nFinal CNV matrix shape after filtering:", cnv_matrix.shape)
 cnv_matrix.to_csv(os.path.join(OUTPUT_DIR, "CNV_node_matrix_filtered.tsv"), sep='\t')
 
-# --- Mantieni solo i geni selezionati per STRING ---
-selected_genes = pd.read_csv(STRING_GENES_FILE, header=None, names=["gene"])["gene"].values
+# --- STRING network: leggi aliases e edges ---
+aliases_df = pd.read_csv(STRING_ALIASES_FILE, sep="\t", dtype=str)
+protein2gene = aliases_df[["protein_id", "gene_id"]].drop_duplicates()
+
+string_edges_df = pd.read_csv(STRING_EDGES_FILE, sep="\s+", dtype=str)
+string_edges_df["combined_score"] = string_edges_df["combined_score"].astype(float)
+
+# --- Converti protein_id in gene_id ---
+string_edges_df = string_edges_df.merge(protein2gene, left_on="protein1", right_on="protein_id", how="left") \
+                                 .rename(columns={"gene_id":"gene1"}) \
+                                 .drop(columns="protein_id")
+string_edges_df = string_edges_df.merge(protein2gene, left_on="protein2", right_on="protein_id", how="left") \
+                                 .rename(columns={"gene_id":"gene2"}) \
+                                 .drop(columns="protein_id")
+
+# Rimuovi interazioni senza mapping
+string_edges_df = string_edges_df.dropna(subset=["gene1","gene2"])
+
+# Lista dei geni STRING presenti
+selected_genes = pd.unique(string_edges_df[["gene1","gene2"]].values.ravel())
+print(f"Selected {len(selected_genes)} genes from STRING network")
+
+# --- Mantieni solo i geni CNV presenti nel network ---
 cnv_matrix_sub = cnv_matrix.loc[cnv_matrix.index.isin(selected_genes)]
 print(f"Using {cnv_matrix_sub.shape[0]} CNV genes present in STRING backbone")
 

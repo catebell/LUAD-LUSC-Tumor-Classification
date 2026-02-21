@@ -8,6 +8,7 @@ import seaborn as sns
 RNA_DIR = "files/RNA"
 MAPPING_FILE = "files/clinical/file_case_mapping.tsv"
 SPLIT_FILE = "files/clinical/patient_split_cleaned.csv"
+OUTPUT_DIR = "weight_edges/RNA"
 
 TPM_THRESHOLD = 0.1
 MIN_SAMPLE_FRACTION = 0.2
@@ -93,7 +94,7 @@ gene2module = pd.Series(
 print("\nNumber of genes per module:")
 print(gene2module.value_counts())
 
-gene2module.to_csv("WGCNA/WGCNA_gene_to_module.tsv", sep='\t')
+gene2module.to_csv(os.path.join(OUTPUT_DIR,"WGCNA_gene_to_module.tsv"), sep='\t')
 
 MEs = wgcna.MEs
 
@@ -106,10 +107,10 @@ sns.clustermap(
 )
 
 plt.title("Module Eigengenes Heatmap")
-plt.savefig("WGCNA/WGCNA_ModuleEigengenes_heatmap.png", dpi=300)
+plt.savefig(os.path.join(OUTPUT_DIR, "WGCNA_ModuleEigengenes_heatmap.png"), dpi=300)
 plt.show()
 
-MEs.to_csv("WGCNA/WGCNA_module_eigengenes.tsv", sep='\t')
+MEs.to_csv(os.path.join(OUTPUT_DIR, "WGCNA_module_eigengenes.tsv"), sep='\t')
 
 TOM = pd.DataFrame(
     wgcna.TOM,
@@ -128,7 +129,7 @@ connectivity_df = pd.DataFrame({
 print("\nTop 10 hub genes:")
 print(connectivity_df.head(10))
 
-connectivity_df.to_csv("WGCNA/WGCNA_gene_connectivity.tsv", sep='\t', index=False)
+connectivity_df.to_csv(os.path.join(OUTPUT_DIR, "WGCNA_gene_connectivity.tsv"), sep='\t', index=False)
 
 top_genes = connectivity_df.head(200)["gene"].values
 expr_top = expr_matrix.loc[top_genes]
@@ -141,13 +142,13 @@ sns.clustermap(
 )
 
 plt.title("Top 200 Hub Genes")
-plt.savefig("WGCNA/Top_hub_genes_heatmap.png", dpi=300)
+plt.savefig(os.path.join(OUTPUT_DIR, "Top_hub_genes_heatmap.png"), dpi=300)
 plt.show()
 
 selected_genes = connectivity_df.head(TOP_N_GENES)["gene"].values
 
 pd.Series(selected_genes).to_csv(
-    "WGCNA/WGCNA_selected_genes_for_STRING.tsv",
+    os.path.join(OUTPUT_DIR, "WGCNA_selected_genes_for_STRING.tsv"),
     sep='\t',
     index=False
 )
@@ -166,7 +167,7 @@ edges_df = pd.DataFrame(edges, columns=["gene1", "gene2", "weight"])
 
 print("Edges over threshold:", len(edges_df))
 
-edges_df.to_csv("WGCNA/WGCNA_edges_for_STRING_intersection.tsv", sep='\t', index=False)
+edges_df.to_csv(os.path.join(OUTPUT_DIR, "WGCNA_edges_for_STRING_intersection.tsv"), sep='\t', index=False)
 
 plt.figure(figsize=(8,5))
 plt.hist(edges_df["weight"], bins=50)
@@ -174,7 +175,7 @@ plt.title("Distribution TOM weights")
 plt.xlabel("TOM weight")
 plt.ylabel("Frequency")
 plt.tight_layout()
-plt.savefig("WGCNA/WGCNA_edge_weight_distribution.png", dpi=300)
+plt.savefig(os.path.join(OUTPUT_DIR, "WGCNA_edge_weight_distribution.png"), dpi=300)
 plt.show()
 
-print("\nPipeline WGCNA complete.")
+print("\nPipeline weight_edges complete.")

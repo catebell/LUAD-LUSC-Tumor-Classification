@@ -261,7 +261,6 @@ VALIDATION (10%, 71 patients [32 LUAD, 39 LUSC]):
 TEST (20%, 142 patients [63 LUAD, 79 LUSC]):
     final_output = model(new_omics_data, new_clinical_data), compare
 
-
 TODO tests:
 - threshold RNA expression (0.7 per ora)
 - tpm_unstranded_threshold per valori di RNA
