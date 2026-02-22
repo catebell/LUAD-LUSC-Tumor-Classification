@@ -24,7 +24,15 @@ start_time = time.time()
 
 ppi_score_threshold = 0.7  # minimum interaction probability score to create edges
 
-file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
+file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
+patients_features_df = pd.read_csv('files/clinical/features.tsv', sep='\t')
+mapping_project_id = {
+    'TCGA-LUAD': 0,
+    'TCGA-LUSC': 1
+}
+patients_features_df['project.project_id'] = patients_features_df['project.project_id'].map(mapping_project_id)
+# map {case_id --> tumor class (LUAD-LUSC)}
+labels_dict = dict(zip(patients_features_df['cases.case_id'], patients_features_df['project.project_id']))
 
 
 # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
@@ -87,7 +95,7 @@ node_features_df['meth_data_present'] = np.where(node_features_df['weighted_beta
 # so the net should learn that when meth_data_present = 0 weighted_beta_value doesn't matter
 
 # only numerical features assigned to nodes, to be used for classification
-features_cols = ['tpm_unstranded', 'fpkm_unstranded', 'fpkm_uq_unstranded', 'copy_number', 'cnv_min_max_diff', 'weighted_beta_value', 'meth_data_present']
+features_cols = ['tpm_unstranded', 'copy_number', 'cnv_min_max_diff', 'weighted_beta_value', 'meth_data_present']
 node_features_df[features_cols] = node_features_df[features_cols].astype(float)
 
 
@@ -96,13 +104,18 @@ node_features_df = node_features_df.groupby('gene_id_mapped').agg({
     'gene_id': 'first',
     'gene_name': 'first',
     'tpm_unstranded': 'mean',
-    'fpkm_unstranded': 'mean',
-    'fpkm_uq_unstranded': 'mean',
     'copy_number': 'mean',
     'cnv_min_max_diff': 'max',
     'weighted_beta_value': 'mean',
     'meth_data_present': 'max'
 })
+
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+print(scaler.fit(node_features_df[features_cols]))
+print(scaler.mean_)
+print(scaler.transform(node_features_df[features_cols]))
+node_features_df[features_cols] = scaler.fit_transform(node_features_df[features_cols])
 
 # interactions aggregation by genes
 edge_features_df = network_df.groupby(['gene1', 'gene2']).agg(avg_combined_score=('combined_score', 'mean'),

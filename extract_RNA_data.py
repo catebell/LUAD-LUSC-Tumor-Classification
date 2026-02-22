@@ -5,7 +5,7 @@ import time
 
 pd.set_option('display.max_colwidth', None)
 
-tpm_unstranded_threshold = 0.1  # gene expression threshold to ignore low-expression genes
+tpm_unstranded_threshold = 1  # gene expression threshold to ignore lower-expression genes
 
 # ISOLATED EXECUTION
 def main():
@@ -56,8 +56,8 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
 
     df_rna = pd.read_csv(f"files/RNA/{file_mapping_df[
         (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'RNA')
-        ]['filename'].to_string(index=False)}", sep='\t', dtype=str,
-                         comment='#')  # 'comment=' to ignore the first line in RNA files
+        ]['filename'].to_string(index=False)}", sep='\t', dtype=str, usecols=['gene_id','gene_name','gene_type',
+                                                                              'tpm_unstranded'], comment='#')  # 'comment=' to ignore the first line in RNA files
 
     df_rna.drop(df_rna[df_rna['gene_id'].str.startswith('ENSG') == False].index, inplace=True)  # drop metadata
     df_rna.dropna(inplace=True)
@@ -131,8 +131,7 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
 
     print("Found " + str(len(network_df) / 2) + " bidirectional interactions.\n")
 
-    print("\n--- %s seconds ---" % (time.time() - start_time))
-    print("\nPROCESSED RNA DATA\n")
+    print("\n--- %s seconds ---\n" % (time.time() - start_time))
 
     return df_rna, network_df
 
@@ -172,19 +171,4 @@ basata sull'integrazione di diverse prove (esperimenti, co-espressione, database
 STRING non usa una semplice somma delle prove, ma un modello probabilistico. Con più canali di prova
 (es. "escore" per esperimenti, "nscore" per vicinanza genica), il punteggio viene calcolato come una loro combinazione
 normalizzando gli score di ogni singolo canale.
-'''
-
-# Motivazioni per ppi_score_threshold
-'''
-Soglie di confidenza per gli score; STRING suggerisce solitamente tre "cut-off" standard per filtrare i risultati:
-
-| Low Confidence | > 0.150 | > 150 |
-| Medium Confidence | > 0.400 | > 400 |
-| High Confidence | > 0.700 | > 700 |
-| Highest Confidence | > 0.900 | > 900 |
-
-`0` in colonne come `nscore` (neighborhood score) o `fscore` (fusion score), succede perché:
-1. Per quelle specifiche coppie di proteine, non ci sono prove derivanti da quel particolare canale.
-2. Spesso le API restituiscono lo score totale (`score`) e i singoli sub-score solo se esplicitamente richiesti o se
-superano una certa soglia interna.
 '''

@@ -101,8 +101,7 @@ def create_meth_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df
     df_meth_grouped.rename(columns={0: 'weighted_beta_value'}, inplace=True)
     print("--> " + str(len(df_meth_grouped)) + " actual rows\n")
 
-    print("\n--- %s seconds ---" % (time.time() - start_time))
-    print("\nPROCESSED METHYLATION DATA\n")
+    print("\n--- %s seconds ---\n" % (time.time() - start_time))
 
     return df_meth_grouped
 

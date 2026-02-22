@@ -49,10 +49,10 @@ for step, data in enumerate(train_loader):
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-#model = GCN(num_node_features=7, num_classes=2, hidden_channels=64).to(device)
-model = CancerGNN(num_node_features=7, num_edge_features=3, hidden_channels=64).to(device)
+#model = GCN(num_node_features=5, num_classes=2, hidden_channels=64).to(device)
+model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
 
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)  # lr = Learning Rate, TODO try 0.001 too
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)  # lr = Learning Rate
 
 criterion = torch.nn.CrossEntropyLoss()
 
@@ -82,7 +82,7 @@ def test(loader):
      for data in loader:  # Iterate in batches over the training/test dataset.
          #out = model(data.x, data.edge_index, data.batch)
          out = model(data.x, data.edge_index, data.edge_attr, data.batch)
-         pred = out.argmax(dim=1)  # Use the class with highest probability.
+         pred = out.argmax(dim=1)  # Use the class with the highest probability.
          correct += int((pred == data.y).sum())  # Check against ground-truth labels.
      return correct / len(loader.dataset)  # Derive ratio of correct predictions.
 

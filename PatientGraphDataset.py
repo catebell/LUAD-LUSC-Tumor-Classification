@@ -7,6 +7,7 @@ import pandas as pd
 import torch_geometric
 from torch_geometric.data import Dataset
 import torch_geometric.transforms as T
+from sklearn.preprocessing import StandardScaler
 
 from extract_CNV_data import create_cnv_df
 from extract_RNA_data import create_rna_df
@@ -22,7 +23,7 @@ class PatientGraphDataset(Dataset):
         Class for the LUAD/LUSC cancer patient graphs Dataset.
         :param root: directory where to save and retrieve processed data.
         """
-        self.file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
+        self.file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
         self.patients_features_df = pd.read_csv('files/clinical/features.tsv', sep='\t')
 
         # case_id list
@@ -54,6 +55,8 @@ class PatientGraphDataset(Dataset):
         self.standard_transform = T.Compose([T.AddSelfLoops(attr='edge_attr')])
 
         self.ppi_score_threshold = 0.7  # minimum interaction probability score to create edges
+
+        self.scaler = StandardScaler()
 
         super(PatientGraphDataset, self).__init__(root, transform, pre_transform)
 
@@ -131,8 +134,8 @@ class PatientGraphDataset(Dataset):
             data = self.standard_transform(data)
             torch.save(data, os.path.join(self.processed_dir, f'data_{case_id}.pt'))
 
-            print("\n--- %s seconds ---" % (time.time() - start_time))
-            print("\nALL DATA PROCESSED\n")
+        print("\n--- %s seconds ---" % (time.time() - start_time))
+        print("\nALL DATA PROCESSED\n")
 
     def _create_graph(self, node_features_df, network_df):
         """
@@ -143,8 +146,8 @@ class PatientGraphDataset(Dataset):
         """
 
         # only numerical features assigned to nodes, to be used for classification
-        features_cols = ['tpm_unstranded', 'fpkm_unstranded', 'fpkm_uq_unstranded', 'copy_number',
-                         'cnv_min_max_diff', 'weighted_beta_value', 'meth_data_present']
+        features_cols = ['tpm_unstranded', 'copy_number', 'cnv_min_max_diff', 'weighted_beta_value', 'meth_data_present']
+
         node_features_df[features_cols] = node_features_df[features_cols].astype(float)
 
         # unique nodes df
@@ -152,13 +155,15 @@ class PatientGraphDataset(Dataset):
             'gene_id': 'first',
             'gene_name': 'first',
             'tpm_unstranded': 'mean',
-            'fpkm_unstranded': 'mean',
-            'fpkm_uq_unstranded': 'mean',
             'copy_number': 'mean',
             'cnv_min_max_diff': 'max',
             'weighted_beta_value': 'mean',
             'meth_data_present': 'max'
         })
+
+        # scaling
+        features_to_scale = ['tpm_unstranded', 'copy_number', 'cnv_min_max_diff', 'weighted_beta_value']
+        node_features_df[features_to_scale] = self.scaler.fit_transform(node_features_df[features_to_scale])
 
         # interactions aggregation by genes
         edge_features_df = network_df.groupby(['gene1', 'gene2']).agg(avg_combined_score=('combined_score', 'mean'),

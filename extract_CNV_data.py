@@ -33,7 +33,8 @@ def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
 
     df_cnv = pd.read_csv(f"files/CNV/{file_mapping_df[
         (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'CNV')
-        ]['filename'].to_string(index=False)}", sep='\t')
+        ]['filename'].to_string(index=False)}", sep='\t', usecols=['gene_id','gene_name','copy_number',
+                                                                   'min_copy_number','max_copy_number'])
 
     df_cnv.dropna(inplace=True)
     df_cnv.reset_index(inplace=True, drop=True)
@@ -44,7 +45,6 @@ def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     # remove genes (names) version (AL627309.1 --> AL627309)
     df_cnv['gene_name'] = df_cnv.gene_name.str.split('.', expand=True)[0]
 
-    df_cnv['copy_number'] = df_cnv['copy_number'] - 2  # '0' becomes the normal value, no net-contribution
     df_cnv['cnv_min_max_diff'] = df_cnv['max_copy_number'] - df_cnv['min_copy_number'] # the bigger the diff, the higher the region instability
     df_cnv.drop(columns=['min_copy_number', 'max_copy_number'], inplace=True)
 
@@ -53,12 +53,7 @@ def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
 
     # nodes data integration
     print("\nAdding matches from protein.aliases.gene file to find gene Ensembl ids...")
-    ''' ## forse necessario, dipende se merge assegna valori di cnv a tutte le ripetizioni di gene_id associate a diversi protein_id
-    print("\nAdding matches from protein.aliases.gene file to find all coded proteins per gene...")
-    genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
-    # add all protein_ids associated to a gene as multiple rows
-    df_cnv = pd.merge(df_cnv, genes_mapping_df, how='left', on=['gene_name'])
-    '''
+
     genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
     df_cnv = pd.merge(df_cnv, genes_mapping_df.drop(columns='protein_id'), how='left', on=['gene_name'])
     df_cnv.dropna(inplace=True)  # only genes protein coding kept (not present in mapping file from STRING)
@@ -75,10 +70,7 @@ def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
         'cnv_min_max_diff': 'mean'
     }).reset_index()
 
-    # TODO forse tenere da parte i geni con CNV sballati ma non protein-coing e aggiungerli come nodi isolati?
-
-    print("\n--- %s seconds ---" % (time.time() - start_time))
-    print("\nPROCESSED CNV DATA\n")
+    print("\n--- %s seconds ---\n" % (time.time() - start_time))
 
     return df_cnv_grouped
 
