@@ -54,14 +54,12 @@ def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
 
     # nodes data integration
     print("Adding matches from protein.aliases.gene file to find gene Ensembl ids...")
-
     genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
     df_cnv = pd.merge(df_cnv, genes_mapping_df.drop(columns='protein_id'), how='left', on=['gene_name'])
     df_cnv.dropna(inplace=True)  # only genes protein coding kept (not present in mapping file from STRING)
     df_cnv.drop_duplicates(inplace=True)
     # if there are discrepancies, keep gene_id from file for correct mapping
-    df_cnv['gene_id'] = np.where(df_cnv['gene_id_x'] == df_cnv['gene_id_y'], df_cnv['gene_id_y'], df_cnv['gene_id_y'])
-    df_cnv.drop(columns=['gene_id_x', 'gene_id_y'], inplace=True)
+    df_cnv = df_cnv.rename(columns={'gene_id_y': 'gene_id'}).drop(columns='gene_id_x')
     df_cnv.reset_index(drop=True, inplace=True)
 
     print("Grouping by gene_id (mean) if more present...")

@@ -5,19 +5,26 @@ import PyWGCNA
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import extract_RNA_data
+
 RNA_DIR = "files/RNA"
-MAPPING_FILE = "files/clinical/file_case_mapping.tsv"
 SPLIT_FILE = "files/clinical/patient_split_cleaned.csv"
 OUTPUT_DIR = "weight_edges/RNA"
 
-TPM_THRESHOLD = 0.1
+TPM_THRESHOLD = 0.1 # extract_RNA_data.tpm_unstranded_threshold
 MIN_SAMPLE_FRACTION = 0.2
 TOP_N_GENES = 2000
 EDGE_THRESHOLD = 0.1
 
 sns.set_theme(style="white")
 
-file_mapping_df = pd.read_csv(MAPPING_FILE, sep="\t")
+# GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
+# file extracted using genes_proteins_aliases_ensg_mapping.py
+print("Reading protein-aliases-gene file...")
+genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
+genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
+
+file_mapping_df = pd.read_csv("files/clinical/file_case_mapping.tsv", sep="\t")
 split_df = pd.read_csv(SPLIT_FILE)
 
 train_case_ids = split_df.loc[
@@ -43,10 +50,18 @@ for _, row in rna_mapping.iterrows():
 
     df_rna = pd.read_csv(path, sep="\t", dtype=str, comment="#")
 
-    df_rna = df_rna[df_rna["gene_id"].str.startswith("ENSG")]
     df_rna = df_rna[df_rna["gene_type"] == "protein_coding"]
-
+    df_rna = df_rna[df_rna["gene_id"].str.startswith("ENSG")]
     df_rna["gene_id"] = df_rna["gene_id"].str.split(".", expand=True)[0]
+
+    # nodes data integration
+    print("Adding matches from protein.aliases.gene file to find all coded proteins per gene...")
+    # add all protein_ids associated to a gene as multiple rows
+    df_rna = pd.merge(df_rna, genes_mapping_df, how='left', on=['gene_name'])
+    df_rna.dropna(inplace=True)
+    df_rna = df_rna.rename(columns={'gene_id_y': 'gene_id'}).drop(columns='gene_id_x')
+    df_rna.reset_index(drop=True, inplace=True)
+
     df_rna["tpm_unstranded"] = df_rna["tpm_unstranded"].astype(float)
 
     df_rna = (

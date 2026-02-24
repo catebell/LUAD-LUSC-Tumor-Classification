@@ -13,7 +13,6 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 MANIFEST_FILE = "methylation_manifests/methylation_manifest450.tsv"
 STRING_EDGES_FILE = "downloaded_files/9606.protein.links.v12.0.txt"
-STRING_ALIASES_FILE = "downloaded_files/9606.protein.aliases.gene.tsv"
 
 MIN_PRESENCE = 0.6      # prima 0.8 → più inclusivo
 MIN_VARIANCE = 0        # rimosso filtro varianza
@@ -75,14 +74,16 @@ print("Gene_symbol × sample shape:", gene_matrix.shape)
 # 3️⃣ gene_symbol → ENSG
 # ===============================
 
-aliases_df = pd.read_csv(STRING_ALIASES_FILE, sep="\t", dtype=str)
-aliases_df = aliases_df[["alias", "gene_id"]].dropna()
-aliases_df = aliases_df[aliases_df["gene_id"].str.startswith("ENSG")]
+# GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
+# file extracted using genes_proteins_aliases_ensg_mapping.py
+print("Reading protein-aliases-gene file...")
+genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t', dtype=str)
+genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
 
 gene_matrix.index = gene_matrix.index.str.strip()
 
 gene_matrix = gene_matrix.reset_index().merge(
-    aliases_df,
+    genes_mapping_df,
     left_on="gene_symbol",
     right_on="alias",
     how="inner"

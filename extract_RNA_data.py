@@ -111,8 +111,7 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     # add all protein_ids associated to a gene as multiple rows
     df_rna = pd.merge(df_rna, genes_mapping_df, how='left', on=['gene_name'])
     df_rna.dropna(inplace=True)
-    df_rna['gene_id'] = np.where(df_rna['gene_id_x'] == df_rna['gene_id_y'], df_rna['gene_id_y'], df_rna['gene_id_y'])
-    df_rna.drop(columns=['gene_id_x', 'gene_id_y'], inplace=True)
+    df_rna = df_rna.rename(columns={'gene_id_y': 'gene_id'}).drop(columns='gene_id_x')
     df_rna.reset_index(drop=True, inplace=True)
     print("--> " + str(len(df_rna)) + " actual rows")
 

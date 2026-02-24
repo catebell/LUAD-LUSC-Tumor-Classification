@@ -44,6 +44,4 @@ class DSGAT_Classifier(nn.Module):
         combined = torch.cat([v_graph, v_clinical], dim=-1)    # [batch_size, 160]
 
         # Classification logits
-        logits = self.classifier(combined)                     # [batch_size, 2]
-
-        return logits
+        return self.classifier(combined)                     # [batch_size, 2]

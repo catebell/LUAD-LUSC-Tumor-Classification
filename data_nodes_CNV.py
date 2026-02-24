@@ -4,12 +4,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# --- Configurazioni ---
 CNV_DIR = "files/CNV"
 OUTPUT_DIR = "weight_edges/CNV"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-MAPPING_FILE = "files/clinical/file_case_mapping.tsv"
 SPLIT_FILE = "files/clinical/patient_split_cleaned.csv"
 
 STRING_EDGES_FILE = "downloaded_files/9606.protein.links.v12.0.txt"
@@ -21,8 +19,13 @@ MIN_SAMPLE_FRACTION = 0.2  # fraction di pazienti con CNV non nullo
 
 sns.set_theme(style="white")
 
-# --- Leggi mapping e split ---
-file_mapping_df = pd.read_csv(MAPPING_FILE, sep="\t")
+# GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
+# file extracted using genes_proteins_aliases_ensg_mapping.py
+print("Reading protein-aliases-gene file...")
+genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
+genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
+
+file_mapping_df = pd.read_csv("files/clinical/file_case_mapping.tsv", sep="\t")
 split_df = pd.read_csv(SPLIT_FILE)
 train_case_ids = split_df.loc[split_df["split"]=="train", "cases.case_id"].astype(str).unique()
 
@@ -31,7 +34,6 @@ cnv_mapping = file_mapping_df[(file_mapping_df["omic"]=="CNV") &
 
 print(f"\nTrain CNV samples found: {len(cnv_mapping)}")
 
-# --- Funzione per calcolare CNV_node ---
 def compute_CNV_node(row, k=k_diff):
     CN = row["copy_number"]
     CN_adj = CN if CN > 0 else 0.01
@@ -39,7 +41,6 @@ def compute_CNV_node(row, k=k_diff):
     diff_term = k if row["diff"] != 0 else 0
     return CN_log2 + diff_term
 
-# --- Leggi i file CNV e costruisci matrice ---
 cnv_dfs = []
 
 for _, row in cnv_mapping.iterrows():
@@ -54,6 +55,16 @@ for _, row in cnv_mapping.iterrows():
     df_cnv["min_copy_number"] = df_cnv["min_copy_number"].astype(float)
     df_cnv["max_copy_number"] = df_cnv["max_copy_number"].astype(float)
     df_cnv["gene_id"] = df_cnv["gene_id"].str.split(".", expand=True)[0]
+
+    # nodes data integration
+    print("Adding matches from protein.aliases.gene file to find gene Ensembl ids...")
+    genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
+    df_cnv = pd.merge(df_cnv, genes_mapping_df.drop(columns='protein_id'), how='left', on=['gene_name'])
+    df_cnv.dropna(inplace=True)  # only genes protein coding kept (not present in mapping file from STRING)
+    df_cnv.drop_duplicates(inplace=True)
+    # if there are discrepancies, keep gene_id from file for correct mapping
+    df_cnv = df_cnv.rename(columns={'gene_id_y': 'gene_id'}).drop(columns='gene_id_x')
+    df_cnv.reset_index(drop=True, inplace=True)
 
     df_gene = df_cnv.groupby("gene_id").agg({
         "copy_number":"mean",
