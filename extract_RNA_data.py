@@ -62,23 +62,23 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     df_rna.drop(df_rna[df_rna['gene_id'].str.startswith('ENSG') == False].index, inplace=True)  # drop metadata
     df_rna.dropna(inplace=True)
     df_rna.reset_index(inplace=True, drop=True)
-    print(str(len(df_rna)) + " rows\n")
+    print("--> " + str(len(df_rna)) + " rows")
 
     print("Removing non protein-coding genes...")
     df_rna.drop(df_rna[df_rna['gene_type'] != "protein_coding"].index, inplace=True)
     df_rna.drop('gene_type', axis=1, inplace=True)  # not useful anymore
-    print("--> " + str(len(df_rna)) + " actual rows\n")
+    print("--> " + str(len(df_rna)) + " actual rows")
 
     print("Removing genes with expression (tpm_unstranded) under " + str(tpm_unstranded_threshold) + "...")
     df_rna.drop(df_rna[df_rna['tpm_unstranded'].astype(float) < tpm_unstranded_threshold].index, inplace=True)
     df_rna.reset_index(inplace=True, drop=True)
-    print("--> " + str(len(df_rna)) + " actual rows\n")
+    print("--> " + str(len(df_rna)) + " actual rows")
 
     # remove gene_ids (Ensembl) version (ENSG00000000003.15 --> ENSG00000000003)
     df_rna['gene_id'] = df_rna.gene_id.str.split('.', expand=True)[0]
     # remove genes (names) version (AL627309.1 --> AL627309)
     df_rna['gene_name'] = df_rna.gene_name.str.split('.', expand=True)[0]
-    print("\nRNA df created, like:")
+    print("RNA df created, like:")
     print(str(df_rna.head(1)))
 
     # Retrieves only preferred protein_ids mapped to preferred STRING gene_name (we lose eventual aliases info)
@@ -106,7 +106,7 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     '''
 
     # nodes data integration
-    print("\nAdding matches from protein.aliases.gene file to find all coded proteins per gene...")
+    print("Adding matches from protein.aliases.gene file to find all coded proteins per gene...")
     genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
     # add all protein_ids associated to a gene as multiple rows
     df_rna = pd.merge(df_rna, genes_mapping_df, how='left', on=['gene_name'])
@@ -114,9 +114,9 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     df_rna['gene_id'] = np.where(df_rna['gene_id_x'] == df_rna['gene_id_y'], df_rna['gene_id_y'], df_rna['gene_id_y'])
     df_rna.drop(columns=['gene_id_x', 'gene_id_y'], inplace=True)
     df_rna.reset_index(drop=True, inplace=True)
-    print("--> " + str(len(df_rna)) + " actual rows\n")
+    print("--> " + str(len(df_rna)) + " actual rows")
 
-    print("\nRetrieving protein-protein interactions from file protein.links...")
+    print("Retrieving protein-protein interactions from file protein.links...")
     # retrieve only interactions between genes both present in df_rna. Both ways interactions (p1-->p2 and p2-->p1)
     network_df = protein_links_df[(protein_links_df['protein1'].isin(df_rna['protein_id'])) &
                                   (protein_links_df['protein2'].isin(df_rna['protein_id']))].copy()
@@ -129,7 +129,7 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     network_df['gene2'] = network_df['protein2'].map(prot_to_gene)
     network_df = network_df.dropna(subset=['gene1', 'gene2'])
 
-    print("Found " + str(len(network_df) / 2) + " bidirectional interactions.\n")
+    print("Found " + str(len(network_df) / 2) + " bidirectional protein interactions.")
 
     print("\n--- %s seconds ---\n" % (time.time() - start_time))
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
 
 # INFO UTILI
 
-# Motivzioni per tpm_unstranded_threshold:
+# Motivazioni per tpm_unstranded_threshold:
 '''
 Rilevanza Biologica: Un'interazione proteina-proteina può avvenire solo se entrambe le proteine sono presenti.
 Se il trascritto è a 0, la proteina non verrà prodotta, quindi l'interazione è fisicamente impossibile in quel contesto.

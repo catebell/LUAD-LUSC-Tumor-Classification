@@ -5,6 +5,8 @@ import pandas as pd
 import torch
 import torch_geometric
 import torch_geometric.transforms as T
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from torch_geometric.transforms import ToUndirected
 
 from extract_CNV_data import create_cnv_df
 from extract_RNA_data import create_rna_df
@@ -110,18 +112,24 @@ node_features_df = node_features_df.groupby('gene_id_mapped').agg({
     'meth_data_present': 'max'
 })
 
-from sklearn.preprocessing import StandardScaler
-scaler = StandardScaler()
-print(scaler.fit(node_features_df[features_cols]))
-print(scaler.mean_)
-print(scaler.transform(node_features_df[features_cols]))
-node_features_df[features_cols] = scaler.fit_transform(node_features_df[features_cols])
+node_features_df['tpm_unstranded'] = np.log1p(node_features_df['tpm_unstranded'])
 
 # interactions aggregation by genes
 edge_features_df = network_df.groupby(['gene1', 'gene2']).agg(avg_combined_score=('combined_score', 'mean'),
                                                               max_combined_score=('combined_score', 'max'),
                                                               num_protein_links=('combined_score', 'count')  # how many proteins of these 2 genes interacts
 ).reset_index()
+
+
+# no bidirectional edges, added later: here we remove duplicate pairs after sort (gene1 < gene2)
+edge_features_df[['gene1', 'gene2']] = np.sort(edge_features_df[['gene1', 'gene2']].values, axis=1)
+edge_features_df = edge_features_df.groupby(['gene1', 'gene2']).agg({'avg_combined_score': 'mean',
+                                                                    'max_combined_score': 'max',
+                                                                    'num_protein_links': 'mean'}).reset_index()
+
+# add correlations computed on omics in file merged_gene_matrix.tsv
+#omic_correlations_df = pd.read_csv('edge_weights/merged_gene_matrix.tsv', sep='\t')
+#edge_features_df = pd.merge(edge_features_df, omic_correlations_df, how='left', on=['gene1','gene2'])
 
 # not necessary for computation/classification, torch_geometric is enough
 '''
@@ -159,12 +167,26 @@ edge_attr = torch.tensor(edge_features_df[['avg_combined_score', 'max_combined_s
 data = torch_geometric.data.Data(x=x, edge_index=edge_index,
                                  edge_attr=edge_attr)  # graph of genes from patient 'case_id'
 
-# by default, Data is not undirected, but our df contains both edges directions;
-# if it's not the case, add ToUndirected() into T.Compose([])
-transform = T.Compose([T.AddSelfLoops(attr='edge_attr')])
+
+transform = T.Compose([T.AddSelfLoops(attr='edge_attr'), ToUndirected()])
 data = transform(data)
 
 print(data)
 
 print("\n--- %s seconds ---" % (time.time() - start_time))
 print("\nGRAPH FOR PATIENT %s CREATED\n" % case_id)
+
+
+scaler = StandardScaler()
+#print(scaler.fit(node_features_df[features_cols]))
+#print(scaler.mean_)
+#print(scaler.transform(node_features_df[features_cols]))
+print(scaler)
+
+# scaling
+cols_to_scale = ['tpm_unstranded', 'copy_number', 'cnv_min_max_diff', 'weighted_beta_value']
+node_features_df[cols_to_scale] = StandardScaler().fit_transform(node_features_df[cols_to_scale])
+
+cols_to_scale = ['num_protein_links']
+edge_features_df[cols_to_scale] = MinMaxScaler().fit_transform(edge_features_df[cols_to_scale])
+

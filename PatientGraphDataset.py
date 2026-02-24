@@ -7,7 +7,7 @@ import pandas as pd
 import torch_geometric
 from torch_geometric.data import Dataset
 import torch_geometric.transforms as T
-from sklearn.preprocessing import StandardScaler
+from torch_geometric.transforms import ToUndirected
 
 from extract_CNV_data import create_cnv_df
 from extract_RNA_data import create_rna_df
@@ -52,11 +52,9 @@ class PatientGraphDataset(Dataset):
         # map {case_id --> tumor class (LUAD-LUSC)}
         self.labels_dict = dict(zip(self.patients_features_df['cases.case_id'], self.patients_features_df['project.project_id']))
 
-        self.standard_transform = T.Compose([T.AddSelfLoops(attr='edge_attr')])
+        self.standard_transform = T.Compose([T.AddSelfLoops(attr='edge_attr'), ToUndirected()])
 
         self.ppi_score_threshold = 0.7  # minimum interaction probability score to create edges
-
-        self.scaler = StandardScaler()
 
         super(PatientGraphDataset, self).__init__(root, transform, pre_transform)
 
@@ -161,9 +159,7 @@ class PatientGraphDataset(Dataset):
             'meth_data_present': 'max'
         })
 
-        # scaling
-        features_to_scale = ['tpm_unstranded', 'copy_number', 'cnv_min_max_diff', 'weighted_beta_value']
-        node_features_df[features_to_scale] = self.scaler.fit_transform(node_features_df[features_to_scale])
+        node_features_df['tpm_unstranded'] = np.log1p(node_features_df['tpm_unstranded'])  # so not to have too different scales
 
         # interactions aggregation by genes
         edge_features_df = network_df.groupby(['gene1', 'gene2']).agg(avg_combined_score=('combined_score', 'mean'),
@@ -171,6 +167,12 @@ class PatientGraphDataset(Dataset):
                                                                       # how many proteins of these 2 genes interacts
                                                                       num_protein_links=('combined_score', 'count')
                                                                       ).reset_index()
+
+        # no bidirectional edges, added later: here we remove duplicate pairs after sort (gene1 < gene2)
+        edge_features_df[['gene1', 'gene2']] = np.sort(edge_features_df[['gene1', 'gene2']].values, axis=1)
+        edge_features_df = edge_features_df.groupby(['gene1', 'gene2']).agg({'avg_combined_score': 'mean',
+                                                                             'max_combined_score': 'max',
+                                                                             'num_protein_links': 'mean'}).reset_index()
 
         # we need to consider in x every possible gene, so the edge index will have the correct numbers (pos. in x = gene id)
         num_nodes = len(self.node_map)
