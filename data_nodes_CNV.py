@@ -57,7 +57,6 @@ for _, row in cnv_mapping.iterrows():
     df_cnv["gene_id"] = df_cnv["gene_id"].str.split(".", expand=True)[0]
 
     # nodes data integration
-    print("Adding matches from protein.aliases.gene file to find gene Ensembl ids...")
     df_cnv = pd.merge(df_cnv, genes_mapping_df.drop(columns='protein_id'), how='left', on=['gene_name'])
     df_cnv.dropna(inplace=True)  # only genes protein coding kept (not present in mapping file from STRING)
     df_cnv.drop_duplicates(inplace=True)

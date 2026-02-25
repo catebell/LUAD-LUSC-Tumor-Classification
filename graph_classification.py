@@ -1,3 +1,4 @@
+import pandas as pd
 import torch
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from torch_geometric.loader import DataLoader
@@ -9,7 +10,23 @@ from models.CancerGNN import CancerGNN
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-dataset = PatientGraphDataset(root='data_graphs_processed')  # dataset initialization; if not exists, it gets created
+file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
+patient_split_df = pd.read_csv('files/clinical/patient_split_cleaned.csv')
+
+file_mapping_df_train = file_mapping_df[file_mapping_df['case_id'].isin(
+    patient_split_df[patient_split_df['split'] == 'train']['cases.case_id'])]
+
+file_mapping_df_test = file_mapping_df[file_mapping_df['case_id'].isin(
+    patient_split_df[patient_split_df['split'] == 'test']['cases.case_id'])]
+
+file_mapping_df_val = file_mapping_df[file_mapping_df['case_id'].isin(
+    patient_split_df[patient_split_df['split'] == 'val']['cases.case_id'])]
+
+# dataset initialization; if not exists, it gets created
+train_dataset = PatientGraphDataset(root='data_graphs_processed_train', file_mapping_df=file_mapping_df_train)
+test_dataset = PatientGraphDataset(root='data_graphs_processed_test', file_mapping_df=file_mapping_df_test)
+val_dataset = PatientGraphDataset(root='data_graphs_processed_validation', file_mapping_df=file_mapping_df_val)
+
 node_feat_scaler = StandardScaler()
 edge_attr_scaler = MinMaxScaler()
 '''
@@ -31,12 +48,16 @@ print(f'Has self-loops: {dataset[0].has_self_loops()}')
 print(f'Is undirected: {dataset[0].is_undirected()}')
 '''
 
-# (80% train, 20% test)
+'''
+# manual split (80% train, 20% test)
 torch.manual_seed(12345)
 dataset = dataset.shuffle()
 train_dataset = dataset[:int(len(dataset) * 0.8)]
 test_dataset = dataset[int(len(dataset) * 0.8):]
 
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+'''
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 

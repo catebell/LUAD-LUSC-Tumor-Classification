@@ -18,12 +18,13 @@ pd.set_option('display.max_colwidth', None)
 
 
 class PatientGraphDataset(Dataset):
-    def __init__(self, root, transform=None, pre_transform=None):
+    def __init__(self, root, file_mapping_df: pd.DataFrame, transform=None, pre_transform=None):
         """
         Class for the LUAD/LUSC cancer patient graphs Dataset.
         :param root: directory where to save and retrieve processed data.
+        :param file_mapping_df: df of data portions to consider.
         """
-        self.file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
+        self.file_mapping_df = file_mapping_df
         self.patients_features_df = pd.read_csv('files/clinical/features.tsv', sep='\t')
 
         # case_id list
