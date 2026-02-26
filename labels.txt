@@ -190,6 +190,7 @@ CNV:
 
 Obtain Multi-omics graphs and save them as Dataset objects into data_graph_processed/:
     [multiomics_graph_creation.py, PatientGraphDataset.py]
+    - StandardScaler for numerical features
     h0 -> [num_nodes, 3]
         - Nodes = genes, features = [RNA, methylation, CNV]
         - Edges = biologic network (PPI, ...), features = [avg_combined_score, max_combined_score, num_protein_links]
@@ -261,12 +262,16 @@ VALIDATION (10%, 71 patients [32 LUAD, 39 LUSC]):
 TEST (20%, 142 patients [63 LUAD, 79 LUSC]):
     final_output = model(new_omics_data, new_clinical_data), compare
 
+-con/senza Scaling (StandardScaler per node features e MinMaxScaler per edge_features)
 TODO tests:
-- threshold RNA expression (0.7 per ora)
-- tpm_unstranded_threshold per valori di RNA
-- modifiche a 'copy_number' e 'cnv_min_max_diff'
+- threshold RNA expression (0.7 now)
+- tpm_unstranded_threshold per valori di RNA (1 now)
+- con e senza 'cnv_min_max_diff'
 - provare non facendo media pesata beta_values ma solo normale mean()
 - feature cliniche toglibili o meno
 - modalità di fare gli edge (aggiungere edge_attr Pearson/Spearman/Kendall)
-- rescale edge features per averle più bilanciate
 - k per combinare cnv e diff
+
+
+
+scp -r "C:\Users\Cate\PycharmProjects\BioinfoUtilsProject\graph_classification.py" cbelluti@ailb-login-02.ing.unimore.it:/work/ai4bio2025/LUAD_LUSC_classification/code

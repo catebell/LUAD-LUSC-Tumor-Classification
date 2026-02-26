@@ -4,6 +4,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from multiomics_graph_creation import ppi_score_threshold
+
 CNV_DIR = "files/CNV"
 OUTPUT_DIR = "weight_edges/CNV"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -11,6 +13,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 SPLIT_FILE = "files/clinical/patient_split_cleaned.csv"
 
 STRING_EDGES_FILE = "downloaded_files/9606.protein.links.v12.0.txt"
+
 STRING_ALIASES_FILE = "downloaded_files/9606.protein.aliases.gene.tsv"
 
 k_diff = 0.3
@@ -95,6 +98,7 @@ protein2gene = aliases_df[["protein_id", "gene_id"]].drop_duplicates()
 
 string_edges_df = pd.read_csv(STRING_EDGES_FILE, sep="\s+", dtype=str)
 string_edges_df["combined_score"] = string_edges_df["combined_score"].astype(float)
+string_edges_df.drop(string_edges_df[string_edges_df['combined_score'] < ppi_score_threshold].index, inplace=True)
 
 # --- Converti protein_id in gene_id ---
 string_edges_df = string_edges_df.merge(protein2gene, left_on="protein1", right_on="protein_id", how="left") \

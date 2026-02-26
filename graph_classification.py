@@ -29,7 +29,9 @@ val_dataset = PatientGraphDataset(root='data_graphs_processed_validation', file_
 
 node_feat_scaler = StandardScaler()
 edge_attr_scaler = MinMaxScaler()
-'''
+
+dataset = train_dataset
+
 print()
 print(f'Dataset: {dataset}:')
 print('====================')
@@ -46,18 +48,16 @@ print(f'Average node degree: {dataset[0].num_edges / dataset[0].num_nodes:.2f}')
 print(f'Has isolated nodes: {dataset[0].has_isolated_nodes()}')
 print(f'Has self-loops: {dataset[0].has_self_loops()}')
 print(f'Is undirected: {dataset[0].is_undirected()}')
-'''
+
 
 '''
-# manual split (80% train, 20% test)
+# manual split over whole dataset (80% train, 20% test)
 torch.manual_seed(12345)
 dataset = dataset.shuffle()
 train_dataset = dataset[:int(len(dataset) * 0.8)]
 test_dataset = dataset[int(len(dataset) * 0.8):]
-
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 '''
+
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 

@@ -62,10 +62,10 @@ def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     df_cnv = df_cnv.rename(columns={'gene_id_y': 'gene_id'}).drop(columns='gene_id_x')
     df_cnv.reset_index(drop=True, inplace=True)
 
-    print("Grouping by gene_id (mean) if more present...")
+    print("Grouping by gene_id (median) if more present...")
     df_cnv_grouped = df_cnv.groupby('gene_id').agg({
-        'copy_number': 'mean',
-        'cnv_min_max_diff': 'mean'
+        'copy_number': 'median',
+        'cnv_min_max_diff': 'max'
     }).reset_index()
     print("--> " + str(len(df_cnv)) + " actual rows")
 

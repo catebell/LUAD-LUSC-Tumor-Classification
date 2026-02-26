@@ -3,6 +3,8 @@ import glob
 import numpy as np
 import pandas as pd
 
+from multiomics_graph_creation import ppi_score_threshold
+
 # ===============================
 # CONFIGURAZIONE (meno restrittiva)
 # ===============================
@@ -116,8 +118,9 @@ gene_matrix = gene_matrix.apply(
 print("\nLoading STRING backbone...")
 
 string_edges_df = pd.read_csv(STRING_EDGES_FILE, sep="\s+", dtype=str)
+string_edges_df.drop(string_edges_df[string_edges_df['combined_score'] < ppi_score_threshold].index, inplace=True)
 
-protein2gene = pd.read_csv(STRING_ALIASES_FILE, sep="\t", dtype=str)
+protein2gene = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep="\t", dtype=str)
 protein2gene = protein2gene[["protein_id", "gene_id"]].dropna()
 protein2gene = protein2gene[protein2gene["gene_id"].str.startswith("ENSG")]
 
