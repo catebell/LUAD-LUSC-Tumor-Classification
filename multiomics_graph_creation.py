@@ -38,7 +38,7 @@ labels_dict = dict(zip(patients_features_df['cases.case_id'], patients_features_
 
 
 # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
-# file extracted using string_files_to_tsv.py --> create_protein_links()
+# file extracted using genes_proteins_aliases_ensg_mapping.py
 print("Reading protein-aliases-gene file...")
 genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
@@ -48,9 +48,13 @@ node_map = {node: i for i, node in enumerate(unique_nodes)}  # TODO maybe with a
 
 
 # PROTEINS LINKS
-# file extracted using string_files_to_tsv.py --> create_protein_aliases_gene()
-print("Getting protein-links...")
-protein_links_df = pd.read_csv('downloaded_files/9606.protein.links.v12.0.tsv', sep='\t')
+# file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
+# --> 9606.protein.links file under INTERACTION DATA, place the .txt extracted into original_dataset/
+print("Reading protein-links file...")
+protein_links_df = pd.read_csv('downloaded_files/9606.protein.links.v12.0.txt', sep=' ')
+
+# refactor the score in a [0-1] interval, like returned by stringdb.get_network()
+protein_links_df['combined_score'] = protein_links_df['combined_score'] / 1000
 
 print("Dropping interactions with combined probability score lower than " + str(ppi_score_threshold) + "...")
 # filter based on score (probability of interacting)

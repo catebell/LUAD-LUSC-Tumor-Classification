@@ -11,7 +11,7 @@ def main():
     example_case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb'
 
     # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
-    # file extracted using string_files_to_tsv.py --> create_protein_links()
+    # file extracted using genes_proteins_aliases_ensg_mapping.py
     print("Reading protein-aliases-gene file...")
     genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
