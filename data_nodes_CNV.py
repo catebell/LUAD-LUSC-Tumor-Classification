@@ -12,7 +12,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 SPLIT_FILE = "files/clinical/patient_split_cleaned.csv"
 
-STRING_EDGES_FILE = "downloaded_files/9606.protein.links.v12.0.txt"
+STRING_EDGES_FILE = "downloaded_files/9606.protein.links.v12.0.tsv"
 
 STRING_ALIASES_FILE = "downloaded_files/9606.protein.aliases.gene.tsv"
 
@@ -23,7 +23,7 @@ MIN_SAMPLE_FRACTION = 0.2  # fraction di pazienti con CNV non nullo
 sns.set_theme(style="white")
 
 # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
-# file extracted using genes_proteins_aliases_ensg_mapping.py
+# file extracted using string_files_to_tsv.py --> create_protein_aliases_gene()
 print("Reading protein-aliases-gene file...")
 genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
@@ -96,7 +96,7 @@ cnv_matrix.to_csv(os.path.join(OUTPUT_DIR, "CNV_node_matrix_filtered.tsv"), sep=
 aliases_df = pd.read_csv(STRING_ALIASES_FILE, sep="\t", dtype=str)
 protein2gene = aliases_df[["protein_id", "gene_id"]].drop_duplicates()
 
-string_edges_df = pd.read_csv(STRING_EDGES_FILE, sep="\s+", dtype=str)
+string_edges_df = pd.read_csv(STRING_EDGES_FILE, sep="\t", dtype=str)
 string_edges_df["combined_score"] = string_edges_df["combined_score"].astype(float)
 string_edges_df.drop(string_edges_df[string_edges_df['combined_score'] < ppi_score_threshold].index, inplace=True)
 

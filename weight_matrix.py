@@ -4,8 +4,8 @@ import pandas as pd
 # 1. Carica i file
 # --------------------------------------------------
 protein_links = pd.read_csv(
-    "downloaded_files/9606.protein.links.v12.0.txt",
-    sep=" ", header=0
+    "downloaded_files/9606.protein.links.v12.0.tsv",
+    sep="\t", header=0
 )
 
 protein_aliases = pd.read_csv(
@@ -14,12 +14,12 @@ protein_aliases = pd.read_csv(
 )
 
 cnv_edges = pd.read_csv(
-    "weight_edges/CNV/CNV_edges_spearman_for_STRING.tsv",
+    "edge_weights/CNV_edges_spearman_for_STRING.tsv",
     sep="\t", header=0
 )
 
 methylation_edges = pd.read_csv(
-    "weight_edges/methylation/methylation_edges_spearman2_for_STRING.tsv",
+    "edge_weights/methylation_edges_spearman2_for_STRING.tsv",
     sep="\t", header=0
 )
 
@@ -64,6 +64,7 @@ protein_links = protein_links[
 # --------------------------------------------------
 # 4. Aggrega per coppia di geni
 # --------------------------------------------------
+
 protein_links_agg = (
     protein_links
     .groupby(['gene1', 'gene2'], as_index=False)
@@ -88,9 +89,7 @@ methylation_edges = make_undirected(methylation_edges)
 # 6. Rinominare colonne peso
 # --------------------------------------------------
 cnv_edges = cnv_edges.rename(columns={'weight': 'cnv_weight'})
-methylation_edges = methylation_edges.rename(
-    columns={'weight': 'methylation_weight'}
-)
+methylation_edges = methylation_edges.rename(columns={'weight': 'methylation_weight'})
 
 # --------------------------------------------------
 # 7. Merge (STRING come base)
