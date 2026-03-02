@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import stringdb
 import time
 
 pd.set_option('display.max_colwidth', None)
@@ -85,6 +84,8 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     # Might be fine for RNA data, but for other omics a lot of genes get grouped as one, and eventual multiple proteins
     # are not retrieved by the string function alone. Moreover, it's a bottleneck operation.
     '''
+    import stringdb
+
     #genes = ['TP53', 'BRCA1', 'FANCD1', 'FANCL']  # example
     genes = list(df_rna['gene_name'].astype(str))
 

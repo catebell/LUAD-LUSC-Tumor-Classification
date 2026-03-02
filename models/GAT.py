@@ -1,47 +1,21 @@
-from DSGAT import DSGAT_GraphBranch
-import torch.nn as nn
-from MLP_clinical import ClinicalMLP
 import torch
+from torch_geometric.nn import GATv2Conv, global_mean_pool
 
-class DSGAT_Classifier(nn.Module):
-    """
-    Full multimodal classifier:
-    - Graph branch (GAT-based)
-    - Clinical MLP branch
-    - Final fusion classifier
-    """
+# GATv2Conv: https://pytorch-geometric.readthedocs.io/en/2.7.0/generated/torch_geometric.nn.conv.GATv2Conv.html
 
-    def __init__(self, omic_in_channels, clinical_input_dim, hidden_channels):
-        super().__init__()
 
-        self.graph_branch = DSGAT_GraphBranch(
-            omic_in_channels,
-            hidden_channels
-        )
+class GAT(torch.nn.Module):
+    def __init__(self, num_node_features, num_classes, num_edge_features, hidden_channels):
+        super(GAT, self).__init__()
+        self.conv1 = GATv2Conv(in_channels=num_node_features, out_channels=hidden_channels, edge_dim=num_edge_features,
+                               heads=1)
+        self.classifier = torch.nn.Linear(hidden_channels, num_classes)  # LUAD vs LUSC
 
-        # Clinical feature encoder
-        self.clinical_branch = ClinicalMLP(clinical_input_dim)
+    def forward(self, x, edge_index, edge_attr, batch):
+        x = self.conv1(x, edge_index, edge_attr=edge_attr)
+        x = x.relu()
 
-        # Final classifier after feature fusion
-        self.classifier = nn.Sequential(
-            nn.Linear(128 + 32, 64),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Linear(32, 2)
-        )
+        x = global_mean_pool(x, batch)  # graph to single vector per patient
 
-    def forward(self, x, edge_index, batch, clinical_data):
-
-        # Graph-level representation
-        v_graph = self.graph_branch(x, edge_index, batch)      # [batch_size, 128]
-
-        # Clinical representation
-        v_clinical = self.clinical_branch(clinical_data)       # [batch_size, 32]
-
-        # Feature fusion
-        combined = torch.cat([v_graph, v_clinical], dim=-1)    # [batch_size, 160]
-
-        # Classification logits
-        return self.classifier(combined)                     # [batch_size, 2]
+        x = torch.nn.functional.dropout(x, p=0.5, training=self.training)
+        return self.classifier(x)

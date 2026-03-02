@@ -14,12 +14,12 @@ protein_aliases = pd.read_csv(
 )
 
 cnv_edges = pd.read_csv(
-    "weight_edges/CNV/CNV_edges_spearman_for_STRING.tsv",
+    "edge_weights/CNV_edges_spearman_for_STRING.tsv",
     sep="\t", header=0
 )
 
 methylation_edges = pd.read_csv(
-    "weight_edges/methylation/methylation_edges_spearman2_for_STRING.tsv",
+    "edge_weights/methylation_edges_spearman2_for_STRING.tsv",
     sep="\t", header=0
 )
 
@@ -88,9 +88,7 @@ methylation_edges = make_undirected(methylation_edges)
 # 6. Rinominare colonne peso
 # --------------------------------------------------
 cnv_edges = cnv_edges.rename(columns={'weight': 'cnv_weight'})
-methylation_edges = methylation_edges.rename(
-    columns={'weight': 'methylation_weight'}
-)
+methylation_edges = methylation_edges.rename(columns={'weight': 'methylation_weight'})
 
 # --------------------------------------------------
 # 7. Merge (STRING come base)

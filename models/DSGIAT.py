@@ -44,6 +44,7 @@ class DSGIAT_GraphBranch(nn.Module):
         graph_embedding = global_mean_pool(combined, batch)  # [batch_size, jk_dim]
         return self.post_pool_mlp(graph_embedding)  # [batch_size, 128]
 
+
 class DSGIAT_Classifier(nn.Module):
     """
     Full multimodal classifier
@@ -65,5 +66,4 @@ class DSGIAT_Classifier(nn.Module):
         v_graph = self.graph_branch(x, edge_index, batch)      # [batch_size, 128]
         v_clinical = self.clinical_branch(clinical_data)       # [batch_size, 32]
         combined = torch.cat([v_graph, v_clinical], dim=-1)    # [batch_size, 160]
-        logits = self.classifier(combined)                     # [batch_size, 2]
-        return logits
+        return self.classifier(combined)                     # [batch_size, 2]
