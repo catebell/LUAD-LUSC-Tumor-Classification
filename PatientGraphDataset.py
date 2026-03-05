@@ -9,10 +9,6 @@ from torch_geometric.data import Dataset
 import torch_geometric.transforms as T
 from torch_geometric.transforms import ToUndirected
 
-from extract_CNV_data import create_cnv_df
-from extract_RNA_data import create_rna_df
-from extract_methylation_data import create_meth_df
-
 
 pd.set_option('display.max_colwidth', None)
 
@@ -33,17 +29,7 @@ class PatientGraphDataset(Dataset):
         # drop patient with incorrect number if omic files (should be 3)
         self.patient_list.drop(self.patient_list[self.patient_list['num_omics_present'] != 3].index, inplace=True)
         self.patient_list = self.patient_list['case_id'].to_list()
-
-        # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
-        # file extracted using genes_proteins_aliases_ensg_mapping.py
-        self.genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')  # proteins-genes mapping df
-
-        # unique genes_ids mapping to numerical index
-        unique_nodes = self.genes_mapping_df['gene_id'].unique()
-        node_map = {node: i for i, node in enumerate(
-            unique_nodes)}  # TODO maybe with a LabelEncoder (https://stackoverflow.com/questions/44617871/how-to-convert-a-list-of-strings-into-a-tensor-in-pytorch)
-        self.node_map = node_map  # global dictionary for Gene_ID -> Index mapping
-
+        self.node_map = pd.read_csv('downloaded_files/gene_ids_mapped.tsv', sep='\t')
 
         mapping_project_id = {
             'TCGA-LUAD': 0,
@@ -85,7 +71,16 @@ class PatientGraphDataset(Dataset):
 
     def process(self):
         # Single execution to convert everything in .pt
+        from extract_CNV_data import create_cnv_df
+        from extract_RNA_data import create_rna_df
+        from extract_methylation_data import create_meth_df
+
         start_time = time.time()
+
+        # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
+        # file extracted using string_files_to_tsv.py --> create_protein_links()
+        genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv',
+                                            sep='\t')  # proteins-genes mapping df
 
         # PROTEINS LINKS
         # file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
@@ -110,14 +105,14 @@ class PatientGraphDataset(Dataset):
 
 
         for case_id in self.patient_list:
-            df_rna, network_df = create_rna_df(case_id, self.file_mapping_df, self.genes_mapping_df, protein_links_df)
+            df_rna, network_df = create_rna_df(case_id, self.file_mapping_df, genes_mapping_df, protein_links_df)
             df_rna['gene_id_mapped'] = df_rna['gene_id'].map(self.node_map)
 
-            df_cnv = create_cnv_df(case_id, self.file_mapping_df, self.genes_mapping_df)
+            df_cnv = create_cnv_df(case_id, self.file_mapping_df, genes_mapping_df)
 
             node_features_df = pd.merge(df_rna, df_cnv, how='left', on=['gene_id'])
 
-            df_meth = create_meth_df(case_id, self.file_mapping_df, self.genes_mapping_df, meth_manifest_df)
+            df_meth = create_meth_df(case_id, self.file_mapping_df, genes_mapping_df, meth_manifest_df)
             node_features_df = pd.merge(node_features_df, df_meth, how='left', on=['gene_id'])
 
             node_features_df[['copy_number', 'cnv_min_max_diff', 'weighted_beta_value']] = node_features_df[
@@ -128,7 +123,7 @@ class PatientGraphDataset(Dataset):
 
             data = self._create_graph(node_features_df, network_df)
 
-            data.y = torch.tensor([self.labels_dict[case_id]], dtype=torch.long)
+            data.y = torch.tensor([self.labels_dict[case_id]], dtype=torch.int)
 
             data = self.standard_transform(data)
             torch.save(data, os.path.join(self.processed_dir, f'data_{case_id}.pt'))
@@ -184,7 +179,7 @@ class PatientGraphDataset(Dataset):
 
         edge_index = torch.as_tensor(np.stack([
             edge_features_df['gene1'].map(self.node_map).values, edge_features_df['gene2'].map(self.node_map).values
-        ]), dtype=torch.long)
+        ]), dtype=torch.int64)
         edge_attr = torch.tensor(
             edge_features_df[['avg_combined_score', 'max_combined_score', 'num_protein_links']].values,
             dtype=torch.float)

@@ -23,6 +23,9 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 logging.info("Device: " + str(device))
 torch.cuda.empty_cache()
 
+model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
+#model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
+
 file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
 patient_split_df = pd.read_csv('files/clinical/patient_split_cleaned.csv')
 
@@ -98,10 +101,6 @@ for step, data in enumerate(train_loader):
 '''
 
 # train loop
-
-model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
-#model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
-
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)  # lr = Learning Rate
 
 # different weights to classes based on number of samples

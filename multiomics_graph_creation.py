@@ -47,7 +47,7 @@ patients_features_df['project.project_id'] = patients_features_df['project.proje
 labels_dict = dict(zip(patients_features_df['cases.case_id'], patients_features_df['project.project_id']))
 
 # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
-# file extracted using genes_proteins_aliases_ensg_mapping.py
+# file extracted using create_tsv_from_STRING_files.create_gene_aliases_proteins_ids_mapping_file()
 logging.info("Reading protein-aliases-gene file...")
 genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
