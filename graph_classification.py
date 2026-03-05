@@ -38,13 +38,17 @@ file_mapping_df_test = file_mapping_df[file_mapping_df['case_id'].isin(
 file_mapping_df_val = file_mapping_df[file_mapping_df['case_id'].isin(
     patient_split_df[patient_split_df['split'] == 'val']['cases.case_id'])]
 
+
+node_map_df = pd.read_csv('downloaded_files/gene_ids_mapped.tsv', sep='\t')
+node_map = dict(zip(node_map_df.gene_id, node_map_df.gene_id_mapped))
+
 # dataset initialization; if not exists, it gets created
 logging.info("Train Dataset init...")
-train_dataset = PatientGraphDataset(root='data_graphs_processed_train', file_mapping_df=file_mapping_df_train)
+train_dataset = PatientGraphDataset(root='data_graphs_processed_train', file_mapping_df=file_mapping_df_train, node_map=node_map)
 logging.info("Test Dataset init...")
-test_dataset = PatientGraphDataset(root='data_graphs_processed_test', file_mapping_df=file_mapping_df_test)
+test_dataset = PatientGraphDataset(root='data_graphs_processed_test', file_mapping_df=file_mapping_df_test, node_map=node_map)
 logging.info("Val Dataset init...")
-val_dataset = PatientGraphDataset(root='data_graphs_processed_validation', file_mapping_df=file_mapping_df_val)
+val_dataset = PatientGraphDataset(root='data_graphs_processed_validation', file_mapping_df=file_mapping_df_val, node_map=node_map)
 
 node_feat_scaler = StandardScaler()
 edge_attr_scaler = MinMaxScaler()

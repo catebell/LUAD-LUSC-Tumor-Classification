@@ -14,7 +14,7 @@ pd.set_option('display.max_colwidth', None)
 
 
 class PatientGraphDataset(Dataset):
-    def __init__(self, root, file_mapping_df: pd.DataFrame, transform=None, pre_transform=None):
+    def __init__(self, root, file_mapping_df: pd.DataFrame, node_map: dict, transform=None, pre_transform=None):
         """
         Class for the LUAD/LUSC cancer patient graphs Dataset.
         :param root: directory where to save and retrieve processed data.
@@ -29,7 +29,7 @@ class PatientGraphDataset(Dataset):
         # drop patient with incorrect number if omic files (should be 3)
         self.patient_list.drop(self.patient_list[self.patient_list['num_omics_present'] != 3].index, inplace=True)
         self.patient_list = self.patient_list['case_id'].to_list()
-        self.node_map = pd.read_csv('downloaded_files/gene_ids_mapped.tsv', sep='\t')
+        self.node_map = node_map
 
         mapping_project_id = {
             'TCGA-LUAD': 0,
