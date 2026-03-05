@@ -1,3 +1,4 @@
+import logging
 import time
 
 import numpy as np
@@ -24,6 +25,15 @@ pd.set_option('display.max_colwidth', None)
 
 start_time = time.time()
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('execution.log', mode='w'),
+        logging.StreamHandler()
+    ]
+)
+
 ppi_score_threshold = 0.7  # minimum interaction probability score to create edges
 
 file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
@@ -36,10 +46,9 @@ patients_features_df['project.project_id'] = patients_features_df['project.proje
 # map {case_id --> tumor class (LUAD-LUSC)}
 labels_dict = dict(zip(patients_features_df['cases.case_id'], patients_features_df['project.project_id']))
 
-
 # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
 # file extracted using genes_proteins_aliases_ensg_mapping.py
-print("Reading protein-aliases-gene file...")
+logging.info("Reading protein-aliases-gene file...")
 genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
 # unique genes_ids mapping to numerical index
@@ -50,20 +59,20 @@ node_map = {node: i for i, node in enumerate(unique_nodes)}  # TODO maybe with a
 # PROTEINS LINKS
 # file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
 # --> 9606.protein.links file under INTERACTION DATA, place the .txt extracted into original_dataset/
-print("Reading protein-links file...")
+logging.info("Reading protein-links file...")
 protein_links_df = pd.read_csv('downloaded_files/9606.protein.links.v12.0.txt', sep=' ')
 
 # refactor the score in a [0-1] interval, like returned by stringdb.get_network()
 protein_links_df['combined_score'] = protein_links_df['combined_score'] / 1000
 
-print("Dropping interactions with combined probability score lower than " + str(ppi_score_threshold) + "...")
+logging.info("Dropping interactions with combined probability score lower than " + str(ppi_score_threshold) + "...")
 # filter based on score (probability of interacting)
 protein_links_df.drop(protein_links_df[protein_links_df['combined_score'] < ppi_score_threshold].index, inplace=True)
 protein_links_df.reset_index(inplace=True, drop=True)
 
 
 # METHYLATION ILLUMINA MANIFEST FOR CpG-GENE MAPPING
-print("Reading Illumina manifest...")
+logging.info("Reading Illumina manifest...")
 # file downloaded from https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html
 # place .csv file into methylation_manifests/originals, then run methylation_manifest_to_tsv.py
 meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
@@ -148,7 +157,7 @@ df_nodes_features.set_index('gene_id', inplace=True)
 G.add_nodes_from((n, dict(d)) for n, d in df_nodes_features.iterrows())
 '''
 
-print("Creating torch_geometric.data.Data graph...")
+logging.info("Creating torch_geometric.data.Data graph...")
 
 # data = torch_geometric.utils.from_networkx(G)  # TOO SLOW, INTERNAL CONVERSION TO TENSORS IS BOTTLENECK
 
@@ -171,10 +180,10 @@ data = torch_geometric.data.Data(x=x, edge_index=edge_index,
 transform = T.Compose([T.AddSelfLoops(attr='edge_attr'), ToUndirected()])
 data = transform(data)
 
-print(data)
+logging.info(data)
 
 print("\n--- %s seconds ---" % (time.time() - start_time))
-print("\nGRAPH FOR PATIENT %s CREATED\n" % case_id)
+logging.info("\nGRAPH FOR PATIENT %s CREATED\n" % case_id)
 
 
 scaler = StandardScaler()

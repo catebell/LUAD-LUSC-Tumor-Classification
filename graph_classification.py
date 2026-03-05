@@ -7,9 +7,8 @@ from torch_geometric.loader import DataLoader
 from collections import Counter
 
 from PatientGraphDataset import PatientGraphDataset
-from models.GAT import GAT
-from models.GNN import GNN
 from models.CancerGNN import CancerGNN
+from models.GAT import GAT
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,6 +21,7 @@ logging.basicConfig(
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 logging.info("Device: " + str(device))
+torch.cuda.empty_cache()
 
 file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
 patient_split_df = pd.read_csv('files/clinical/patient_split_cleaned.csv')
@@ -74,8 +74,9 @@ train_dataset = dataset[:int(len(dataset) * 0.8)]
 test_dataset = dataset[int(len(dataset) * 0.8):]
 '''
 
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
+val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
 
 # scalers fitted only o n test data
 for graph in train_loader:
@@ -85,8 +86,8 @@ for graph in train_loader:
 # to make things faster by applying scaler transformations manually:
 x_mean = torch.tensor(node_feat_scaler.mean_, dtype=torch.float, device=device)
 x_std = torch.tensor(node_feat_scaler.scale_, dtype=torch.float, device=device)
-e_min = torch.tensor(edge_attr_scaler.data_min_, dtype=torch.float).to(device)
-e_max = torch.tensor(edge_attr_scaler.data_max_, dtype=torch.float).to(device)
+e_min = torch.tensor(edge_attr_scaler.data_min_, dtype=torch.float, device=device)
+e_max = torch.tensor(edge_attr_scaler.data_max_, dtype=torch.float, device=device)
 
 '''
 for step, data in enumerate(train_loader):
@@ -98,7 +99,6 @@ for step, data in enumerate(train_loader):
 
 # train loop
 
-#model = GNN(num_node_features=5, num_classes=2, hidden_channels=64).to(device)
 model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
 #model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
 
@@ -120,30 +120,50 @@ logging.info(model)
 def train():
     model.train()
     total_loss = 0
+    accumulation_steps = 4  #batches to accumulate before update
+    i = 0
 
+    model.zero_grad()
     for data in train_loader:  # Iterate in batches over the training dataset.
         data = data.to(device)
-
         # .transform() works with numpy, library on GPU (not CUDA-efficient)
         #data.x[:, :4] = torch.tensor(node_feat_scaler.transform(data.x[:, :4].numpy())).to(device)
-        #data.edge_attr[:,2:] = torch.tensor(edge_attr_scaler.transform(data.edge_attr[:,2].numpy().reshape(-1,1))).to(device)
+        #data.edge_attr[:,2] = torch.tensor(edge_attr_scaler.transform(data.edge_attr[:,2].numpy().reshape(-1,1))).to(device)
 
         # StandardScale: (x - mean) / std
         data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
         # MinMaxScaler: (x - min) / (max - min)
-        data.edge_attr[:,2:] = (data.edge_attr[:,2:] - e_min) / (e_max - e_min + 1e-6)
+        data.edge_attr[:,2] = (data.edge_attr[:,2] - e_min) / (e_max - e_min + 1e-6)
 
         # perform a single forward pass
-        #out = model(data.x, data.edge_index, data.batch)
         out = model(data.x, data.edge_index, data.edge_attr, data.batch)
-        #out = model(data.x, data.edge_index, data.edge_attr, data.batch)
 
         partial_loss = criterion(out, data.y)  # Compute the loss.
-        partial_loss.backward()  # Derive gradients.
-        optimizer.step()  # Update parameters based on gradients.
-        optimizer.zero_grad()  # Clear gradients.
+        scaled_loss = partial_loss / accumulation_steps
+        scaled_loss.backward()  # Derive gradients.
+
+        if (i+1) % accumulation_steps == 0:
+            optimizer.step()  # Update parameters based on gradients.
+            optimizer.zero_grad()  # Clear gradients.
+
         total_loss += partial_loss.item() * data.num_graphs
+        i = i + 1
     return total_loss / len(train_dataset)
+
+
+def validate():
+    model.eval()
+    total_loss = 0
+    for data in val_loader:
+        data = data.to(device)
+        data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
+        data.edge_attr[:, 2] = (data.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
+
+        with torch.no_grad():
+            out = model(data.x, data.edge_index, data.edge_attr, data.batch)
+            partial_loss = criterion(out, data.y)
+            total_loss += partial_loss.item() * data.num_graphs
+    return total_loss / len(val_dataset)
 
 
 def test(loader):
@@ -157,23 +177,33 @@ def test(loader):
          #data.x[:, :4] = torch.tensor(node_feat_scaler.transform(data.x[:, :4].cpu().numpy())).to(device)
          #data.edge_attr[:, 2:] = torch.tensor(edge_attr_scaler.transform(data.edge_attr[:, 2].cpu().numpy().reshape(-1,1))).to(device)
 
-         # StandardScale: (x - mean) / std
          data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
-         # MinMaxScaler: (x - min) / (max - min)
-         data.edge_attr[:, 2:] = (data.edge_attr[:, 2:] - e_min) / (e_max - e_min + 1e-6)
+         data.edge_attr[:, 2] = (data.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
-         #out = model(data.x, data.edge_index, data.batch)
          out = model(data.x, data.edge_index, data.edge_attr, data.batch)
-         #out = model(data.x, data.edge_index, data.edge_attr, data.batch)
 
          pred = out.argmax(dim=1)  # Use the class with the highest probability.
          correct += int((pred == data.y).sum())  # Check against ground-truth labels.
      return correct / len(loader.dataset)  # Derive ratio of correct predictions.
 
 
-for epoch in range(1, 101):
-    loss = train()
+best_val_loss = float('inf')
+
+for epoch in range(1, 21):
+    train_loss = train()
+    val_loss = validate()
+
     train_acc = test(train_loader)
+    val_acc = test(val_loader)
     test_acc = test(test_loader)
-    logging.info(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
+    logging.info(f'Epoch: {epoch:03d}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, Train Acc: {train_acc:.4f},'
+                 f' Val Acc: {val_acc:.4f}, Test Acc: {test_acc:.4f}')
+
+
+    #save best model based on Val Loss
+    if val_loss < best_val_loss:
+        best_val_loss = val_loss
+        torch.save(model.state_dict(), 'best_classification_gnn.pth')
+        logging.info("--- Found and saved a better model! ---")
+
 

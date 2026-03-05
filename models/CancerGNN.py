@@ -20,6 +20,7 @@ class CancerGNN(torch.nn.Module):
         x = F.dropout(x, p=0.5, training=self.training)
         return self.classifier(x)
 
+# TODO F.dropout(x, p=0.5, training=self.training) tra i layer del modello.
 
 '''  # nice ma non usare senza GPU
 class CancerGNN(torch.nn.Module):
@@ -59,44 +60,5 @@ class CancerGNN(torch.nn.Module):
         x = F.relu(x + h)  # Residual connection
 
         x = global_mean_pool(x, batch)
-        return self.classifier(x)
-'''
-
-'''  # too slow, couldn't try, no senza GPU
-import torch
-from torch_geometric.nn import GINEConv, global_mean_pool
-import torch.nn.functional as F
-
-
-class CancerGNN(torch.nn.Module):
-    def __init__(self, num_node_features, num_edge_features, hidden_channels):
-        super(CancerGNN, self).__init__()
-        # GINEConv needs an MLP
-        nn1 = torch.nn.Sequential(torch.nn.Linear(num_node_features, hidden_channels), torch.nn.ReLU())
-        nn2 = torch.nn.Sequential(torch.nn.Linear(hidden_channels, hidden_channels), torch.nn.ReLU())
-        self.conv1 = GINEConv(nn1, edge_dim=num_edge_features)
-        self.conv2 = GINEConv(nn2, edge_dim=num_edge_features)
-        #self.conv3 = GINEConv(nn2, edge_dim=num_edge_features)
-        s
-        elf.classifier = torch.nn.Linear(hidden_channels, 2)  # LUAD vs LUSC    
-    
-        x = self.conv3(x, edge_index, edge_attr=edge_attr)
-        x = F.relu(x)
-
-        x = global_mean_pool(x, batch)  # graph transformed in a vector per patient
-
-        return self.classifier(x)
-        
-    def forward(self, x, edge_index, edge_attr, batch):
-        x = self.conv1(x, edge_index, edge_attr=edge_attr)
-        x = F.relu(x)
-        x = self.conv2(x, edge_index, edge_attr=edge_attr)
-        x = F.relu(x)
-        #x = self.conv3(x, edge_index, edge_attr=edge_attr)
-        #x = F.relu(x)
-
-        x = global_mean_pool(x, batch)  # graph to single vector per patient
-
-        x = F.dropout(x, p=0.5, training=self.training)
         return self.classifier(x)
 '''
