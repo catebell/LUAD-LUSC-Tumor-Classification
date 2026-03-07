@@ -1,7 +1,7 @@
 import torch
 from torch_geometric.nn import GINEConv, global_mean_pool, BatchNorm
 import torch.nn.functional as F
-
+'''
 class CancerGNN(torch.nn.Module):
     def __init__(self, num_node_features, num_edge_features, hidden_channels):
         super(CancerGNN, self).__init__()
@@ -19,10 +19,9 @@ class CancerGNN(torch.nn.Module):
 
         x = F.dropout(x, p=0.5, training=self.training)
         return self.classifier(x)
+'''
 
-# TODO F.dropout(x, p=0.5, training=self.training) tra i layer del modello.
-
-'''  # nice ma non usare senza GPU
+ # nice ma non usare senza GPU
 class CancerGNN(torch.nn.Module):
     def __init__(self, num_node_features, num_edge_features, hidden_channels):
         super(CancerGNN, self).__init__()
@@ -61,4 +60,4 @@ class CancerGNN(torch.nn.Module):
 
         x = global_mean_pool(x, batch)
         return self.classifier(x)
-'''
+

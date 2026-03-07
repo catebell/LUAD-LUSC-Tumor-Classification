@@ -23,8 +23,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 logging.info("Device: " + str(device))
 torch.cuda.empty_cache()
 
-model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
-#model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
+#model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
+model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
 
 file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
 patient_split_df = pd.read_csv('files/clinical/patient_split_cleaned.csv')
@@ -123,8 +123,6 @@ logging.info(model)
 def train():
     model.train()
     total_loss = 0
-    accumulation_steps = 4  #batches to accumulate before update
-    i = 0
 
     model.zero_grad()
     for data in train_loader:  # Iterate in batches over the training dataset.
@@ -142,15 +140,13 @@ def train():
         out = model(data.x, data.edge_index, data.edge_attr, data.batch)
 
         partial_loss = criterion(out, data.y)  # Compute the loss.
-        scaled_loss = partial_loss / accumulation_steps
+        scaled_loss = partial_loss
         scaled_loss.backward()  # Derive gradients.
 
-        if (i+1) % accumulation_steps == 0:
-            optimizer.step()  # Update parameters based on gradients.
-            optimizer.zero_grad()  # Clear gradients.
+        optimizer.step()  # Update parameters based on gradients.
+        optimizer.zero_grad()  # Clear gradients.
 
         total_loss += partial_loss.item() * data.num_graphs
-        i = i + 1
     return total_loss / len(train_dataset)
 
 

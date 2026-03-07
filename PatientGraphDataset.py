@@ -21,6 +21,8 @@ class PatientGraphDataset(Dataset):
         :param file_mapping_df: df of data portions to consider.
         """
         self.file_mapping_df = file_mapping_df
+        self.node_map = node_map
+
         self.patients_features_df = pd.read_csv('files/clinical/features.tsv', sep='\t')
 
         # case_id list
@@ -29,7 +31,6 @@ class PatientGraphDataset(Dataset):
         # drop patient with incorrect number if omic files (should be 3)
         self.patient_list.drop(self.patient_list[self.patient_list['num_omics_present'] != 3].index, inplace=True)
         self.patient_list = self.patient_list['case_id'].to_list()
-        self.node_map = node_map
 
         mapping_project_id = {
             'TCGA-LUAD': 0,
