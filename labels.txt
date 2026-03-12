@@ -275,3 +275,5 @@ TODO tests:
 
 
 scp -r "C:\Users\Cate\PycharmProjects\BioinfoUtilsProject\graph_classification.py" cbelluti@ailb-login-02.ing.unimore.it:/work/ai4bio2025/LUAD_LUSC_classification/code
+setfacl -R -m u:sgherardi:rwx PatientGraphDataset.py
+ncdu ~

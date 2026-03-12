@@ -12,16 +12,35 @@ class GAT(torch.nn.Module):
         self.conv1 = GATv2Conv(in_channels=num_node_features, out_channels=hidden_channels, edge_dim=num_edge_features,
                                heads=heads)
         self.bn1 = BatchNorm(hidden_channels * heads)
-        # if hidden_channels dimensions change we need to project to map num_node_features to the output dimension before adding skip connections:
+        # if hidden_channels dims change we need to project to map num_node_features to the output dimension before adding skip connections:
         self.skip_conn_projection1 = torch.nn.Linear(num_node_features, hidden_channels * heads)
 
         self.conv2 = GATv2Conv(in_channels=hidden_channels * heads, out_channels=hidden_channels, edge_dim=num_edge_features,
                                heads=1)
         self.bn2 = BatchNorm(hidden_channels)
-        # No need if hidden_channels is the same
+        # (no need if hidden_channels is the same):
         self.skip_conn_projection2 = torch.nn.Linear(hidden_channels * heads, hidden_channels)
 
         self.classifier = torch.nn.Linear(hidden_channels * 2, num_classes)  # LUAD vs LUSC
+
+        # LUAD vs LUSC
+        '''
+        self.classifier = torch.nn.Sequential(
+            torch.nn.Linear(hidden_channels * 2, hidden_channels),
+            torch.nn.ELU(),
+            torch.nn.Dropout(p=0.3),
+            torch.nn.Linear(hidden_channels, num_classes)
+        )
+        
+        oppure
+        
+        self.classifier = torch.nn.Sequential(
+            torch.nn.Linear(hidden_channels * 2, hidden_channels),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(p=0.3), 
+            torch.nn.Linear(hidden_channels, num_classes)
+        )
+        '''
 
     def forward(self, x, edge_index, edge_attr, batch):
         x_projected = self.skip_conn_projection1(x)
@@ -40,15 +59,17 @@ class GAT(torch.nn.Module):
         x_max = global_max_pool(x, batch)
         x = torch.cat([x_mean, x_max], dim=1)  #now x has dimension hidden_channels * 2
 
+        # provare senza e magari mettere dropout nelle conv
         x = torch.nn.functional.dropout(x, p=0.5, training=self.training)
         return self.classifier(x)
 
 
 '''
-1. Multi-Head Attention
-Il vero potere dei GAT risiede nelle "teste" multiple. Usare heads=1 limita il modello a un solo "punto di vista" sulle relazioni tra geni.
-Usando più teste (es. 4 o 8), permetti al modello di imparare diverse sottoreti funzionali contemporaneamente.
+1. Gestione del Dropout
+Attualmente hai il dropout solo sul classificatore. Nei GAT è molto efficace applicare il dropout anche ai coefficienti di attenzione e all'input dei layer convolutivi.
 
+self.conv1 = GATv2Conv(..., dropout=0.2) # Dropout sulle attention heads, forse meglio 0.1
+self.conv2 = GATv2Conv(..., dropout=0.2)
 
 2. Batch Normalization e Skip Connections
 Con grafi di 20.000 nodi, il segnale tende a "diluirsi" o a svanire (vanishing gradient).
@@ -80,4 +101,25 @@ Tuttavia, la scelta tra Global Attention e Mean+Max Pooling non è solo tecnica,
 
 4. Struttura del Classifier
 Passare da 64 canali direttamente alle 2 classi è un salto brusco. Un piccolo MLP alla fine aiuta a distillare meglio il vettore del paziente.
+
+"Dense" Classifier
+
+self.classifier = torch.nn.Linear(hidden_channels * 2, num_classes) è un singolo layer lineare: Linear(128, 2).
+Dopo aver condensato 20.000 geni in un vettore da 128 (64 mean + 64 max), un passaggio intermedio aiuta a modellare
+interazioni non lineari tra queste feature aggregate:
+
+self.classifier = torch.nn.Sequential(
+    torch.nn.Linear(hidden_channels * 2, hidden_channels),
+    torch.nn.ReLU(),
+    torch.nn.Dropout(p=0.5),
+    torch.nn.Linear(hidden_channels, num_classes)
+)
+
+
+5. Learning Rate Scheduler
+https://medium.com/@theom/a-very-short-visual-introduction-to-learning-rate-schedulers-with-code-189eddffdb00
+
+
+4. Overfitting Alert
+Se il gap tra Train Acc e Val Acc supera il 15-20%, aumenta il dropout a 0.6 o riduci leggermente gli hidden_channels (es. a 32).
 '''

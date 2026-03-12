@@ -1,19 +1,23 @@
 import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
 
 # EXPOSURE.TSV
 
-df_exposure = pd.read_csv("original_dataset/clinical/exposure.tsv", sep="\t")
-df_exposure.dropna(inplace=True) # remove rows with wrong formatting ()
+df_exposure = pd.read_csv("original_dataset/clinical/exposure.tsv", sep="\t",
+                          usecols=['project.project_id','cases.case_id','exposures.pack_years_smoked',
+                                   'exposures.tobacco_smoking_onset_year','exposures.tobacco_smoking_quit_year',
+                                   'exposures.tobacco_smoking_status'])
+df_exposure.dropna(inplace=True) # remove rows with wrong formatting
 
 # consider only columns with >50% of data not null
-columns = []
+cols = []
 for i in df_exposure.columns:
     if len(df_exposure[df_exposure[i] == "\'--"]) <= df_exposure.shape[0]/2:
-        columns.append(i)
-print("Columns kept from exposure.tsv: " + str(columns))
+        cols.append(i)
+print("Columns kept from exposure.tsv: " + str(cols))
 
-features_df = pd.DataFrame(data=df_exposure, columns = columns)
-features_df.drop(['exposures.exposure_type'], axis=1, inplace=True)
+features_df = pd.DataFrame(data=df_exposure, columns = cols)
 
 # add cols
 new_col_smoker = features_df.loc[:,'project.project_id'].astype(str).copy()
@@ -21,15 +25,12 @@ new_col_smoker.loc[:] = '\'--' # Null, True or False
 new_col_years = features_df.loc[:,'project.project_id'].astype(str).copy()
 new_col_years.loc[:] = '\'--' # Null, count_years (int)
 
-
 # change obj type to int
 columns_smoking_years = ["exposures.tobacco_smoking_onset_year", "exposures.tobacco_smoking_quit_year"]
-
 for i in columns_smoking_years:
     features_df[i] = features_df[i].astype(str)
     features_df.loc[features_df[i] == '\'--', i] = '0'
     features_df[i] = features_df[i].astype(int)
-#print("Dtype Features:\n",features_df.dtypes)
 
 # if both years not null --> True, data_stop - data_start
 new_col_smoker.loc[(features_df['exposures.tobacco_smoking_quit_year'] != 0) & (features_df['exposures.tobacco_smoking_onset_year'] != 0)] = True
@@ -56,18 +57,6 @@ print("Columns added: ['exposures.tobacco_smoker', 'exposures.tobacco_years']")
 features_df.drop(['exposures.tobacco_smoking_onset_year'], axis=1, inplace=True)
 features_df.drop(['exposures.tobacco_smoking_quit_year'], axis=1, inplace=True)
 features_df.drop(['exposures.tobacco_smoking_status'], axis=1, inplace=True)
-
-# DEBUG
-'''
-print("Features Shape: ", features_df.shape)
-print("Null values: ")
-for i in features_df.columns:
-    print("\t", i , ": ", len(features_df[features_df[i] == "\'--"]))
-print("Data unique values: ")
-for i in features_df.columns:
-    if features_df[i].nunique() != features_df.shape[0]:
-        print("\t", i, ": ", features_df[i].unique())
-'''
 
 
 # CLINICAL.TSV
@@ -97,22 +86,72 @@ cols = [
     'diagnoses.sites_of_involvement',
     'diagnoses.tissue_or_organ_of_origin']
 
-index_cols = ['project.project_id', 'cases.case_id']
 
-features_df = features_df.join(only_primary_df[cols].set_index(index_cols), on=index_cols)
+features_df = features_df.join(only_primary_df[cols].set_index(['project.project_id', 'cases.case_id']),
+                               on=['project.project_id', 'cases.case_id'])
 print("Columns joined from clinical.tsv: " + str(cols))
 
-'''
-# for project.project_id
-mapping_project_id = {
+features_df.replace(['\'--', 'not reported', 'Unknown', 'MX', 'NX', 'TX'], pd.NA, inplace=True)
+
+features_df.to_csv(r"files/clinical/features_considered.tsv", sep="\t", index=False)
+
+print("\nEncoding features to numerical...")
+
+#print(features_df.nunique())
+
+# for project.project_id, remap tumor class to 0-1
+mapping = {
     'TCGA-LUAD': 0,
     'TCGA-LUSC': 1
 }
-# remap tumor class to 0-1
-features_df['project.project_id'] = features_df['project.project_id'].map(mapping_project_id)
-'''
+features_df['project.project_id'] = features_df['project.project_id'].map(mapping)
+
+# for exposures.tobacco_smoker 0 will be missing value
+mapping = {
+    True: 1,
+    False: -1
+}
+features_df['exposures.tobacco_smoker'] = features_df['exposures.tobacco_smoker'].map(mapping).fillna(0)
+
+# features already numerical, set NA to 0:
+cols = ['exposures.pack_years_smoked', 'exposures.tobacco_years', 'demographic.age_at_index']
+for col in cols:
+    median_val = pd.to_numeric(features_df[col], errors='coerce').median()  # if set to 0 it may be considered outlier
+    features_df[col] = features_df[col].fillna(median_val)
+
+# for diagnoses.ajcc_pathologic_stage, ordinal:
+stage_map = {'Stage I': 1, 'Stage IA': 1, 'Stage IB': 1, 'Stage II': 2, 'Stage IIA': 2,
+             'Stage IIB': 2, 'Stage III': 3, 'Stage IIIA': 3, 'Stage IIIB': 3, 'Stage IV': 4}
+features_df['diagnoses.ajcc_pathologic_stage'] = features_df['diagnoses.ajcc_pathologic_stage'].map(stage_map).fillna(0)
+
+# for categorical features:
+cols = [
+    'demographic.country_of_residence_at_enrollment',
+    'demographic.ethnicity',
+    'demographic.gender',
+    'demographic.race',
+    'diagnoses.ajcc_pathologic_m',
+    'diagnoses.ajcc_pathologic_n',
+    'diagnoses.ajcc_pathologic_t',
+    'diagnoses.icd_10_code',
+    'diagnoses.laterality',
+    'diagnoses.sites_of_involvement',
+    'diagnoses.tissue_or_organ_of_origin'
+]
+
+categories = [features_df[col].dropna().unique() for col in cols]  # all possible not NA vals of each category
+
+ct = ColumnTransformer(
+    transformers=[('encoder', OneHotEncoder(categories=categories, handle_unknown='ignore'), cols)],
+    remainder='passthrough'  # Keep other columns as-is
+)
+encoded_array = ct.fit_transform(features_df)
+encoded_df = pd.DataFrame(encoded_array, columns=ct.get_feature_names_out())
+
+# to change encoded names from 'encoder__demographic.country_of_residence_at_enrollment_Australia' to 'country_of_residence_at_enrollment_Australia'
+encoded_df = encoded_df.rename(columns=dict(zip(encoded_df.columns, [s.split('.')[-1] for s in encoded_df.columns])))
 
 # CREATE FILE
-features_df.to_csv(r"files/clinical/features.tsv", sep="\t", index=False)
+encoded_df.to_csv(r"files/clinical/features_encoded.tsv", sep="\t", index=False)
 
 print("DONE")
