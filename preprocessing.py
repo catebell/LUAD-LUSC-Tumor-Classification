@@ -151,6 +151,12 @@ encoded_df = pd.DataFrame(encoded_array, columns=ct.get_feature_names_out())
 # to change encoded names from 'encoder__demographic.country_of_residence_at_enrollment_Australia' to 'country_of_residence_at_enrollment_Australia'
 encoded_df = encoded_df.rename(columns=dict(zip(encoded_df.columns, [s.split('.')[-1] for s in encoded_df.columns])))
 
+# reorder names istg
+new_names = ['project_id', 'case_id', 'age_at_index', 'tobacco_years', 'pack_years_smoked']
+new_names.extend(encoded_df.drop(columns=['project_id', 'case_id', 'age_at_index', 'tobacco_years', 'pack_years_smoked']).columns.values)
+
+encoded_df = encoded_df[new_names]
+
 # CREATE FILE
 encoded_df.to_csv(r"files/clinical/features_encoded.tsv", sep="\t", index=False)
 

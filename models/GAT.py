@@ -59,7 +59,7 @@ class GAT(torch.nn.Module):
         x_max = global_max_pool(x, batch)
         x = torch.cat([x_mean, x_max], dim=1)  #now x has dimension hidden_channels * 2
 
-        # provare senza e magari mettere dropout nelle conv
+        # TODO provare senza e magari mettere dropout nelle conv
         x = torch.nn.functional.dropout(x, p=0.5, training=self.training)
         return self.classifier(x)
 
@@ -118,8 +118,4 @@ self.classifier = torch.nn.Sequential(
 
 5. Learning Rate Scheduler
 https://medium.com/@theom/a-very-short-visual-introduction-to-learning-rate-schedulers-with-code-189eddffdb00
-
-
-4. Overfitting Alert
-Se il gap tra Train Acc e Val Acc supera il 15-20%, aumenta il dropout a 0.6 o riduci leggermente gli hidden_channels (es. a 32).
 '''

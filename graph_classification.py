@@ -83,9 +83,9 @@ clinical_feat_scaler = StandardScaler()
 
 # scalers fitted only on test data
 for data in train_loader:
-    node_feat_scaler.partial_fit(data.x[:, :4].numpy())  # only first 4 cols (5 is binary mask)
+    node_feat_scaler.partial_fit(data.x[:,:4].numpy())  # only first 4 cols (5 is binary mask)
     edge_attr_scaler.partial_fit(data.edge_attr[:,2].numpy().reshape(-1,1))  # only cols of number of links
-    # TODO clinical_feat_scaler.partial_fit(data.clinical.numpy()) solo pack_years_smoked, tobacco_years, age_at_index
+    clinical_feat_scaler.partial_fit(data.clinical[:,:3].numpy()) # only pack_years_smoked, tobacco_years, age_at_index
 
 
 # to make things faster by applying scaler transformations manually:
@@ -98,13 +98,10 @@ clinical_std = torch.tensor(clinical_feat_scaler.scale_, dtype=torch.float, devi
 
 # train loop
 
-lr_min = 0.00001
 lr_max = 0.001
 max_epochs = 50
 
 optimizer = torch.optim.Adam(model.parameters(), lr=lr_max)  # lr = Learning Rate
-#scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99)
-#scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=max_epochs, eta_min=lr_min)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
 '''
 ReduceLROnPlateau: Invece di calare "a prescindere" dal tempo (come fanno Exponential o Cosine), cala solo quando la
@@ -138,7 +135,7 @@ def train():
 
         # StandardScale: (x - mean) / std
         data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
-        # TODO data.clinical
+        data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
         # MinMaxScaler: (x - min) / (max - min)
         data.edge_attr[:,2] = (data.edge_attr[:,2] - e_min) / (e_max - e_min + 1e-6)
 
@@ -162,7 +159,7 @@ def validate():
     for data in val_loader:
         data = data.to(device)
         data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
-        # TODO data.clinical
+        data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
         data.edge_attr[:, 2] = (data.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
         with torch.no_grad():
@@ -184,7 +181,7 @@ def test(loader):
          #data.edge_attr[:, 2:] = torch.tensor(edge_attr_scaler.transform(data.edge_attr[:, 2].cpu().numpy().reshape(-1,1))).to(device)
 
          data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
-         # TODO data.clinical
+         data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
          data.edge_attr[:, 2] = (data.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
          out = model(data.x, data.edge_index, data.edge_attr, data.batch)

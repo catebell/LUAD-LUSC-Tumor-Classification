@@ -37,14 +37,10 @@ logging.basicConfig(
 ppi_score_threshold = 0.7  # minimum interaction probability score to create edges
 
 file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
-patients_features_df = pd.read_csv('files/clinical/features.tsv', sep='\t')
-mapping_project_id = {
-    'TCGA-LUAD': 0,
-    'TCGA-LUSC': 1
-}
-patients_features_df['project.project_id'] = patients_features_df['project.project_id'].map(mapping_project_id)
+
+clinical_features_df = pd.read_csv('files/clinical/features_encoded.tsv', sep='\t')
 # map {case_id --> tumor class (LUAD-LUSC)}
-labels_dict = dict(zip(patients_features_df['cases.case_id'], patients_features_df['project.project_id']))
+labels_dict = dict(zip(clinical_features_df['case_id'], clinical_features_df['project_id']))
 
 # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
 # file extracted using create_tsv_from_STRING_files.create_gene_aliases_proteins_ids_mapping_file()
@@ -179,6 +175,11 @@ data = torch_geometric.data.Data(x=x, edge_index=edge_index,
 
 transform = T.Compose([T.AddSelfLoops(attr='edge_attr'), ToUndirected()])
 data = transform(data)
+
+# ADD CLINICAL FEATURES TENSOR
+clinical_values = clinical_features_df[clinical_features_df['case_id'] == case_id].iloc[:, 2:]
+
+data.clinical = torch.tensor(clinical_values.values.astype(float), dtype=torch.float)
 
 logging.info(data)
 

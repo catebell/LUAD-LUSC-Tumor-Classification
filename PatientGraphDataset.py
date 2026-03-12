@@ -23,8 +23,6 @@ class PatientGraphDataset(Dataset):
         self.file_mapping_df = file_mapping_df
         self.node_map = node_map
 
-        self.patients_features_df = pd.read_csv('files/clinical/features.tsv', sep='\t')
-
         # case_id list
         self.patient_list = self.file_mapping_df.groupby('case_id').agg(case_id=('case_id', 'first'),
                                                                    num_omics_present=('filename', 'count'))
@@ -32,13 +30,9 @@ class PatientGraphDataset(Dataset):
         self.patient_list.drop(self.patient_list[self.patient_list['num_omics_present'] != 3].index, inplace=True)
         self.patient_list = self.patient_list['case_id'].to_list()
 
-        mapping_project_id = {
-            'TCGA-LUAD': 0,
-            'TCGA-LUSC': 1
-        }
-        self.patients_features_df['project.project_id'] = self.patients_features_df['project.project_id'].map(mapping_project_id)
+        self.clinical_features_df = pd.read_csv('files/clinical/features_encoded.tsv', sep='\t')
         # map {case_id --> tumor class (LUAD-LUSC)}
-        self.labels_dict = dict(zip(self.patients_features_df['cases.case_id'], self.patients_features_df['project.project_id']))
+        self.labels_dict = dict(zip(self.clinical_features_df['case_id'], self.clinical_features_df['project_id']))
 
         self.standard_transform = T.Compose([T.AddSelfLoops(attr='edge_attr'), ToUndirected()])
 
@@ -104,7 +98,6 @@ class PatientGraphDataset(Dataset):
         # place .csv file into methylation_manifests/originals, then run methylation_manifest_to_tsv.py
         meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 
-
         for case_id in self.patient_list:
             df_rna, network_df = create_rna_df(case_id, self.file_mapping_df, genes_mapping_df, protein_links_df)
             df_rna['gene_id_mapped'] = df_rna['gene_id'].map(self.node_map)
@@ -127,6 +120,12 @@ class PatientGraphDataset(Dataset):
             data.y = torch.tensor([self.labels_dict[case_id]], dtype=torch.int)
 
             data = self.standard_transform(data)
+
+            # ADD CLINICAL FEATURES TENSOR
+            clinical_values = self.clinical_features_df[self.clinical_features_df['case_id'] == case_id].iloc[:, 2:]
+            # (first 2 cols are not features to be considered --> project_id and case_id)
+            data.clinical = torch.tensor(clinical_values.values.astype(float), dtype=torch.float)
+
             torch.save(data, os.path.join(self.processed_dir, f'data_{case_id}.pt'))
 
         print("\n--- %s seconds ---" % (time.time() - start_time))
