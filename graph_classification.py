@@ -1,6 +1,5 @@
 import logging
 
-import numpy as np
 import pandas as pd
 import torch
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -28,7 +27,7 @@ torch.cuda.empty_cache()
 
 #model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
 model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
-#model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=16, hidden_channels=64).to(device)
+#model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64).to(device)
 
 file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
 patient_split_df = pd.read_csv('files/clinical/patient_split_cleaned.csv')
@@ -141,6 +140,7 @@ def train():
 
         # perform a single forward pass
         out = model(data.x, data.edge_index, data.edge_attr, data.batch)
+        #out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)
 
         loss = criterion(out, data.y)  # Compute the loss.
         scaled_loss = loss
@@ -164,6 +164,7 @@ def validate():
 
         with torch.no_grad():
             out = model(data.x, data.edge_index, data.edge_attr, data.batch)
+            #out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)
             loss = criterion(out, data.y)
             total_loss += loss.item() * data.num_graphs
     return total_loss / len(val_dataset)
@@ -185,6 +186,7 @@ def test(loader):
          data.edge_attr[:, 2] = (data.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
          out = model(data.x, data.edge_index, data.edge_attr, data.batch)
+         #out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)
 
          pred = out.argmax(dim=1)  # Use the class with the highest probability.
          correct += int((pred == data.y).sum())  # Check against ground-truth labels.

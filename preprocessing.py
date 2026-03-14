@@ -155,6 +155,11 @@ encoded_df = encoded_df.rename(columns=dict(zip(encoded_df.columns, [s.split('.'
 new_names = ['project_id', 'case_id', 'age_at_index', 'tobacco_years', 'pack_years_smoked']
 new_names.extend(encoded_df.drop(columns=['project_id', 'case_id', 'age_at_index', 'tobacco_years', 'pack_years_smoked']).columns.values)
 
+'''
+Print encoded_df.columns to be sure names are cleaned. If prefixes remains:
+encoded_df.columns = [c.replace('encoder__', '').replace('remainder__', '').split('.')[-1] for c in encoded_df.columns]
+'''
+
 encoded_df = encoded_df[new_names]
 
 # CREATE FILE

@@ -12,6 +12,7 @@ from torch_geometric.transforms import ToUndirected
 from extract_CNV_data import create_cnv_df
 from extract_RNA_data import create_rna_df
 from extract_methylation_data import create_meth_df
+from models.GAT import GAT
 
 """
     Computes and returns the torch_geometric graph (torch_geometric.data.Data) of genes (gene_id is node identifier)
@@ -40,7 +41,7 @@ file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').
 
 clinical_features_df = pd.read_csv('files/clinical/features_encoded.tsv', sep='\t')
 # map {case_id --> tumor class (LUAD-LUSC)}
-labels_dict = dict(zip(clinical_features_df['case_id'], clinical_features_df['project_id']))
+labels_dict = dict(zip(clinical_features_df['case_id'], clinical_features_df['project_id'].astype(int)))
 
 # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
 # file extracted using create_tsv_from_STRING_files.create_gene_aliases_proteins_ids_mapping_file()
@@ -176,6 +177,7 @@ data = torch_geometric.data.Data(x=x, edge_index=edge_index,
 transform = T.Compose([T.AddSelfLoops(attr='edge_attr'), ToUndirected()])
 data = transform(data)
 
+
 # ADD CLINICAL FEATURES TENSOR
 clinical_values = clinical_features_df[clinical_features_df['case_id'] == case_id].iloc[:, 2:]
 
@@ -185,7 +187,6 @@ logging.info(data)
 
 print("\n--- %s seconds ---" % (time.time() - start_time))
 logging.info("\nGRAPH FOR PATIENT %s CREATED\n" % case_id)
-
 
 scaler = StandardScaler()
 #print(scaler.fit(node_features_df[features_cols]))
@@ -200,3 +201,10 @@ node_features_df[cols_to_scale] = StandardScaler().fit_transform(node_features_d
 cols_to_scale = ['num_protein_links']
 edge_features_df[cols_to_scale] = MinMaxScaler().fit_transform(edge_features_df[cols_to_scale])
 
+data.y = torch.tensor([labels_dict[case_id]], dtype=torch.long)  # instead of torch.int
+criterion = torch.nn.CrossEntropyLoss()
+model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64)
+out = model(data.x, data.edge_index, data.edge_attr, data.batch)
+loss = criterion(out, data.y)
+
+print(loss)

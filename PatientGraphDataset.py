@@ -117,14 +117,14 @@ class PatientGraphDataset(Dataset):
 
             data = self._create_graph(node_features_df, network_df)
 
-            data.y = torch.tensor([self.labels_dict[case_id]], dtype=torch.int)
+            data.y = torch.tensor([self.labels_dict[case_id]], dtype=torch.long)
 
             data = self.standard_transform(data)
 
             # ADD CLINICAL FEATURES TENSOR
             clinical_values = self.clinical_features_df[self.clinical_features_df['case_id'] == case_id].iloc[:, 2:]
             # (first 2 cols are not features to be considered --> project_id and case_id)
-            data.clinical = torch.tensor(clinical_values.values.astype(float), dtype=torch.float)
+            data.clinical = torch.tensor(clinical_values.values.astype(float), dtype=torch.float).view(1,-1)
 
             torch.save(data, os.path.join(self.processed_dir, f'data_{case_id}.pt'))
 
