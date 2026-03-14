@@ -39,14 +39,14 @@ class GAT_graph_branch(nn.Module):
             nn.Linear(256, 128)
         )
 
-    def forward(self, x, edge_index, batch):
+    def forward(self, x, edge_index, edge_attr, batch):
         h0 = x
         # Each node attends over its neighbors, multi-head attention increases expressive power
-        h1 = F.elu(self.conv1(h0, edge_index))
+        h1 = F.elu(self.conv1(h0, edge_index, edge_attr))
         h1 = self.lp(h1, edge_index)  # label propagation smooths node embeddings
 
         # second GAT layer learns higher-level interactions
-        h2 = F.elu(self.conv2(h1, edge_index))
+        h2 = F.elu(self.conv2(h1, edge_index, edge_attr))
         h2 = self.lp(h2, edge_index)
 
         # skip connections: concatenate representations from different depths

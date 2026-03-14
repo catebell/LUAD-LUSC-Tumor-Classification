@@ -35,9 +35,9 @@ class MultiModalGNN(nn.Module):
             nn.Linear(32, 2)  # LUAD vs LUSC
         )
 
-    def forward(self, graph_data: torch.Tensor, edge_index, batch, clinical_data: torch.Tensor):
+    def forward(self, graph_data: torch.Tensor, edge_index, edge_attr, clinical_data: torch.Tensor, batch):
 
-        emb_graph = self.graph_branch(graph_data, edge_index, batch)  # graph-level representation embedding [batch_size, 128]
+        emb_graph = self.graph_branch(graph_data, edge_index, edge_attr, batch)  # graph-level representation embedding [batch_size, 128]
 
         emb_clinical = self.clinical_branch(clinical_data)  # clinical representation embedding [batch_size, 32]
 
