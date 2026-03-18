@@ -1,6 +1,7 @@
+import torch
 import torch.nn as nn
 
-class MLP_clinical_branch(nn.Module):
+class MLP(nn.Module):
     def __init__(self, num_patient_features):
         super().__init__()
 
@@ -16,5 +17,10 @@ class MLP_clinical_branch(nn.Module):
             nn.Dropout(0.6)
         )
 
+        self.classifier = nn.Linear(4, 2)
+
     def forward(self, x):
-        return self.mlp(x)
+        x = self.mlp(x)
+        x = torch.nn.functional.normalize(x, p=2, dim=1)
+
+        return self.classifier(x)

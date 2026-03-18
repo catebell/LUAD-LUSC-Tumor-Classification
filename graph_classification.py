@@ -9,6 +9,7 @@ from collections import Counter
 from PatientGraphDataset import PatientGraphDataset
 from models.CancerGNN import CancerGNN
 from models.GAT import GAT
+from models.MLP import MLP
 from models.MultiModalGNN import MultiModalGNN
 
 
@@ -26,8 +27,9 @@ logging.info("Device: " + str(device))
 torch.cuda.empty_cache()
 
 #model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
-model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
-#model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64).to(device)
+#model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
+#model = MLP(num_patient_features=53).to(device)
+model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64).to(device)
 
 file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
 patient_split_df = pd.read_csv('files/clinical/patient_split_cleaned.csv')
@@ -139,8 +141,12 @@ def train():
         data.edge_attr[:,2] = (data.edge_attr[:,2] - e_min) / (e_max - e_min + 1e-6)
 
         # perform a single forward pass
-        out = model(data.x, data.edge_index, data.edge_attr, data.batch)
-        #out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)
+        if model.__class__ == CancerGNN or model.__class__ == GAT:
+            out = model(data.x, data.edge_index, data.edge_attr, data.batch)  # just graph
+        elif model.__class__ == MLP:
+            out = model(data.clinical) # just clinical features
+        else:  # MultiModalGNN
+            out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch) # both
 
         loss = criterion(out, data.y)  # Compute the loss.
         scaled_loss = loss
@@ -163,8 +169,13 @@ def validate():
         data.edge_attr[:, 2] = (data.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
         with torch.no_grad():
-            out = model(data.x, data.edge_index, data.edge_attr, data.batch)
-            #out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)
+            if model.__class__ == CancerGNN or model.__class__ == GAT:
+                out = model(data.x, data.edge_index, data.edge_attr, data.batch)  # just graph
+            elif model.__class__ == MLP:
+                out = model(data.clinical)  # just clinical features
+            else:  # MultiModalGNN
+                out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)  # both
+
             loss = criterion(out, data.y)
             total_loss += loss.item() * data.num_graphs
     return total_loss / len(val_dataset)
@@ -176,17 +187,16 @@ def test(loader):
 
      for data in loader:  # Iterate in batches over the training/test dataset.
          data = data.to(device)
-
-         #inefficient
-         #data.x[:, :4] = torch.tensor(node_feat_scaler.transform(data.x[:, :4].cpu().numpy())).to(device)
-         #data.edge_attr[:, 2:] = torch.tensor(edge_attr_scaler.transform(data.edge_attr[:, 2].cpu().numpy().reshape(-1,1))).to(device)
-
          data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
          data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
          data.edge_attr[:, 2] = (data.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
-         out = model(data.x, data.edge_index, data.edge_attr, data.batch)
-         #out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)
+         if model.__class__ == CancerGNN or model.__class__ == GAT:
+             out = model(data.x, data.edge_index, data.edge_attr, data.batch)  # just graph
+         elif model.__class__ == MLP:
+             out = model(data.clinical)  # just clinical features
+         else:  # MultiModalGNN
+             out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)  # both
 
          pred = out.argmax(dim=1)  # Use the class with the highest probability.
          correct += int((pred == data.y).sum())  # Check against ground-truth labels.
@@ -209,7 +219,7 @@ for epoch in range(1, max_epochs + 1):
                  f' Val Acc: {val_acc:.4f}, Test Acc: {test_acc:.4f}')
 
     #save best model based on Val Loss
-    if val_loss < best_val_loss:
+    if val_loss < best_val_loss and train_acc - test_acc < 0.05:
         best_val_loss = val_loss
         torch.save(model.state_dict(), 'best_classification_gnn.pth')
         logging.info("--- Found and saved a better model! ---")

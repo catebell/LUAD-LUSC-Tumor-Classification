@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 mapping_df = pd.read_csv(r'files/clinical/file_case_mapping.tsv', sep='\t')
-features_df = pd.read_csv(r'files/clinical/features.tsv', sep='\t')
+features_df = pd.read_csv(r'files/clinical/features_considered.tsv', sep='\t')
 
 dup_counts = (
     mapping_df
@@ -89,4 +89,12 @@ stats = (
 )
 
 print("Stats per split e progetto:\n", stats)
+'''
+Stats per split e progetto:
+ project.project_id  TCGA-LUAD  TCGA-LUSC
+split                                   
+test                       63         79
+train                     221        275
+val                        32         39
+'''
 print("Final number of patients:", len(filtered_patients))

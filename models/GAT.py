@@ -9,38 +9,19 @@ from torch_geometric.nn import GATv2Conv, global_mean_pool, global_max_pool, Bat
 class GAT(torch.nn.Module):
     def __init__(self, num_node_features, num_classes, num_edge_features, hidden_channels, heads=2):
         super(GAT, self).__init__()
-        self.conv1 = GATv2Conv(in_channels=num_node_features, out_channels=hidden_channels, edge_dim=num_edge_features,
-                               heads=heads)
-        self.bn1 = BatchNorm(hidden_channels * heads)
         # if hidden_channels dims change we need to project to map num_node_features to the output dimension before adding skip connections:
         self.skip_conn_projection1 = torch.nn.Linear(num_node_features, hidden_channels * heads)
+        self.conv1 = GATv2Conv(in_channels=num_node_features, out_channels=hidden_channels, edge_dim=num_edge_features, heads=heads)
+        self.bn1 = BatchNorm(hidden_channels * heads)
 
-        self.conv2 = GATv2Conv(in_channels=hidden_channels * heads, out_channels=hidden_channels, edge_dim=num_edge_features,
-                               heads=1)
-        self.bn2 = BatchNorm(hidden_channels)
         # (no need if hidden_channels is the same):
         self.skip_conn_projection2 = torch.nn.Linear(hidden_channels * heads, hidden_channels)
+        self.conv2 = GATv2Conv(in_channels=hidden_channels * heads, out_channels=hidden_channels, edge_dim=num_edge_features, heads=1)
+        self.bn2 = BatchNorm(hidden_channels)
 
+        self.dropout = torch.nn.Dropout(0.5)
         self.classifier = torch.nn.Linear(hidden_channels * 2, num_classes)  # LUAD vs LUSC
 
-        # LUAD vs LUSC
-        '''
-        self.classifier = torch.nn.Sequential(
-            torch.nn.Linear(hidden_channels * 2, hidden_channels),
-            torch.nn.ELU(),
-            torch.nn.Dropout(p=0.3),
-            torch.nn.Linear(hidden_channels, num_classes)
-        )
-        
-        oppure
-        
-        self.classifier = torch.nn.Sequential(
-            torch.nn.Linear(hidden_channels * 2, hidden_channels),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(p=0.3), 
-            torch.nn.Linear(hidden_channels, num_classes)
-        )
-        '''
 
     def forward(self, x, edge_index, edge_attr, batch):
         x_projected = self.skip_conn_projection1(x)
@@ -59,8 +40,8 @@ class GAT(torch.nn.Module):
         x_max = global_max_pool(x, batch)
         x = torch.cat([x_mean, x_max], dim=1)  #now x has dimension hidden_channels * 2
 
-        # TODO provare senza e magari mettere dropout nelle conv
-        x = torch.nn.functional.dropout(x, p=0.5, training=self.training)
+        x = self.dropout(x)
+
         return self.classifier(x)
 
 
@@ -68,7 +49,7 @@ class GAT(torch.nn.Module):
 1. Gestione del Dropout
 Attualmente hai il dropout solo sul classificatore. Nei GAT è molto efficace applicare il dropout anche ai coefficienti di attenzione e all'input dei layer convolutivi.
 
-self.conv1 = GATv2Conv(..., dropout=0.2) # Dropout sulle attention heads, forse meglio 0.1
+self.conv1 = GATv2Conv(..., dropout=0.2) # Dropout sulle attention heads
 self.conv2 = GATv2Conv(..., dropout=0.2)
 
 2. Batch Normalization e Skip Connections

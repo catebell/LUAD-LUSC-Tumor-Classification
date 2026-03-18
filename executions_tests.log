@@ -1,0 +1,250 @@
+solo GAT:
+
+2026-03-18 17:41:04,335 - INFO - GAT(
+  (skip_conn_projection1): Linear(in_features=5, out_features=128, bias=True)
+  (conv1): GATv2Conv(5, 64, heads=2)
+  (bn1): BatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (skip_conn_projection2): Linear(in_features=128, out_features=64, bias=True)
+  (conv2): GATv2Conv(128, 64, heads=1)
+  (bn2): BatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (dropout): Dropout(p=0.5, inplace=False)
+  (classifier): Linear(in_features=128, out_features=2, bias=True)
+)
+/homes/cbelluti/.local/lib/python3.11/site-packages/torch_geometric/utils/_scatter.py:91: UserWarning: The usage of `scatter(reduce='max')` can be accelerated via the 'torch-scatter' package, but it was not found
+  warnings.warn(
+2026-03-18 17:41:41,236 - INFO - Epoch: 001, Train Loss: 2.3825, Val Loss: 0.6959, Train Acc: 0.6397, Val Acc: 0.5556, Test Acc: 0.6993
+2026-03-18 17:41:41,243 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:42:18,526 - INFO - Epoch: 002, Train Loss: 0.9380, Val Loss: 0.8038, Train Acc: 0.4575, Val Acc: 0.4583, Test Acc: 0.5035
+2026-03-18 17:42:55,896 - INFO - Epoch: 003, Train Loss: 0.7264, Val Loss: 0.6857, Train Acc: 0.6964, Val Acc: 0.6111, Test Acc: 0.7552
+2026-03-18 17:42:55,908 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:43:33,666 - INFO - Epoch: 004, Train Loss: 0.7160, Val Loss: 0.6788, Train Acc: 0.6032, Val Acc: 0.4861, Test Acc: 0.6713
+2026-03-18 17:43:33,672 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:44:12,330 - INFO - Epoch: 005, Train Loss: 0.6802, Val Loss: 0.7885, Train Acc: 0.5729, Val Acc: 0.5417, Test Acc: 0.5874
+2026-03-18 17:44:51,572 - INFO - Epoch: 006, Train Loss: 0.6798, Val Loss: 0.6748, Train Acc: 0.7085, Val Acc: 0.6250, Test Acc: 0.7413
+2026-03-18 17:44:51,579 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:45:29,797 - INFO - Epoch: 007, Train Loss: 0.6632, Val Loss: 0.6959, Train Acc: 0.5648, Val Acc: 0.4861, Test Acc: 0.6434
+2026-03-18 17:46:08,059 - INFO - Epoch: 008, Train Loss: 0.6512, Val Loss: 0.6782, Train Acc: 0.7126, Val Acc: 0.5972, Test Acc: 0.7203
+2026-03-18 17:46:46,263 - INFO - Epoch: 009, Train Loss: 0.6580, Val Loss: 0.6608, Train Acc: 0.6842, Val Acc: 0.5556, Test Acc: 0.7203
+2026-03-18 17:46:46,270 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:47:24,748 - INFO - Epoch: 010, Train Loss: 0.6543, Val Loss: 0.6561, Train Acc: 0.6822, Val Acc: 0.5694, Test Acc: 0.7063
+2026-03-18 17:47:24,755 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:48:02,969 - INFO - Epoch: 011, Train Loss: 0.6464, Val Loss: 0.6375, Train Acc: 0.7065, Val Acc: 0.6806, Test Acc: 0.7832
+2026-03-18 17:48:02,976 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:48:41,097 - INFO - Epoch: 012, Train Loss: 0.6484, Val Loss: 0.6455, Train Acc: 0.7126, Val Acc: 0.6250, Test Acc: 0.7622
+2026-03-18 17:49:19,063 - INFO - Epoch: 013, Train Loss: 0.6287, Val Loss: 0.6320, Train Acc: 0.7328, Val Acc: 0.6667, Test Acc: 0.7552
+2026-03-18 17:49:19,070 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:49:56,799 - INFO - Epoch: 014, Train Loss: 0.6106, Val Loss: 0.6351, Train Acc: 0.6842, Val Acc: 0.6250, Test Acc: 0.6923
+2026-03-18 17:50:34,523 - INFO - Epoch: 015, Train Loss: 0.6039, Val Loss: 0.6213, Train Acc: 0.7713, Val Acc: 0.7639, Test Acc: 0.8252
+2026-03-18 17:50:34,529 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:51:12,094 - INFO - Epoch: 016, Train Loss: 0.6094, Val Loss: 0.6206, Train Acc: 0.6903, Val Acc: 0.6111, Test Acc: 0.7063
+2026-03-18 17:51:12,101 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:51:50,691 - INFO - Epoch: 017, Train Loss: 0.6081, Val Loss: 0.5706, Train Acc: 0.8360, Val Acc: 0.8194, Test Acc: 0.8671
+2026-03-18 17:51:50,698 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:52:28,876 - INFO - Epoch: 018, Train Loss: 0.5674, Val Loss: 0.5285, Train Acc: 0.8704, Val Acc: 0.8333, Test Acc: 0.8741
+2026-03-18 17:52:28,883 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:53:06,928 - INFO - Epoch: 019, Train Loss: 0.5522, Val Loss: 0.5466, Train Acc: 0.8522, Val Acc: 0.7917, Test Acc: 0.8811
+2026-03-18 17:53:45,184 - INFO - Epoch: 020, Train Loss: 0.5433, Val Loss: 0.5225, Train Acc: 0.8441, Val Acc: 0.8333, Test Acc: 0.8531
+2026-03-18 17:53:45,190 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:54:23,501 - INFO - Epoch: 021, Train Loss: 0.5141, Val Loss: 0.5041, Train Acc: 0.8644, Val Acc: 0.8056, Test Acc: 0.8811
+2026-03-18 17:54:23,507 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:55:01,437 - INFO - Epoch: 022, Train Loss: 0.5150, Val Loss: 0.4898, Train Acc: 0.8583, Val Acc: 0.8194, Test Acc: 0.8392
+2026-03-18 17:55:01,444 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:55:39,859 - INFO - Epoch: 023, Train Loss: 0.5069, Val Loss: 0.4633, Train Acc: 0.9069, Val Acc: 0.8889, Test Acc: 0.9021
+2026-03-18 17:55:39,866 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:56:18,577 - INFO - Epoch: 024, Train Loss: 0.5125, Val Loss: 0.4487, Train Acc: 0.9069, Val Acc: 0.9167, Test Acc: 0.9021
+2026-03-18 17:56:18,583 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:56:57,208 - INFO - Epoch: 025, Train Loss: 0.4919, Val Loss: 0.4448, Train Acc: 0.9109, Val Acc: 0.8889, Test Acc: 0.8951
+2026-03-18 17:56:57,215 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:57:35,669 - INFO - Epoch: 026, Train Loss: 0.4697, Val Loss: 0.4521, Train Acc: 0.9130, Val Acc: 0.8750, Test Acc: 0.8951
+2026-03-18 17:58:14,171 - INFO - Epoch: 027, Train Loss: 0.4824, Val Loss: 0.4581, Train Acc: 0.9109, Val Acc: 0.9028, Test Acc: 0.9021
+2026-03-18 17:58:54,070 - INFO - Epoch: 028, Train Loss: 0.4661, Val Loss: 0.4199, Train Acc: 0.8866, Val Acc: 0.8889, Test Acc: 0.8601
+2026-03-18 17:58:54,076 - INFO - --- Found and saved a better model! ---
+2026-03-18 17:59:32,447 - INFO - Epoch: 029, Train Loss: 0.4711, Val Loss: 0.4450, Train Acc: 0.9231, Val Acc: 0.8889, Test Acc: 0.9231
+2026-03-18 18:00:11,018 - INFO - Epoch: 030, Train Loss: 0.4475, Val Loss: 0.4028, Train Acc: 0.9130, Val Acc: 0.9167, Test Acc: 0.9021
+2026-03-18 18:00:11,024 - INFO - --- Found and saved a better model! ---
+
+----------------------------------------------------------------------------------------------
+Solo MLP:
+
+MLP(
+  (mlp): Sequential(
+    (0): Linear(in_features=53, out_features=16, bias=True)
+    (1): LayerNorm((16,), eps=1e-05, elementwise_affine=True)
+    (2): ReLU()
+    (3): Dropout(p=0.7, inplace=False)
+    (4): Linear(in_features=16, out_features=4, bias=True)
+    (5): LayerNorm((4,), eps=1e-05, elementwise_affine=True)
+    (6): ReLU()
+    (7): Dropout(p=0.6, inplace=False)
+  )
+  (classifier): Linear(in_features=4, out_features=2, bias=True)
+)
+2026-03-18 15:17:59,844 - INFO - Epoch: 001, Train Loss: 0.7783, Val Loss: 0.6972, Train Acc: 0.5324, Val Acc: 0.5417, Test Acc: 0.5524
+2026-03-18 15:17:59,847 - INFO - --- Found and saved a better model! ---
+2026-03-18 15:18:11,760 - INFO - Epoch: 002, Train Loss: 0.7469, Val Loss: 0.6606, Train Acc: 0.6559, Val Acc: 0.6528, Test Acc: 0.5944
+2026-03-18 15:18:11,763 - INFO - --- Found and saved a better model! ---
+2026-03-18 15:18:23,609 - INFO - Epoch: 003, Train Loss: 0.7042, Val Loss: 0.6785, Train Acc: 0.6275, Val Acc: 0.6250, Test Acc: 0.5804
+2026-03-18 15:18:35,663 - INFO - Epoch: 004, Train Loss: 0.7018, Val Loss: 0.6828, Train Acc: 0.6275, Val Acc: 0.6250, Test Acc: 0.5874
+2026-03-18 15:18:47,778 - INFO - Epoch: 005, Train Loss: 0.7154, Val Loss: 0.6814, Train Acc: 0.6559, Val Acc: 0.6389, Test Acc: 0.6154
+2026-03-18 15:18:59,857 - INFO - Epoch: 006, Train Loss: 0.7002, Val Loss: 0.6805, Train Acc: 0.6559, Val Acc: 0.6389, Test Acc: 0.5944
+2026-03-18 15:19:11,907 - INFO - Epoch: 007, Train Loss: 0.7095, Val Loss: 0.6788, Train Acc: 0.5911, Val Acc: 0.6111, Test Acc: 0.5664
+2026-03-18 15:19:23,894 - INFO - Epoch: 008, Train Loss: 0.6941, Val Loss: 0.6713, Train Acc: 0.5972, Val Acc: 0.6250, Test Acc: 0.5874
+2026-03-18 15:19:35,932 - INFO - Epoch: 009, Train Loss: 0.7047, Val Loss: 0.6700, Train Acc: 0.6093, Val Acc: 0.6389, Test Acc: 0.6014
+2026-03-18 15:19:48,003 - INFO - Epoch: 010, Train Loss: 0.6965, Val Loss: 0.6697, Train Acc: 0.6174, Val Acc: 0.6389, Test Acc: 0.6014
+2026-03-18 15:20:00,018 - INFO - Epoch: 011, Train Loss: 0.7014, Val Loss: 0.6665, Train Acc: 0.6336, Val Acc: 0.6528, Test Acc: 0.6154
+2026-03-18 15:20:12,065 - INFO - Epoch: 012, Train Loss: 0.6947, Val Loss: 0.6675, Train Acc: 0.6296, Val Acc: 0.6528, Test Acc: 0.5804
+2026-03-18 15:20:23,887 - INFO - Epoch: 013, Train Loss: 0.6918, Val Loss: 0.6760, Train Acc: 0.6134, Val Acc: 0.5972, Test Acc: 0.5874
+2026-03-18 15:20:35,719 - INFO - Epoch: 014, Train Loss: 0.6967, Val Loss: 0.6780, Train Acc: 0.5931, Val Acc: 0.5972, Test Acc: 0.5944
+2026-03-18 15:20:47,505 - INFO - Epoch: 015, Train Loss: 0.6911, Val Loss: 0.6775, Train Acc: 0.5951, Val Acc: 0.5972, Test Acc: 0.5944
+2026-03-18 15:20:59,401 - INFO - Epoch: 016, Train Loss: 0.6952, Val Loss: 0.6782, Train Acc: 0.5992, Val Acc: 0.5972, Test Acc: 0.5944
+2026-03-18 15:21:11,353 - INFO - Epoch: 017, Train Loss: 0.6906, Val Loss: 0.6748, Train Acc: 0.6073, Val Acc: 0.5972, Test Acc: 0.5874
+2026-03-18 15:21:23,335 - INFO - Epoch: 018, Train Loss: 0.6979, Val Loss: 0.6711, Train Acc: 0.6235, Val Acc: 0.6528, Test Acc: 0.6014
+2026-03-18 15:21:35,272 - INFO - Epoch: 019, Train Loss: 0.6860, Val Loss: 0.6705, Train Acc: 0.6275, Val Acc: 0.6806, Test Acc: 0.6084
+2026-03-18 15:21:47,218 - INFO - Epoch: 020, Train Loss: 0.6810, Val Loss: 0.6694, Train Acc: 0.6296, Val Acc: 0.6806, Test Acc: 0.6084
+2026-03-18 15:21:59,218 - INFO - Epoch: 021, Train Loss: 0.6916, Val Loss: 0.6593, Train Acc: 0.6842, Val Acc: 0.6806, Test Acc: 0.6364
+2026-03-18 15:21:59,220 - INFO - --- Found and saved a better model! ---
+2026-03-18 15:22:11,317 - INFO - Epoch: 022, Train Loss: 0.6872, Val Loss: 0.6551, Train Acc: 0.7004, Val Acc: 0.7083, Test Acc: 0.6643
+2026-03-18 15:22:11,319 - INFO - --- Found and saved a better model! ---
+2026-03-18 15:22:23,162 - INFO - Epoch: 023, Train Loss: 0.6851, Val Loss: 0.6492, Train Acc: 0.7146, Val Acc: 0.7083, Test Acc: 0.6364
+2026-03-18 15:22:23,164 - INFO - --- Found and saved a better model! ---
+2026-03-18 15:22:34,961 - INFO - Epoch: 024, Train Loss: 0.6976, Val Loss: 0.6430, Train Acc: 0.7267, Val Acc: 0.6944, Test Acc: 0.6503
+2026-03-18 15:22:34,963 - INFO - --- Found and saved a better model! ---
+2026-03-18 15:22:46,703 - INFO - Epoch: 025, Train Loss: 0.6856, Val Loss: 0.6482, Train Acc: 0.7206, Val Acc: 0.6806, Test Acc: 0.6294
+2026-03-18 15:22:58,479 - INFO - Epoch: 026, Train Loss: 0.6778, Val Loss: 0.6421, Train Acc: 0.7267, Val Acc: 0.6944, Test Acc: 0.6713
+2026-03-18 15:22:58,511 - INFO - --- Found and saved a better model! ---
+2026-03-18 15:23:10,282 - INFO - Epoch: 027, Train Loss: 0.6906, Val Loss: 0.6471, Train Acc: 0.7227, Val Acc: 0.6944, Test Acc: 0.6503
+2026-03-18 15:23:22,157 - INFO - Epoch: 028, Train Loss: 0.6838, Val Loss: 0.6460, Train Acc: 0.7146, Val Acc: 0.6528, Test Acc: 0.6573
+2026-03-18 15:23:34,035 - INFO - Epoch: 029, Train Loss: 0.6856, Val Loss: 0.6451, Train Acc: 0.7328, Val Acc: 0.6806, Test Acc: 0.6643
+2026-03-18 15:23:45,925 - INFO - Epoch: 030, Train Loss: 0.6855, Val Loss: 0.6435, Train Acc: 0.7247, Val Acc: 0.6667, Test Acc: 0.6643
+2026-03-18 15:23:57,914 - INFO - Epoch: 031, Train Loss: 0.6816, Val Loss: 0.6490, Train Acc: 0.7186, Val Acc: 0.6806, Test Acc: 0.6713
+2026-03-18 15:24:09,926 - INFO - Epoch: 032, Train Loss: 0.6922, Val Loss: 0.6500, Train Acc: 0.7227, Val Acc: 0.6667, Test Acc: 0.6643
+2026-03-18 15:24:21,944 - INFO - Epoch: 033, Train Loss: 0.6816, Val Loss: 0.6449, Train Acc: 0.7206, Val Acc: 0.6944, Test Acc: 0.6923
+2026-03-18 15:24:33,852 - INFO - Epoch: 034, Train Loss: 0.6877, Val Loss: 0.6448, Train Acc: 0.7206, Val Acc: 0.6944, Test Acc: 0.6923
+2026-03-18 15:24:45,829 - INFO - Epoch: 035, Train Loss: 0.6893, Val Loss: 0.6466, Train Acc: 0.7186, Val Acc: 0.6806, Test Acc: 0.6853
+2026-03-18 15:24:57,904 - INFO - Epoch: 036, Train Loss: 0.6825, Val Loss: 0.6367, Train Acc: 0.7146, Val Acc: 0.7222, Test Acc: 0.6853
+2026-03-18 15:24:57,906 - INFO - --- Found and saved a better model! ---
+2026-03-18 15:25:09,934 - INFO - Epoch: 037, Train Loss: 0.6796, Val Loss: 0.6469, Train Acc: 0.7186, Val Acc: 0.6806, Test Acc: 0.6923
+2026-03-18 15:25:21,931 - INFO - Epoch: 038, Train Loss: 0.6822, Val Loss: 0.6418, Train Acc: 0.7206, Val Acc: 0.6944, Test Acc: 0.6923
+2026-03-18 15:25:33,990 - INFO - Epoch: 039, Train Loss: 0.6826, Val Loss: 0.6347, Train Acc: 0.7227, Val Acc: 0.7222, Test Acc: 0.6573
+2026-03-18 15:25:33,992 - INFO - --- Found and saved a better model! ---
+2026-03-18 15:25:46,069 - INFO - Epoch: 040, Train Loss: 0.6905, Val Loss: 0.6295, Train Acc: 0.7287, Val Acc: 0.7361, Test Acc: 0.6573
+2026-03-18 15:25:46,071 - INFO - --- Found and saved a better model! ---
+2026-03-18 15:25:58,259 - INFO - Epoch: 041, Train Loss: 0.6787, Val Loss: 0.6307, Train Acc: 0.7328, Val Acc: 0.7083, Test Acc: 0.6294
+2026-03-18 15:26:10,476 - INFO - Epoch: 042, Train Loss: 0.6740, Val Loss: 0.6336, Train Acc: 0.6984, Val Acc: 0.7083, Test Acc: 0.6503
+2026-03-18 15:26:22,649 - INFO - Epoch: 043, Train Loss: 0.6869, Val Loss: 0.6346, Train Acc: 0.7085, Val Acc: 0.6944, Test Acc: 0.6643
+2026-03-18 15:26:34,824 - INFO - Epoch: 044, Train Loss: 0.6861, Val Loss: 0.6298, Train Acc: 0.7045, Val Acc: 0.7083, Test Acc: 0.6643
+2026-03-18 15:26:47,180 - INFO - Epoch: 045, Train Loss: 0.6763, Val Loss: 0.6261, Train Acc: 0.7166, Val Acc: 0.7222, Test Acc: 0.6503
+2026-03-18 15:26:47,182 - INFO - --- Found and saved a better model! ---
+2026-03-18 15:26:59,888 - INFO - Epoch: 046, Train Loss: 0.6822, Val Loss: 0.6519, Train Acc: 0.6822, Val Acc: 0.6528, Test Acc: 0.6503
+2026-03-18 15:27:11,798 - INFO - Epoch: 047, Train Loss: 0.6853, Val Loss: 0.6466, Train Acc: 0.6964, Val Acc: 0.6806, Test Acc: 0.6643
+2026-03-18 15:27:23,594 - INFO - Epoch: 048, Train Loss: 0.6789, Val Loss: 0.6535, Train Acc: 0.6842, Val Acc: 0.6667, Test Acc: 0.6713
+2026-03-18 15:27:35,475 - INFO - Epoch: 049, Train Loss: 0.6813, Val Loss: 0.6528, Train Acc: 0.7004, Val Acc: 0.6667, Test Acc: 0.6713
+2026-03-18 15:27:47,478 - INFO - Epoch: 050, Train Loss: 0.6832, Val Loss: 0.6456, Train Acc: 0.7045, Val Acc: 0.6806, Test Acc: 0.6783
+
+----------------------------------------------------------------------------------------------
+Multi
+
+2026-03-18 18:47:45,865 - INFO - MultiModalGNN(
+  (graph_branch): GAT_graph_branch(
+    (skip_conn_projection1): Linear(in_features=5, out_features=128, bias=True)
+    (conv1): GATv2Conv(5, 64, heads=2)
+    (bn1): BatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (skip_conn_projection2): Linear(in_features=128, out_features=64, bias=True)
+    (conv2): GATv2Conv(128, 64, heads=1)
+    (bn2): BatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  )
+  (clinical_branch): MLP_clinical_branch(
+    (mlp): Sequential(
+      (0): Linear(in_features=53, out_features=16, bias=True)
+      (1): LayerNorm((16,), eps=1e-05, elementwise_affine=True)
+      (2): ReLU()
+      (3): Dropout(p=0.7, inplace=False)
+      (4): Linear(in_features=16, out_features=4, bias=True)
+      (5): LayerNorm((4,), eps=1e-05, elementwise_affine=True)
+      (6): ReLU()
+      (7): Dropout(p=0.6, inplace=False)
+    )
+  )
+  (classifier): Sequential(
+    (0): Linear(in_features=132, out_features=64, bias=True)
+    (1): ReLU()
+    (2): Dropout(p=0.5, inplace=False)
+    (3): Linear(in_features=64, out_features=2, bias=True)
+  )
+)
+/homes/cbelluti/.local/lib/python3.11/site-packages/torch_geometric/utils/_scatter.py:91: UserWarning: The usage of `scatter(reduce='max')` can be accelerated via the 'torch-scatter' package, but it was not found
+  warnings.warn(
+(base) [cbelluti@ailb-login-02 project_folder]$ tail -f train.err
+    (0): Linear(in_features=132, out_features=64, bias=True)
+    (1): ReLU()
+    (2): Dropout(p=0.5, inplace=False)
+    (3): Linear(in_features=64, out_features=2, bias=True)
+  )
+)
+/homes/cbelluti/.local/lib/python3.11/site-packages/torch_geometric/utils/_scatter.py:91: UserWarning: The usage of `scatter(reduce='max')` can be accelerated via the 'torch-scatter' package, but it was not found
+  warnings.warn(
+2026-03-18 18:48:24,477 - INFO - Epoch: 001, Train Loss: 1.0484, Val Loss: 0.6744, Train Acc: 0.4980, Val Acc: 0.5556, Test Acc: 0.5315
+2026-03-18 18:48:24,485 - INFO - --- Found and saved a better model! ---
+2026-03-18 18:49:02,515 - INFO - Epoch: 002, Train Loss: 0.7322, Val Loss: 0.6881, Train Acc: 0.4737, Val Acc: 0.4861, Test Acc: 0.4895
+2026-03-18 18:49:40,456 - INFO - Epoch: 003, Train Loss: 0.6901, Val Loss: 0.6788, Train Acc: 0.5243, Val Acc: 0.5417, Test Acc: 0.5664
+2026-03-18 18:50:18,215 - INFO - Epoch: 004, Train Loss: 0.6752, Val Loss: 0.6717, Train Acc: 0.6721, Val Acc: 0.5556, Test Acc: 0.7063
+2026-03-18 18:50:18,224 - INFO - --- Found and saved a better model! ---
+2026-03-18 18:50:55,729 - INFO - Epoch: 005, Train Loss: 0.6751, Val Loss: 0.6772, Train Acc: 0.6194, Val Acc: 0.5417, Test Acc: 0.6923
+2026-03-18 18:51:33,094 - INFO - Epoch: 006, Train Loss: 0.6768, Val Loss: 0.6652, Train Acc: 0.7065, Val Acc: 0.5972, Test Acc: 0.7133
+2026-03-18 18:51:33,102 - INFO - --- Found and saved a better model! ---
+2026-03-18 18:52:10,817 - INFO - Epoch: 007, Train Loss: 0.6624, Val Loss: 0.6710, Train Acc: 0.6862, Val Acc: 0.5972, Test Acc: 0.6993
+2026-03-18 18:52:48,461 - INFO - Epoch: 008, Train Loss: 0.6683, Val Loss: 0.6634, Train Acc: 0.6579, Val Acc: 0.5694, Test Acc: 0.6783
+2026-03-18 18:52:48,470 - INFO - --- Found and saved a better model! ---
+2026-03-18 18:53:26,342 - INFO - Epoch: 009, Train Loss: 0.6522, Val Loss: 0.6592, Train Acc: 0.6822, Val Acc: 0.6250, Test Acc: 0.7133
+2026-03-18 18:53:26,357 - INFO - --- Found and saved a better model! ---
+2026-03-18 18:54:04,491 - INFO - Epoch: 010, Train Loss: 0.6531, Val Loss: 0.6622, Train Acc: 0.6377, Val Acc: 0.5417, Test Acc: 0.6713
+2026-03-18 18:54:42,729 - INFO - Epoch: 011, Train Loss: 0.6564, Val Loss: 0.6877, Train Acc: 0.5951, Val Acc: 0.5694, Test Acc: 0.5874
+2026-03-18 18:55:21,548 - INFO - Epoch: 012, Train Loss: 0.6656, Val Loss: 0.6591, Train Acc: 0.6903, Val Acc: 0.5972, Test Acc: 0.7413
+2026-03-18 18:55:21,556 - INFO - --- Found and saved a better model! ---
+2026-03-18 18:56:00,254 - INFO - Epoch: 013, Train Loss: 0.6532, Val Loss: 0.6724, Train Acc: 0.6781, Val Acc: 0.5833, Test Acc: 0.6853
+2026-03-18 18:56:39,463 - INFO - Epoch: 014, Train Loss: 0.6301, Val Loss: 0.6598, Train Acc: 0.7166, Val Acc: 0.6389, Test Acc: 0.7273
+2026-03-18 18:57:18,293 - INFO - Epoch: 015, Train Loss: 0.6299, Val Loss: 0.7035, Train Acc: 0.6640, Val Acc: 0.5833, Test Acc: 0.6993
+2026-03-18 18:57:57,180 - INFO - Epoch: 016, Train Loss: 0.6504, Val Loss: 0.6558, Train Acc: 0.6579, Val Acc: 0.5694, Test Acc: 0.6853
+2026-03-18 18:57:57,188 - INFO - --- Found and saved a better model! ---
+2026-03-18 18:58:35,879 - INFO - Epoch: 017, Train Loss: 0.6017, Val Loss: 0.6446, Train Acc: 0.7449, Val Acc: 0.6389, Test Acc: 0.7832
+2026-03-18 18:58:35,887 - INFO - --- Found and saved a better model! ---
+2026-03-18 18:59:14,744 - INFO - Epoch: 018, Train Loss: 0.6215, Val Loss: 0.6568, Train Acc: 0.7490, Val Acc: 0.6250, Test Acc: 0.7413
+2026-03-18 18:59:53,757 - INFO - Epoch: 019, Train Loss: 0.6255, Val Loss: 0.6502, Train Acc: 0.7632, Val Acc: 0.6806, Test Acc: 0.7622
+2026-03-18 19:00:32,696 - INFO - Epoch: 020, Train Loss: 0.5847, Val Loss: 0.6291, Train Acc: 0.7470, Val Acc: 0.6250, Test Acc: 0.7133
+2026-03-18 19:00:32,704 - INFO - --- Found and saved a better model! ---
+2026-03-18 19:01:11,774 - INFO - Epoch: 021, Train Loss: 0.5774, Val Loss: 0.6199, Train Acc: 0.7935, Val Acc: 0.6389, Test Acc: 0.7343
+2026-03-18 19:01:50,918 - INFO - Epoch: 022, Train Loss: 0.5541, Val Loss: 0.6357, Train Acc: 0.7814, Val Acc: 0.6111, Test Acc: 0.7552
+2026-03-18 19:02:29,858 - INFO - Epoch: 023, Train Loss: 0.5985, Val Loss: 0.6435, Train Acc: 0.7551, Val Acc: 0.6250, Test Acc: 0.7273
+2026-03-18 19:03:08,777 - INFO - Epoch: 024, Train Loss: 0.6087, Val Loss: 0.7425, Train Acc: 0.7024, Val Acc: 0.6111, Test Acc: 0.6783
+2026-03-18 19:03:47,891 - INFO - Epoch: 025, Train Loss: 0.6087, Val Loss: 0.6909, Train Acc: 0.6417, Val Acc: 0.5833, Test Acc: 0.6294
+2026-03-18 19:04:27,191 - INFO - Epoch: 026, Train Loss: 0.5580, Val Loss: 0.5878, Train Acc: 0.7814, Val Acc: 0.6667, Test Acc: 0.7972
+2026-03-18 19:04:27,199 - INFO - --- Found and saved a better model! ---
+2026-03-18 19:05:05,580 - INFO - Epoch: 027, Train Loss: 0.5533, Val Loss: 0.5833, Train Acc: 0.7874, Val Acc: 0.6944, Test Acc: 0.7902
+2026-03-18 19:05:05,588 - INFO - --- Found and saved a better model! ---
+2026-03-18 19:05:44,647 - INFO - Epoch: 028, Train Loss: 0.4890, Val Loss: 0.7351, Train Acc: 0.6741, Val Acc: 0.5972, Test Acc: 0.6434
+2026-03-18 19:06:23,504 - INFO - Epoch: 029, Train Loss: 0.5007, Val Loss: 0.5551, Train Acc: 0.8583, Val Acc: 0.6944, Test Acc: 0.8322
+2026-03-18 19:06:23,512 - INFO - --- Found and saved a better model! ---
+2026-03-18 19:07:02,301 - INFO - Epoch: 030, Train Loss: 0.4656, Val Loss: 0.5014, Train Acc: 0.8482, Val Acc: 0.7778, Test Acc: 0.8462
+2026-03-18 19:07:02,310 - INFO - --- Found and saved a better model! ---
+2026-03-18 19:07:41,229 - INFO - Epoch: 031, Train Loss: 0.4751, Val Loss: 0.5185, Train Acc: 0.8664, Val Acc: 0.7500, Test Acc: 0.8392
+2026-03-18 19:08:19,234 - INFO - Epoch: 032, Train Loss: 0.4229, Val Loss: 0.5105, Train Acc: 0.8725, Val Acc: 0.7361, Test Acc: 0.8042
+2026-03-18 19:08:58,036 - INFO - Epoch: 033, Train Loss: 0.4628, Val Loss: 0.6664, Train Acc: 0.7874, Val Acc: 0.7083, Test Acc: 0.7063
+2026-03-18 19:09:36,345 - INFO - Epoch: 034, Train Loss: 0.3927, Val Loss: 0.5262, Train Acc: 0.8279, Val Acc: 0.6944, Test Acc: 0.7902
+2026-03-18 19:10:15,066 - INFO - Epoch: 035, Train Loss: 0.3941, Val Loss: 0.4674, Train Acc: 0.9008, Val Acc: 0.7917, Test Acc: 0.8182
+2026-03-18 19:10:54,005 - INFO - Epoch: 036, Train Loss: 0.3592, Val Loss: 0.4391, Train Acc: 0.9150, Val Acc: 0.7778, Test Acc: 0.8601
+2026-03-18 19:11:32,184 - INFO - Epoch: 037, Train Loss: 0.3738, Val Loss: 0.4593, Train Acc: 0.9130, Val Acc: 0.7500, Test Acc: 0.8392
+2026-03-18 19:12:10,189 - INFO - Epoch: 038, Train Loss: 0.3572, Val Loss: 0.4939, Train Acc: 0.8441, Val Acc: 0.7361, Test Acc: 0.8182
+2026-03-18 19:12:10,197 - INFO - --- Found and saved a better model! ---
+2026-03-18 19:12:48,551 - INFO - Epoch: 039, Train Loss: 0.3313, Val Loss: 0.4504, Train Acc: 0.9211, Val Acc: 0.8333, Test Acc: 0.8462
+2026-03-18 19:13:26,117 - INFO - Epoch: 040, Train Loss: 0.3491, Val Loss: 0.4640, Train Acc: 0.9109, Val Acc: 0.8194, Test Acc: 0.8741
+2026-03-18 19:13:26,125 - INFO - --- Found and saved a better model! ---
+2026-03-18 19:14:03,620 - INFO - Epoch: 041, Train Loss: 0.3352, Val Loss: 0.5631, Train Acc: 0.8846, Val Acc: 0.8056, Test Acc: 0.8531
+2026-03-18 19:14:41,175 - INFO - Epoch: 042, Train Loss: 0.3338, Val Loss: 0.4577, Train Acc: 0.8765, Val Acc: 0.7500, Test Acc: 0.8252
+2026-03-18 19:15:18,886 - INFO - Epoch: 043, Train Loss: 0.2912, Val Loss: 0.5558, Train Acc: 0.8482, Val Acc: 0.7639, Test Acc: 0.8182
+2026-03-18 19:15:56,748 - INFO - Epoch: 044, Train Loss: 0.2966, Val Loss: 0.5214, Train Acc: 0.8563, Val Acc: 0.7500, Test Acc: 0.7972
+2026-03-18 19:16:34,597 - INFO - Epoch: 045, Train Loss: 0.2453, Val Loss: 0.3969, Train Acc: 0.9433, Val Acc: 0.8333, Test Acc: 0.8601
+2026-03-18 19:17:12,614 - INFO - Epoch: 046, Train Loss: 0.2771, Val Loss: 0.4245, Train Acc: 0.9251, Val Acc: 0.8056, Test Acc: 0.8601
+2026-03-18 19:17:50,932 - INFO - Epoch: 047, Train Loss: 0.2493, Val Loss: 0.3759, Train Acc: 0.9372, Val Acc: 0.8889, Test Acc: 0.8741
+2026-03-18 19:18:29,361 - INFO - Epoch: 048, Train Loss: 0.2352, Val Loss: 0.5713, Train Acc: 0.8826, Val Acc: 0.7778, Test Acc: 0.8042
+2026-03-18 19:19:07,926 - INFO - Epoch: 049, Train Loss: 0.2747, Val Loss: 0.4410, Train Acc: 0.9494, Val Acc: 0.8056, Test Acc: 0.8811
+2026-03-18 19:19:46,459 - INFO - Epoch: 050, Train Loss: 0.2761, Val Loss: 0.3491, Train Acc: 0.9514, Val Acc: 0.8750, Test Acc: 0.8531
