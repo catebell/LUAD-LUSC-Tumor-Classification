@@ -1,6 +1,5 @@
 import torch.nn as nn
 import torch
-from torch_geometric.nn import BatchNorm
 
 from models.GAT_graph_branch import GAT_graph_branch
 from models.MLP_clinical_branch import MLP_clinical_branch
