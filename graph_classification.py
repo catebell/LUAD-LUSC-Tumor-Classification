@@ -12,6 +12,9 @@ from models.GAT import GAT
 from models.MLP import MLP
 from models.MultiModalGNN import MultiModalGNN
 
+import warnings
+warnings.filterwarnings("ignore")
+# TODO rimuovere sta cosa
 
 logging.basicConfig(
     level=logging.INFO,
@@ -100,7 +103,7 @@ clinical_std = torch.tensor(clinical_feat_scaler.scale_, dtype=torch.float, devi
 # train loop
 
 lr_max = 0.001
-max_epochs = 50
+max_epochs = 100
 
 optimizer = torch.optim.Adam(model.parameters(), lr=lr_max)  # lr = Learning Rate
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
@@ -204,6 +207,7 @@ def test(loader):
 
 
 best_val_loss = float('inf')
+early_stopping_counter = 0
 
 for epoch in range(1, max_epochs + 1):
     train_loss = train()
@@ -219,7 +223,14 @@ for epoch in range(1, max_epochs + 1):
                  f' Val Acc: {val_acc:.4f}, Test Acc: {test_acc:.4f}')
 
     #save best model based on Val Loss
-    if val_loss < best_val_loss and train_acc - test_acc < 0.05:
+    if val_loss < best_val_loss and train_acc - test_acc < 0.1:
+        early_stopping_counter = 0
         best_val_loss = val_loss
         torch.save(model.state_dict(), 'best_classification_gnn.pth')
         logging.info("--- Found and saved a better model! ---")
+
+    if early_stopping_counter > 20:
+        logging.info("--- Stopping training due to early stopping --- ")
+        break
+    else:
+        early_stopping_counter += 1

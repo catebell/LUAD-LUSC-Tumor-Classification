@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch
+from torch_geometric.nn import BatchNorm
 
 from models.GAT_graph_branch import GAT_graph_branch
 from models.MLP_clinical_branch import MLP_clinical_branch
@@ -41,6 +42,7 @@ class MultiModalGNN(nn.Module):
         emb_clinical = self.clinical_branch(clinical_data)  # clinical representation embedding
 
         # L2 embeddings normalization
+        emb_graph = torch.nn.functional.normalize(emb_graph, p=2, dim=1)
         emb_clinical = torch.nn.functional.normalize(emb_clinical, p=2, dim=1)
 
         emb_combined = torch.cat([emb_graph, emb_clinical*0.8], dim=-1)  # feature fusion
