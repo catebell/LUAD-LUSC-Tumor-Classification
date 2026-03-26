@@ -9,9 +9,9 @@ import torch_geometric.transforms as T
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from torch_geometric.transforms import ToUndirected
 
-from extract_CNV_data import create_cnv_df
-from extract_RNA_data import create_rna_df
-from extract_methylation_data import create_meth_df
+from preprocessing_CNV_to_df import create_cnv_df
+from preprocessing_RNA_to_df import create_rna_df
+from preprocessing_methylation_to_df import create_meth_df
 from models.GAT import GAT
 
 """
@@ -46,7 +46,7 @@ labels_dict = dict(zip(clinical_features_df['case_id'], clinical_features_df['pr
 # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
 # file extracted using create_tsv_from_STRING_files.create_gene_aliases_proteins_ids_mapping_file()
 logging.info("Reading protein-aliases-gene file...")
-genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
+genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
 # unique genes_ids mapping to numerical index
 unique_nodes = genes_mapping_df['gene_id'].unique()
@@ -57,7 +57,7 @@ node_map = {node: i for i, node in enumerate(unique_nodes)}  # TODO maybe with a
 # file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
 # --> 9606.protein.links file under INTERACTION DATA, place the .txt extracted into original_dataset/
 logging.info("Reading protein-links file...")
-protein_links_df = pd.read_csv('downloaded_files/9606.protein.links.v12.0.txt', sep=' ')
+protein_links_df = pd.read_csv('STRING_downloaded_files/9606.protein.links.v12.0.txt', sep=' ')
 
 # refactor the score in a [0-1] interval, like returned by stringdb.get_network()
 protein_links_df['combined_score'] = protein_links_df['combined_score'] / 1000
@@ -71,7 +71,7 @@ protein_links_df.reset_index(inplace=True, drop=True)
 # METHYLATION ILLUMINA MANIFEST FOR CpG-GENE MAPPING
 logging.info("Reading Illumina manifest...")
 # file downloaded from https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html
-# place .csv file into methylation_manifests/originals, then run methylation_manifest_to_tsv.py
+# place .csv file into methylation_manifests/originals_downloaded, then run methylation_manifest_to_tsv.py
 meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 
 ###

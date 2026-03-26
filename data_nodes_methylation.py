@@ -14,7 +14,7 @@ OUTPUT_DIR = "weight_edges/methylation"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 MANIFEST_FILE = "methylation_manifests/methylation_manifest450.tsv"
-STRING_EDGES_FILE = "downloaded_files/9606.protein.links.v12.0.txt"
+STRING_EDGES_FILE = "STRING_downloaded_files/9606.protein.links.v12.0.txt"
 
 MIN_PRESENCE = 0.6      # prima 0.8 → più inclusivo
 MIN_VARIANCE = 0        # rimosso filtro varianza
@@ -79,7 +79,7 @@ print("Gene_symbol × sample shape:", gene_matrix.shape)
 # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
 # file extracted using create_tsv_from_STRING_files.create_gene_aliases_proteins_ids_mapping_file()
 print("Reading protein-aliases-gene file...")
-genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t', dtype=str)
+genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t', dtype=str)
 genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
 
 gene_matrix.index = gene_matrix.index.str.strip()
@@ -120,7 +120,7 @@ print("\nLoading STRING backbone...")
 string_edges_df = pd.read_csv(STRING_EDGES_FILE, sep="\s+", dtype=str)
 string_edges_df.drop(string_edges_df[string_edges_df['combined_score'] < ppi_score_threshold].index, inplace=True)
 
-protein2gene = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep="\t", dtype=str)
+protein2gene = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep="\t", dtype=str)
 protein2gene = protein2gene[["protein_id", "gene_id"]].dropna()
 protein2gene = protein2gene[protein2gene["gene_id"].str.startswith("ENSG")]
 

@@ -2,7 +2,7 @@ import pandas as pd
 
 # not useful, too little values, 450k is ok
 '''
-df_meth27_manifest = pd.read_excel('methylation_manifests/originals/illumina_humanmethylation27_content.xlsx',
+df_meth27_manifest = pd.read_excel('methylation_manifests/originals_downloaded/illumina_humanmethylation27_content.xlsx',
                                    usecols=['Name', 'Chr', 'Gene_Strand', 'Symbol'], dtype=str)
 df_meth27_manifest.rename(columns={"Name": "cpg_IlmnID", "Chr": "gene_chr", "Gene_Strand":"gene_strand", "Symbol":"gene_symbol"}, inplace=True)
 # drop rows not about 'cg...'
@@ -15,7 +15,7 @@ df_meth27_manifest.to_csv(r"methylation_manifests/methylation_manifest27.tsv", s
 # DE-COMMENT TO EXTRACT TSV
 
 cols = ['IlmnID','CHR','Strand','UCSC_RefGene_Name','UCSC_RefGene_Group','Relation_to_UCSC_CpG_Island']
-df_meth450_manifest = pd.read_csv('methylation_manifests/originals/humanmethylation450_15017482_v1-2.csv',
+df_meth450_manifest = pd.read_csv('methylation_manifests/originals_downloaded/humanmethylation450_15017482_v1-2.csv',
                                   comment='#', usecols=cols, dtype=str)
 df_meth450_manifest.rename(columns={"IlmnID": "cpg_IlmnID", "CHR": "gene_chr", "Strand":"gene_strand", "UCSC_RefGene_Name":"gene_symbol", "Relation_to_UCSC_CpG_Island":"cpg_position", "UCSC_RefGene_Group":"cpg_region"}, inplace=True)
 # drop rows not about 'cg...'
@@ -32,7 +32,7 @@ df_meth450_manifest.to_csv(r"methylation_manifests/methylation_manifest450.tsv",
 
 # probably not useful, 450k is enough
 '''
-df_methEPICb4_manifest = pd.read_csv('methylation_manifests/originals/MethylationEPIC_v-1-0_B4.csv',
+df_methEPICb4_manifest = pd.read_csv('methylation_manifests/originals_downloaded/MethylationEPIC_v-1-0_B4.csv',
                                      comment='#', usecols=['IlmnID', 'CHR', 'UCSC_RefGene_Name', 'GencodeBasicV12_Accession'], dtype=str)
 df_methEPICb4_manifest.rename(columns={"IlmnID": "cpg_IlmnID", "CHR": "gene_chr", "UCSC_RefGene_Name":"gene_symbol", "GencodeBasicV12_Accession":"gene_id"}, inplace=True)
 # drop rows not about 'cg...'
@@ -43,7 +43,7 @@ df_methEPICb4_manifest.dropna(subset=["cpg_IlmnID", "gene_symbol"], inplace=True
 df_methEPICb4_manifest.to_csv(r"methylation_manifests/methylation_manifestEPICb4.tsv", sep="\t", index=False)
 
 
-df_methEPICb5_manifest = pd.read_csv('methylation_manifests/originals/infinium-methylationepic-v-1-0-b5-manifest-file.csv',
+df_methEPICb5_manifest = pd.read_csv('methylation_manifests/originals_downloaded/infinium-methylationepic-v-1-0-b5-manifest-file.csv',
                                      comment='#', usecols=['IlmnID', 'CHR', 'UCSC_RefGene_Name', 'GencodeBasicV12_Accession'], dtype=str)
 df_methEPICb5_manifest.rename(columns={"IlmnID": "cpg_IlmnID", "CHR": "gene_chr", "UCSC_RefGene_Name":"gene_symbol", "GencodeBasicV12_Accession":"gene_id"},
                               inplace=True)

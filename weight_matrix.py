@@ -4,12 +4,12 @@ import pandas as pd
 # 1. Carica i file
 # --------------------------------------------------
 protein_links = pd.read_csv(
-    "downloaded_files/9606.protein.links.v12.0.txt",
+    "STRING_downloaded_files/9606.protein.links.v12.0.txt",
     sep=" ", header=0
 )
 
 protein_aliases = pd.read_csv(
-    "downloaded_files/9606.protein.aliases.gene.tsv",
+    "STRING_downloaded_files/9606.protein.aliases.gene.tsv",
     sep="\t", header=0
 )
 

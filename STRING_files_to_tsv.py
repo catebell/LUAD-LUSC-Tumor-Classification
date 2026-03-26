@@ -6,34 +6,34 @@ def main():
 
 def create_genes_id_mapping_file():
     """Creates the tsv file that nodes/genes use to get their associated unique ordered id.
-    Output saved in 'downloaded_files/gene_ids_mapped.tsv'"""
+    Output saved in 'files/clinical/gene_ids_mapped.tsv'"""
 
     # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
     # file extracted using string_files_to_tsv.py --> create_protein_links()
-    genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv',
+    genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv',
                                    sep='\t')  # proteins-genes mapping df
 
     # unique genes_ids mapping to numerical index
     unique_nodes = genes_mapping_df['gene_id'].unique()
     node_map = {node: i for i, node in enumerate(
-        unique_nodes)}  # TODO maybe with a LabelEncoder (https://stackoverflow.com/questions/44617871/how-to-convert-a-list-of-strings-into-a-tensor-in-pytorch)
+        unique_nodes)}
     node_map = node_map  # global dictionary for Gene_ID -> Index mapping
 
     genes_id_mapping_df = pd.DataFrame(node_map.items(), columns=['gene_id', 'gene_id_mapped'])
 
     # save to file
-    genes_id_mapping_df.to_csv('downloaded_files/gene_ids_mapped.tsv', sep="\t", index=False)
+    genes_id_mapping_df.to_csv('files/clinical/gene_ids_mapped.tsv', sep="\t", index=False)
 
 
 def create_gene_aliases_proteins_ids_mapping_file():
     """Run to re-create the 9606.protein.aliases.gene txt file with protein_id, gene_name and gene_id (retrieved using
     mygene lib) mapping and excluding data not useful.
-    Output will be saved in 'downloaded_files/9606.protein.aliases.gene.tsv'.
+    Output will be saved in 'STRING_downloaded_files/9606.protein.aliases.gene.tsv'.
     Takes a lot of time."""
 
     import mygene
 
-    output_filepath = "downloaded_files/9606.protein.aliases.gene.tsv"
+    output_filepath = "STRING_downloaded_files/9606.protein.aliases.gene.tsv"
 
     def map_symbols_to_ensg(gene_symbols):
         mg = mygene.MyGeneInfo()
@@ -70,7 +70,7 @@ def create_gene_aliases_proteins_ids_mapping_file():
     # file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
     # --> 9606.protein.aliases file under ACCESSORY DATA, place the .txt extracted into original_dataset/
     print("Reading protein-aliases file...")
-    df_iter = pd.read_csv('downloaded_files/9606.protein.aliases.v12.0.txt', sep='\t',
+    df_iter = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.v12.0.txt', sep='\t',
                           usecols=['#string_protein_id', 'alias'], chunksize=10000)  # Process 50000 rows at a time
 
     protein_aliases_df = pd.DataFrame(columns=['protein_id', 'alias', 'gene_id'])

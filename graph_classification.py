@@ -46,7 +46,7 @@ file_mapping_df_test = file_mapping_df[file_mapping_df['case_id'].isin(
 file_mapping_df_val = file_mapping_df[file_mapping_df['case_id'].isin(
     patient_split_df[patient_split_df['split'] == 'val']['cases.case_id'])]
 
-node_map_df = pd.read_csv('downloaded_files/gene_ids_mapped.tsv', sep='\t')
+node_map_df = pd.read_csv('files/clinical/gene_ids_mapped.tsv', sep='\t')
 node_map = dict(zip(node_map_df.gene_id, node_map_df.gene_id_mapped))
 
 # graph dataset initialization; if not exists, it gets created
@@ -101,11 +101,27 @@ clinical_mean = torch.tensor(clinical_feat_scaler.mean_, dtype=torch.float, devi
 clinical_std = torch.tensor(clinical_feat_scaler.scale_, dtype=torch.float, device=device)
 
 # train loop
-
-lr_max = 0.001
 max_epochs = 100
 
-optimizer = torch.optim.Adam(model.parameters(), lr=lr_max)  # lr = Learning Rate
+def get_optimizer(model, lr, default):
+    # Separiamo i parametri dell'MLP dagli altri
+    mlp_params = []
+    other_params = []
+
+    for name, param in model.named_parameters():
+        if 'mlp' in name or 'classifier' in name:
+            mlp_params.append(param)
+        else:
+            other_params.append(param)
+
+    return torch.optim.Adam([
+        {'params': other_params, 'weight_decay': default},
+        {'params': mlp_params, 'weight_decay': 1e-2}
+    ], lr=lr)
+
+
+optimizer = get_optimizer(model, 0.001, 1e-4)
+#optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-2)  # lr = Learning Rate
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
 '''
 ReduceLROnPlateau: Invece di calare "a prescindere" dal tempo (come fanno Exponential o Cosine), cala solo quando la
@@ -121,7 +137,7 @@ w0 = len(train_labels) / (2 * counts[0])
 w1 = len(train_labels) / (2 * counts[1])
 weights = torch.tensor([w0, w1], dtype=torch.float).to(device)
 
-criterion = torch.nn.CrossEntropyLoss(weights)
+criterion = torch.nn.CrossEntropyLoss(weights, label_smoothing=0.1)
 
 logging.info(model)
 
@@ -131,7 +147,8 @@ def train():
     total_loss = 0
     model.zero_grad()
 
-    for data in train_loader:  # Iterate in batches over the training dataset.
+    for og in train_loader:  # Iterate in batches over the training dataset.
+        data = og.clone()
         data = data.to(device)
         # .transform() works with numpy, library on GPU (not CUDA-efficient)
         #data.x[:, :4] = torch.tensor(node_feat_scaler.transform(data.x[:, :4].numpy())).to(device)
@@ -165,7 +182,8 @@ def train():
 def validate():
     model.eval()
     total_loss = 0
-    for data in val_loader:
+    for og in val_loader:
+        data = og.clone()
         data = data.to(device)
         data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
         data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
@@ -188,7 +206,8 @@ def test(loader):
      model.eval()
      correct = 0
 
-     for data in loader:  # Iterate in batches over the training/test dataset.
+     for og in loader:  # Iterate in batches over the training/test dataset.
+         data = og.clone()
          data = data.to(device)
          data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
          data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
@@ -223,14 +242,15 @@ for epoch in range(1, max_epochs + 1):
                  f' Val Acc: {val_acc:.4f}, Test Acc: {test_acc:.4f}')
 
     #save best model based on Val Loss
-    if val_loss < best_val_loss and train_acc - test_acc < 0.1:
-        early_stopping_counter = 0
+    if val_loss < best_val_loss:
         best_val_loss = val_loss
+        early_stopping_counter = 0
+
         torch.save(model.state_dict(), 'best_classification_gnn.pth')
-        logging.info("--- Found and saved a better model! ---")
+        logging.info("--- Found and saved a better model! ---\n")
 
     if early_stopping_counter > 20:
-        logging.info("--- Stopping training due to early stopping --- ")
+        logging.info("--- Stopping training due to early stopping ---")
         break
     else:
         early_stopping_counter += 1

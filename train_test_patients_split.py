@@ -42,7 +42,7 @@ train_val, test = train_test_split(
     filtered_patients,
     test_size=0.20,
     stratify=filtered_patients['project.project_id'],
-    random_state=42
+    random_state=7  # or 42
 )
 
 # Train (70% totale) vs Val (10% totale)
@@ -50,7 +50,7 @@ train, val = train_test_split(
     train_val,
     test_size=0.125,  # 0.125 * 0.8 ≈ 0.10
     stratify=train_val['project.project_id'],
-    random_state=42
+    random_state=7  # or 42
 )
 
 filtered_patients['split'] = 'none'

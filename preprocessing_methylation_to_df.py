@@ -12,12 +12,12 @@ def main():
     # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
     # file extracted using create_tsv_from_STRING_files.create_gene_aliases_proteins_ids_mapping_file()
     print("Reading protein-aliases-gene file...")
-    genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
+    genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
     # METHYLATION ILLUMINA MANIFEST FOR CpG-GENE MAPPING
     print("Reading Illumina manifest...")
     # file downloaded from https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html
-    # place .csv file into methylation_manifests/originals, then run methylation_manifest_to_tsv.py
+    # place .csv file into methylation_manifests/originals_downloaded, then run methylation_manifest_to_tsv.py
     meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 
     create_meth_df(example_case_id, file_mapping_df, genes_mapping_df, meth_manifest_df)

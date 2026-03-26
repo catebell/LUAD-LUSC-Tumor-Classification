@@ -66,22 +66,22 @@ class PatientGraphDataset(Dataset):
 
     def process(self):
         # Single execution to convert everything in .pt
-        from extract_CNV_data import create_cnv_df
-        from extract_RNA_data import create_rna_df
-        from extract_methylation_data import create_meth_df
+        from preprocessing_CNV_to_df import create_cnv_df
+        from preprocessing_RNA_to_df import create_rna_df
+        from preprocessing_methylation_to_df import create_meth_df
 
         start_time = time.time()
 
         # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
         # file extracted using string_files_to_tsv.py --> create_protein_links()
-        genes_mapping_df = pd.read_csv('downloaded_files/9606.protein.aliases.gene.tsv',
-                                            sep='\t')  # proteins-genes mapping df
+        genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv',
+                                       sep='\t')  # proteins-genes mapping df
 
         # PROTEINS LINKS
         # file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
         # --> 9606.protein.links file under INTERACTION DATA, place the .txt extracted into original_dataset/
         print("Reading protein-links file...")
-        protein_links_df = pd.read_csv('downloaded_files/9606.protein.links.v12.0.txt', sep=' ')
+        protein_links_df = pd.read_csv('STRING_downloaded_files/9606.protein.links.v12.0.txt', sep=' ')
 
         # refactor the score in a [0-1] interval, like returned by stringdb.get_network()
         protein_links_df['combined_score'] = protein_links_df['combined_score'] / 1000
@@ -95,7 +95,7 @@ class PatientGraphDataset(Dataset):
         # METHYLATION ILLUMINA MANIFEST FOR CpG-GENE MAPPING
         print("Reading Illumina manifest...")
         # file downloaded from https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html
-        # place .csv file into methylation_manifests/originals, then run methylation_manifest_to_tsv.py
+        # place .csv file into methylation_manifests/originals_downloaded, then run methylation_manifest_to_tsv.py
         meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 
         for case_id in self.patient_list:
@@ -174,8 +174,8 @@ class PatientGraphDataset(Dataset):
         num_nodes = len(self.node_map)
 
         # only the rows corresponding to this specific patient genes are filled (non-zero), with gene_id_mapped as index
-        x_df = node_features_df.reindex(np.arange(0, num_nodes), fill_value=0)
-        x = torch.tensor(x_df.loc[x_df.index, features_cols].values.astype(float), dtype=torch.float)
+        x_df = node_features_df.reindex(np.arange(0, num_nodes))
+        x = torch.tensor(x_df.loc[x_df.index, features_cols].fillna(0).values.astype(float), dtype=torch.float)
 
         edge_index = torch.as_tensor(np.stack([
             edge_features_df['gene1'].map(self.node_map).values, edge_features_df['gene2'].map(self.node_map).values
