@@ -67,7 +67,7 @@ df_meth = pd.read_csv(f"files/methylation/{file_mapping_df[
     (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'methylation')
     ]['filename'].to_string(index=False)}", sep='\t', names=['cpg_IlmnID', 'beta_value'], dtype=str)
 
-df_match_cpg_gene = pd.read_csv("original_dataset/matched_cpg_genes_converted.csv", dtype=str)
+df_match_cpg_gene = pd.read_csv("methylation_manifests/matched_cpg_genes_converted.csv", dtype=str)
 df_meth = pd.merge(df_meth, df_match_cpg_gene[['cpg_IlmnID', 'gene_chr', 'gene_id', 'gene_symbol']], on='cpg_IlmnID', how='left')
 print("Added symbols from matched_cpg_genes_converted.csv")
 print("Tot cpgIDs: " + str(len(df_meth)))
