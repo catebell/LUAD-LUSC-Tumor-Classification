@@ -19,10 +19,15 @@ class GAT_graph_branch(torch.nn.Module):
                                edge_dim=num_edge_features, heads=1)
         self.bn2 = BatchNorm(hidden_channels)
 
+        self.dropout = torch.nn.Dropout(0.5)
 
-    def forward(self, x, edge_index, edge_attr, batch):
+
+    def forward(self, x, edge_index, edge_attr, batch, return_attention_weights=False):
         x_projected = self.skip_conn_projection1(x)
-        x = self.conv1(x, edge_index, edge_attr=edge_attr)
+        if return_attention_weights:
+            x, att_weights = self.conv1(x, edge_index, edge_attr=edge_attr, return_attention_weights=True)
+        else:
+            x = self.conv1(x, edge_index, edge_attr=edge_attr)
         x = self.bn1(x)
         x = x + x_projected
         x = F.elu(x)
@@ -37,4 +42,11 @@ class GAT_graph_branch(torch.nn.Module):
         x_max = global_max_pool(x, batch)
         x = torch.cat([x_mean, x_max], dim=1)  # now x has dimension hidden_channels * 2
 
+        x = self.dropout(x)
+
+        if return_attention_weights:
+            return x, att_weights
         return x
+
+    def get_attention(self, x, edge_index, edge_attr, batch):
+        return self.forward(x, edge_index, edge_attr, batch, return_attention_weights=True)
