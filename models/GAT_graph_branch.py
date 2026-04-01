@@ -19,8 +19,6 @@ class GAT_graph_branch(torch.nn.Module):
                                edge_dim=num_edge_features, heads=1)
         self.bn2 = BatchNorm(hidden_channels)
 
-        self.dropout = torch.nn.Dropout(0.5)
-
 
     def forward(self, x, edge_index, edge_attr, batch, return_attention_weights=False):
         x_projected = self.skip_conn_projection1(x)
@@ -41,8 +39,6 @@ class GAT_graph_branch(torch.nn.Module):
         x_mean = global_mean_pool(x, batch)
         x_max = global_max_pool(x, batch)
         x = torch.cat([x_mean, x_max], dim=1)  # now x has dimension hidden_channels * 2
-
-        x = self.dropout(x)
 
         if return_attention_weights:
             return x, att_weights

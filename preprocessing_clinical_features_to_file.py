@@ -118,9 +118,10 @@ features_df['exposures.tobacco_smoker'] = features_df['exposures.tobacco_smoker'
 
 # features already numerical, set NA to 0:
 cols = ['exposures.pack_years_smoked', 'exposures.tobacco_years', 'demographic.age_at_index']
-for col in cols:
-    median_val = pd.to_numeric(features_df[col], errors='coerce').median()  # if set to 0 it may be considered outlier
-    features_df[col] = features_df[col].fillna(median_val)
+with pd.option_context("future.no_silent_downcasting", True):
+    for col in cols:
+        median_val = pd.to_numeric(features_df[col], errors='coerce').median()  # if set to 0 it may be considered outlier
+        features_df[col] = features_df[col].fillna(median_val)
 
 # for diagnoses.ajcc_pathologic_stage, ordinal:
 stage_map = {'Stage I': 1, 'Stage IA': 1, 'Stage IB': 1, 'Stage II': 2, 'Stage IIA': 2,
@@ -142,7 +143,10 @@ cols = [
     'diagnoses.tissue_or_organ_of_origin'
 ]
 
-categories = [features_df[col].dropna().unique() for col in cols]  # all possible not NA vals of each category
+for col in cols:
+    features_df[col] = features_df[col].str.replace(".", "_").str.replace(" ", "_")
+
+categories = [features_df[col].dropna().unique() for col in cols]  # list of all possible not NA vals of each category
 
 ct = ColumnTransformer(
     transformers=[('encoder', OneHotEncoder(categories=categories, handle_unknown='ignore'), cols)],

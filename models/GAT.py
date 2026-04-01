@@ -46,11 +46,6 @@ class GAT(torch.nn.Module):
 
 
 '''
-1. Gestione del Dropout
-Attualmente hai il dropout solo sul classificatore. Nei GAT è molto efficace applicare il dropout anche ai coefficienti di attenzione e all'input dei layer convolutivi.
-
-self.conv1 = GATv2Conv(..., dropout=0.2) # Dropout sulle attention heads
-self.conv2 = GATv2Conv(..., dropout=0.2)
 
 2. Batch Normalization e Skip Connections
 Con grafi di 20.000 nodi, il segnale tende a "diluirsi" o a svanire (vanishing gradient).
@@ -99,4 +94,8 @@ self.classifier = torch.nn.Sequential(
 
 5. Learning Rate Scheduler
 https://medium.com/@theom/a-very-short-visual-introduction-to-learning-rate-schedulers-with-code-189eddffdb00
+
+ReduceLROnPlateau: Invece di calare "a prescindere" dal tempo (come fanno Exponential o Cosine), cala solo quando la
+Val Loss smette di migliorare. È molto più intelligente per dati biologici dove la velocità di convergenza può variare
+tra un run e l'altro.
 '''

@@ -6,15 +6,15 @@ import seaborn as sns
 
 from multiomics_graph_creation import ppi_score_threshold
 
-CNV_DIR = "files/CNV"
+CNV_DIR = "../../files/CNV"
 OUTPUT_DIR = "weight_edges/CNV"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-SPLIT_FILE = "files/clinical/patient_split_cleaned.csv"
+SPLIT_FILE = "../../files/clinical/patient_split_cleaned.csv"
 
-STRING_EDGES_FILE = "STRING_downloaded_files/9606.protein.links.v12.0.txt"
+STRING_EDGES_FILE = "../../STRING_downloaded_files/9606.protein.links.v12.0.txt"
 
-STRING_ALIASES_FILE = "STRING_downloaded_files/9606.protein.aliases.gene.tsv"
+STRING_ALIASES_FILE = "../../STRING_downloaded_files/9606.protein.aliases.gene.tsv"
 
 k_diff = 0.3
 EDGE_THRESHOLD = 0.1
@@ -25,10 +25,10 @@ sns.set_theme(style="white")
 # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
 # file extracted using create_tsv_from_STRING_files.create_gene_aliases_proteins_ids_mapping_file()
 print("Reading protein-aliases-gene file...")
-genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
+genes_mapping_df = pd.read_csv('../../STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
 
-file_mapping_df = pd.read_csv("files/clinical/file_case_mapping.tsv", sep="\t")
+file_mapping_df = pd.read_csv("../../files/clinical/file_case_mapping.tsv", sep="\t")
 split_df = pd.read_csv(SPLIT_FILE)
 train_case_ids = split_df.loc[split_df["split"]=="train", "cases.case_id"].astype(str).unique()
 

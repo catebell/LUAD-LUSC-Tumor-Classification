@@ -25,6 +25,5 @@ class MLP(nn.Module):
 
     def forward(self, x):
         x = self.mlp(x)
-        #x = torch.nn.functional.normalize(x, p=2, dim=1)
 
         return self.classifier(x)

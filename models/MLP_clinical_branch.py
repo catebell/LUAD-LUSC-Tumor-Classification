@@ -11,8 +11,8 @@ class MLP_clinical_branch(nn.Module):
             nn.SiLU(),
             nn.Dropout(0.5),
 
-            nn.Linear(64, 4),
-            nn.LayerNorm(4),
+            nn.Linear(64, 8),
+            nn.LayerNorm(8),
             nn.SiLU(),
             nn.Dropout(0.2)
         )

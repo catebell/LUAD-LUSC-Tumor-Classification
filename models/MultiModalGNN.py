@@ -24,22 +24,22 @@ class MultiModalGNN(nn.Module):
         )  # output has dim hidden_channels * 2
 
         # clinical feature encoder
-        self.clinical_branch = MLP_clinical_branch(clinical_input_dim)  # output has dim 4
+        self.clinical_branch = MLP_clinical_branch(clinical_input_dim)  # output has dim 8
 
         # gate will look at both data type and decide how much importance give to the clinical features for this patient
         self.gate = nn.Sequential(
-            nn.Linear(hidden_channels * 2 + 4, 16),
+            nn.Linear(hidden_channels * 2 + 8, 16),
             nn.ReLU(),
             nn.Linear(16, 1),
             nn.Sigmoid()
         )
 
         self.classifier = nn.Sequential(
-            #nn.Linear(hidden_channels * 2 + 4, hidden_channels),
+            #nn.Linear(hidden_channels * 2 + 8, hidden_channels),
             #nn.ReLU(),
             #nn.Dropout(0.5),
             #nn.Linear(hidden_channels, 2)  # LUAD vs LUSC
-            nn.Linear(hidden_channels * 2 + 4, 2)  # LUAD vs LUSC
+            nn.Linear(hidden_channels * 2 + 8, 2)  # LUAD vs LUSC
         )
 
 
