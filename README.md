@@ -91,5 +91,6 @@ Run [graph_classification.py](graph_classification.py) to create the patients gr
   <img src="images/architecture-light.png#gh-light-mode-only" width="100%" alt="Project Architecture">
   <img src="images/architecture-dark.png#gh-dark-mode-only" width="100%" alt="Project Architecture">
 </p>
-
-Overview dell'architettura del progetto.
+<p align="center">
+  <strong>Figure 1.</strong> High-level overview of the project architecture.
+</p>
