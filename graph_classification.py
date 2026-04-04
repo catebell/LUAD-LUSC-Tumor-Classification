@@ -16,6 +16,9 @@ import warnings
 warnings.filterwarnings("ignore")
 # TODO rimuovere sta cosa
 
+def main():
+    train_and_save_model()
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -133,8 +136,7 @@ weights = torch.tensor([w0, w1], dtype=torch.float).to(device)
 
 criterion = torch.nn.CrossEntropyLoss(weights, label_smoothing=0.1)
 
-logging.info(model)
-
+logging.info(str(model) + '\n')
 
 def train():
     model.train()
@@ -219,231 +221,37 @@ def test(model, loader):
      return correct / len(loader.dataset)  # Derive ratio of correct predictions.
 
 
-'''
-best_val_loss = float('inf')
-early_stopping_counter = 0
+def train_and_save_model():
+    best_val_loss = float('inf')
+    early_stopping_counter = 0
 
-for epoch in range(1, max_epochs + 1):
-    train_loss = train()
-    val_loss = validate()
+    for epoch in range(1, max_epochs + 1):
+        train_loss = train()
+        val_loss = validate()
 
-    train_acc = test(model, train_loader)
-    val_acc = test(model, val_loader)
-    test_acc = test(model, test_loader)
+        train_acc = test(model, train_loader)
+        val_acc = test(model, val_loader)
+        test_acc = test(model, test_loader)
 
-    scheduler.step(val_loss)  # update learning rate
+        scheduler.step(val_loss)  # update learning rate
 
-    logging.info(f'Epoch: {epoch:03d}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, Train Acc: {train_acc:.4f},'
-                 f' Val Acc: {val_acc:.4f}, Test Acc: {test_acc:.4f}')
+        logging.info(f'Epoch: {epoch:03d}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, Train Acc: {train_acc:.4f},'
+                     f' Val Acc: {val_acc:.4f}, Test Acc: {test_acc:.4f}')
 
-    #save best model based on Val Loss
-    if val_loss < best_val_loss:
-        best_val_loss = val_loss
-        early_stopping_counter = 0
+        #save best model based on Val Loss
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            early_stopping_counter = 0
 
-        torch.save(model.state_dict(), 'best_classification_gnn.pth')
-        logging.info("--- Found and saved a better model! ---\n")
+            torch.save(model.state_dict(), 'best_classification_gnn.pth')
+            logging.info("--- Found and saved a better model! ---\n")
 
-    if early_stopping_counter > 20:
-        logging.info("--- Stopping training due to early stopping ---")
-        break
-    else:
-        early_stopping_counter += 1
-'''
-
-
-def explain_clinical_importance(model, loader, clinical_feature_names):
-    """
-    Clinical features importance computed by Permutation Importance.
-    0.05 --> accuracy drops by 5% without that feature, 0.00 --> useless feature, accuracy doesn't drop.
-    """
-    model.eval()
-    baseline_acc = test(model, loader)
-    feature_importances = {}
-
-    features = ['age_at_index','tobacco_years','pack_years_smoked','country_of_residence_at_enrollment','ethnicity',
-                'gender','race','ajcc_pathologic_m','ajcc_pathologic_n','ajcc_pathologic_t','icd_10_code','laterality',
-                'sites_of_involvement','tissue_or_organ_of_origin','tobacco_smoker','ajcc_pathologic_stage']
-    '''
-    for example:
-    country_of_residence_at_enrollment_Germany,
-    country_of_residence_at_enrollment_Ukraine,
-    country_of_residence_at_enrollment_Switzerland
-    will all be found by contains.('country_of_residence_at_enrollment')
-    '''
-
-    for target_feat in features:
-        # find all cols idx corresponding to a single feature to regroup the one-hot-encoded ones:
-        col_indices = []
-        for i, col_name in enumerate(clinical_feature_names):
-            if col_name == target_feat or col_name.startswith(target_feat + "_"):
-                col_indices.append(i)
-
-        correct = 0
-        total = 0
-
-        for data in loader:
-            data_copy = data.clone().to(device)
-
-            data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
-            data_copy.x[:, :4] = (data_copy.x[:, :4] - x_mean) / (x_std + 1e-6)
-            data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
-
-            perm = torch.randperm(data_copy.clinical.size(0))
-
-            # permutation applied to every col of the current feature
-            for idx in col_indices:
-                data_copy.clinical[:, idx] = data_copy.clinical[perm, idx]
-
-            with torch.no_grad():
-                if model.__class__ == CancerGNN or model.__class__ == GAT:
-                    out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)
-                elif model.__class__ == MLP:
-                    out = model(data_copy.clinical)
-                else:  # MultiModalGNN
-                    out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.clinical,
-                                data_copy.batch)
-
-                pred = out.argmax(dim=1)
-                correct += int((pred == data_copy.y).sum())
-                total += data_copy.num_graphs
-
-        permuted_acc = correct / total
-        feature_importances[target_feat] = baseline_acc - permuted_acc
-
-    return sorted(feature_importances.items(), key=lambda x: x[1], reverse=True)
+        if early_stopping_counter > 20:
+            logging.info("--- Stopping training due to early stopping ---")
+            break
+        else:
+            early_stopping_counter += 1
 
 
-def get_gene_attention_weights(model, loader, node_map_inv):
-    """Extract genes with the highest attention weights from GAT."""
-    model.eval()
-
-    # we process data by batches, so total numbers of nodes in a data from loader is len(node_map_inv) * num_batches
-    num_unique_genes = len(node_map_inv)
-    gene_scores = torch.zeros(num_unique_genes).to(device)
-    counts = torch.zeros(num_unique_genes).to(device)
-
-    for data in loader:
-        data_copy = data.clone().to(device)
-        data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
-        data_copy.x[:, :4] = (data_copy.x[:, :4] - x_mean) / (x_std + 1e-6)
-        data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
-
-        with torch.no_grad():
-            # retrieve attention from graph branch
-            _, (edge_index, att_weights) = model.graph_branch.get_attention(
-                data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch
-            )
-
-            # avg for attention heads
-            mean_att = att_weights.mean(dim=1)
-
-            # remapping to unique genes in a batch
-            # target_nodes = idx in batch (es. 0...77963 if batch_size=4 and genes=19491)
-            target_nodes_batch = edge_index[1]
-
-            # remap to single patient genes idx (0...19490)
-            target_nodes_original = target_nodes_batch % num_unique_genes
-
-            gene_scores.scatter_add_(0, target_nodes_original, mean_att)
-
-            ones = torch.ones_like(mean_att)
-            counts.scatter_add_(0, target_nodes_original, ones)
-
-    avg_scores = (gene_scores / (counts + 1e-6)).cpu().numpy()
-
-    importance_list = []
-    for idx, score in enumerate(avg_scores):
-        gene_id = node_map_inv.get(idx, f"Unknown_{idx}")
-        # just genes present in the dataset
-        if counts[idx] > 0:
-            importance_list.append((gene_id, score))
-
-    return sorted(importance_list, key=lambda x: x[1], reverse=True)
-
-
-def get_gene_saliency(model, loader, node_map_inv):
-    """Compute genes saliency"""
-    model.eval()
-    gene_accumulation = {}
-    gene_counts = {}
-
-    for data in loader:
-        data_copy = data.clone().to(device)
-        data_copy.x[:, :4] = (data_copy.x[:, :4] - x_mean) / (x_std + 1e-6)
-        data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
-        data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
-
-        data_copy.x.requires_grad = True  # to trace operations on the tensor and accumulate grads in x.grad attribute
-
-        out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.clinical, data_copy.batch)
-        probs = torch.softmax(out, dim=1)
-        max_probs, _ = torch.max(probs, dim=1)
-
-        model.zero_grad()
-        max_probs.backward(torch.ones_like(max_probs))
-
-        # avg of absolute gradient on node features
-        saliency = data_copy.x.grad.abs().mean(dim=1).cpu().numpy()
-
-        num_nodes_per_graph = data_copy.x.size(0) // data_copy.num_graphs
-
-        for i in range(data_copy.x.size(0)):
-            # retrieve original node indexes because data contains a batch of graphs (num nodes = num genes * num batches)
-            # --> each graph has same gene idx order
-            gene_idx_in_map = i % (data_copy.x.size(0) // data_copy.num_graphs)
-            score = saliency[i]
-            gene_id = node_map_inv.get(gene_idx_in_map, f"Unknown_{gene_idx_in_map}")
-
-            gene_accumulation[gene_id] = gene_accumulation.get(gene_id, 0) + score
-            gene_counts[gene_id] = gene_counts.get(gene_id, 0) + 1
-
-    final_importance = []
-    for gene_id in gene_accumulation:
-        avg_score = gene_accumulation[gene_id] / gene_counts[gene_id]  # avg per gene_id
-        final_importance.append((gene_id, avg_score))
-
-    final_importance.sort(key=lambda x: x[1], reverse=True)
-
-    # normalization 0-1 for first in the list
-    if final_importance:
-        max_val = final_importance[0][1]
-        final_importance = [(g, s / max_val) for g, s in final_importance]
-
-    return final_importance
-
-
-clinical_names = ['age_at_index', 'tobacco_years', 'pack_years_smoked', 'country_of_residence_at_enrollment_Australia', 'country_of_residence_at_enrollment_Germany', 'country_of_residence_at_enrollment_United States', 'country_of_residence_at_enrollment_Switzerland', 'country_of_residence_at_enrollment_Russia', 'country_of_residence_at_enrollment_Canada', 'country_of_residence_at_enrollment_Ukraine', 'country_of_residence_at_enrollment_Romania', 'country_of_residence_at_enrollment_Vietnam', 'ethnicity_not hispanic or latino', 'ethnicity_hispanic or latino', 'gender_male', 'gender_female', 'race_white', 'race_black or african american', 'race_asian', 'ajcc_pathologic_m_M0', 'ajcc_pathologic_m_M1a', 'ajcc_pathologic_m_M1', 'ajcc_pathologic_m_M1b', 'ajcc_pathologic_n_N1', 'ajcc_pathologic_n_N0', 'ajcc_pathologic_n_N2', 'ajcc_pathologic_n_N3', 'ajcc_pathologic_t_T2a', 'ajcc_pathologic_t_T2b', 'ajcc_pathologic_t_T2', 'ajcc_pathologic_t_T3', 'ajcc_pathologic_t_T4', 'ajcc_pathologic_t_T1b', 'ajcc_pathologic_t_T1', 'ajcc_pathologic_t_T1a', '3', '1', '2', '9', '8', '0', 'laterality_Left', 'laterality_Right', 'sites_of_involvement_Peripheral Lung', 'sites_of_involvement_Central Lung', 'tissue_or_organ_of_origin_Lower lobe, lung', 'tissue_or_organ_of_origin_Upper lobe, lung', 'tissue_or_organ_of_origin_Middle lobe, lung', 'tissue_or_organ_of_origin_Lung, NOS', 'tissue_or_organ_of_origin_Overlapping lesion of lung', 'tissue_or_organ_of_origin_Main bronchus', 'tobacco_smoker', 'ajcc_pathologic_stage']
-
-node_map_inv = {v: k for k, v in node_map.items()}
-
-logging.info("--- Feature Importance analysis (Best Model Saved) ---\n")
-
-model.load_state_dict(torch.load('best_k_fold_gnn.pth', map_location=device))  # currently model_fold_3.pth
-
-clinical_imp = explain_clinical_importance(model, test_loader, clinical_names)
-logging.info("Clinical Features importance:")
-for name, imp in clinical_imp:
-    logging.info(f"{name}: {imp:.4f}\n")
-
-gene_alias = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t', usecols=['gene_id', 'alias'])
-gene_alias = gene_alias.groupby('gene_id')['alias'].apply(list).reset_index(name='names')
-gene_alias['gene_id_mapped'] = gene_alias['gene_id'].map(node_map)
-gene_alias.set_index('gene_id_mapped', inplace=True)
-
-#gene_imp = get_gene_attention_weights(model, test_loader, node_map_inv)  # (GAT Attention)
-gene_sal = get_gene_saliency(model, test_loader, node_map_inv)
-'''
-Confronta i risultati con quelli della Saliency (gradiente).
-
-    L'Attention ti dice quali geni sono "hub" importanti strutturalmente nel grafo.
-
-    La Saliency ti dice quali geni hanno causato effettivamente lo spostamento della predizione verso LUAD o LUSC.
-    I geni che compaiono in cima a entrambe le liste sono i tuoi candidati biomarcatori più solidi.
-'''
-
-logging.info("Top 100 Genes saliency:")
-
-for gene_id, score in gene_sal[:100]:
-    names = gene_alias[gene_alias['gene_id'] == gene_id]['names']
-    logging.info(f"{gene_id}: {score:.4f}   {names}")
+if __name__ == "__main__":
+    main()

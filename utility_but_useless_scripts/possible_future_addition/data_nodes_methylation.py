@@ -1,9 +1,8 @@
 import os
 import glob
-import numpy as np
 import pandas as pd
 
-from multiomics_graph_creation import ppi_score_threshold
+from utility_but_useless_scripts.multiomics_graph_creation import ppi_score_threshold
 
 # ===============================
 # CONFIGURAZIONE (meno restrittiva)

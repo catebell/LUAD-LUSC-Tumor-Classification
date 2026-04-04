@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from multiomics_graph_creation import ppi_score_threshold
+from utility_but_useless_scripts.multiomics_graph_creation import ppi_score_threshold
 
 CNV_DIR = "../../files/CNV"
 OUTPUT_DIR = "weight_edges/CNV"

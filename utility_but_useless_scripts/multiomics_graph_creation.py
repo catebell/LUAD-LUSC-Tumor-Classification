@@ -30,23 +30,23 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('execution.log', mode='w'),
+        logging.FileHandler('../execution.log', mode='w'),
         logging.StreamHandler()
     ]
 )
 
 ppi_score_threshold = 0.7  # minimum interaction probability score to create edges
 
-file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
+file_mapping_df = pd.read_csv('../files/clinical/file_case_mapping.tsv', sep='\t').dropna()
 
-clinical_features_df = pd.read_csv('files/clinical/features_encoded.tsv', sep='\t')
+clinical_features_df = pd.read_csv('../files/clinical/features_encoded.tsv', sep='\t')
 # map {case_id --> tumor class (LUAD-LUSC)}
 labels_dict = dict(zip(clinical_features_df['case_id'], clinical_features_df['project_id'].astype(int)))
 
 # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
 # file extracted using create_tsv_from_STRING_files.create_gene_aliases_proteins_ids_mapping_file()
 logging.info("Reading protein-aliases-gene file...")
-genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
+genes_mapping_df = pd.read_csv('../STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
 # unique genes_ids mapping to numerical index
 unique_nodes = genes_mapping_df['gene_id'].unique()
@@ -57,7 +57,7 @@ node_map = {node: i for i, node in enumerate(unique_nodes)}  # TODO maybe with a
 # file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
 # --> 9606.protein.links file under INTERACTION DATA, place the .txt extracted into original_dataset/
 logging.info("Reading protein-links file...")
-protein_links_df = pd.read_csv('STRING_downloaded_files/9606.protein.links.v12.0.txt', sep=' ')
+protein_links_df = pd.read_csv('../STRING_downloaded_files/9606.protein.links.v12.0.txt', sep=' ')
 
 # refactor the score in a [0-1] interval, like returned by stringdb.get_network()
 protein_links_df['combined_score'] = protein_links_df['combined_score'] / 1000
@@ -72,7 +72,7 @@ protein_links_df.reset_index(inplace=True, drop=True)
 logging.info("Reading Illumina manifest...")
 # file downloaded from https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html
 # place .csv file into methylation_manifests/originals_downloaded, then run methylation_manifest_to_tsv.py
-meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
+meth_manifest_df = pd.read_csv("../methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 
 ###
 

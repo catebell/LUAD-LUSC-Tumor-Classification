@@ -2,6 +2,7 @@ import pandas as pd
 
 def main():
     create_genes_id_mapping_file()
+    create_gene_aliases_proteins_ids_mapping_file()  # ⚠ COMMENT AFTER DOING ONCE
 
 
 def create_genes_id_mapping_file():

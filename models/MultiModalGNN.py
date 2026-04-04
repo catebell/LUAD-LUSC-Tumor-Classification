@@ -35,10 +35,6 @@ class MultiModalGNN(nn.Module):
         )
 
         self.classifier = nn.Sequential(
-            #nn.Linear(hidden_channels * 2 + 8, hidden_channels),
-            #nn.ReLU(),
-            #nn.Dropout(0.5),
-            #nn.Linear(hidden_channels, 2)  # LUAD vs LUSC
             nn.Linear(hidden_channels * 2 + 8, 2)  # LUAD vs LUSC
         )
 
@@ -49,11 +45,13 @@ class MultiModalGNN(nn.Module):
 
         emb_clinical = self.clinical_branch(clinical_data)  # clinical representation embedding
 
-        # L2 embeddings normalization
+        # L2 embeddings normalization  TODO try without
         emb_graph = torch.nn.functional.normalize(emb_graph, p=2, dim=1)
         emb_clinical = torch.nn.functional.normalize(emb_clinical, p=2, dim=1)
 
+        # TODO try without
         gate_score = self.gate(torch.cat([emb_graph, emb_clinical], dim=1))  # gate assigns a [0-1] coefficient
+        print(gate_score)
         emb_combined = torch.cat([emb_graph, emb_clinical * gate_score], dim=-1)  # feature fusion
 
         return self.classifier(emb_combined)  # [batch_size, 2]
