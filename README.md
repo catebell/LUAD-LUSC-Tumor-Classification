@@ -87,7 +87,7 @@ Run [graph_classification.py](graph_classification.py) to create the patients gr
 
 ## Architecture
 <p align="center">
-  <img src="images/architecture.png" width="500" alt="Project Architecture">
+  <img src="images/architecture.png" width="100%" alt="Project Architecture">
 </p>
 
 Overview dell'architettura del progetto.
