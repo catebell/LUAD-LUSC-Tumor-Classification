@@ -92,7 +92,7 @@ files/
 - **data_graphs_processed_test/**
 - **data_graphs_processed_train/**
 - **data_graphs_processed_validation/**
-> ⚠️ The first execution can take a few hours. It will not start a second time unless the folders get deleted or renamed.
+> ⚠️ The first execution can take a few hours. It will not start again unless the folders get deleted or renamed.
 
 
 ## Try with different tumor classes
