@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class MLP(nn.Module):
-    def __init__(self, num_patient_features):
+    def __init__(self, num_patient_features, num_classes):
         super().__init__()
 
         self.mlp = nn.Sequential(
@@ -20,7 +20,7 @@ class MLP(nn.Module):
             nn.Dropout(0.2)
         )
 
-        self.classifier = nn.Linear(8, 2)
+        self.classifier = nn.Linear(8, num_classes)
 
 
     def forward(self, x):

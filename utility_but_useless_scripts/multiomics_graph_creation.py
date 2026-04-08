@@ -15,6 +15,7 @@ from preprocessing_methylation_to_df import create_meth_df
 from models.GAT import GAT
 
 """
+    Extract from utility_but_useless_scripts/ and into the project before executing.
     Computes and returns the torch_geometric graph (torch_geometric.data.Data) of genes (gene_id is node identifier)
     for the specified patient (case_id) using coded protein-protein interactions and features from RNA, CNV and
     methylation data.
@@ -34,6 +35,7 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
 
 ppi_score_threshold = 0.7  # minimum interaction probability score to create edges
 
@@ -119,6 +121,8 @@ node_features_df = node_features_df.groupby('gene_id_mapped').agg({
 })
 
 node_features_df['tpm_unstranded'] = np.log1p(node_features_df['tpm_unstranded'])
+
+node_features_df.drop(node_features_df[node_features_df['gene_id'].isin(node_map) == False].index, inplace=True)
 
 # interactions aggregation by genes
 edge_features_df = network_df.groupby(['gene1', 'gene2']).agg(avg_combined_score=('combined_score', 'mean'),

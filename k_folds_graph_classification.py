@@ -139,7 +139,7 @@ def test(model, loader):
     model.eval()
     correct = 0
 
-    for data in loader:  # Iterate in batches over the training/test dataset.
+    for data in loader:  # iterate in batches.
         data_copy = data.clone()
         data_copy = data_copy.to(device)
 
@@ -155,9 +155,9 @@ def test(model, loader):
             out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.clinical,
                         data_copy.batch)  # both
 
-        pred = out.argmax(dim=1)  # Use the class with the highest probability.
-        correct += int((pred == data_copy.y).sum())  # Check against ground-truth labels.
-    return correct / len(loader.dataset)  # Derive ratio of correct predictions.
+        pred = out.argmax(dim=1)  # use the class with the highest probability
+        correct += int((pred == data_copy.y).sum())  # check against ground-truth labels
+    return correct / len(loader.dataset)
 
 
 test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
@@ -175,8 +175,8 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
     # re-initialization for current fold
     #model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
     #model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
-    #model = MLP(num_patient_features=53).to(device)
-    model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64).to(device)
+    #model = MLP(num_patient_features=53, num_classes=2).to(device)
+    model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
     logging.info(model)
 
     optimizer = get_optimizer(model, 0.001, 1e-4)

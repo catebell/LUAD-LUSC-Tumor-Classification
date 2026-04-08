@@ -130,10 +130,10 @@ features_df['project.project_id'] = features_df['project.project_id'].map(mappin
    ```
    → #model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
    #model = MLP(num_patient_features=53, num_classes=2).to(device)
-   model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
+   → model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
    ```
    ```
-   model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
+   → model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
    #model = MLP(num_patient_features=53, num_classes=2).to(device)
    → #model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
    ```

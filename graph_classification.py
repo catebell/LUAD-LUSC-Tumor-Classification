@@ -34,8 +34,8 @@ torch.cuda.empty_cache()
 
 #model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
 #model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
-#model = MLP(num_patient_features=53).to(device)
-model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64).to(device)
+#model = MLP(num_patient_features=53, num_classes=2).to(device)
+model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
 
 file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
 patient_split_df = pd.read_csv('files/clinical/patient_split_cleaned.csv')

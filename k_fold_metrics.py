@@ -70,14 +70,15 @@ def build_model():
         model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64)
 
     elif MODEL_TYPE == "MLP":
-        model = MLP(num_patient_features=53)
+        model = MLP(num_patient_features=53, num_classes=2)
 
     elif MODEL_TYPE == "MultiModalGNN":
         model = MultiModalGNN(
             num_node_features=5,
             num_edge_features=3,
             clinical_input_dim=53,
-            hidden_channels=64
+            hidden_channels=64,
+            num_classes=2
         )
 
     return model.to(device)

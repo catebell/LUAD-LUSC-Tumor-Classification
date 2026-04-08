@@ -68,14 +68,15 @@ def build_model():
         model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64)
 
     elif MODEL_TYPE == "MLP":
-        model = MLP(num_patient_features=53)
+        model = MLP(num_patient_features=53, num_classes=2)
 
     elif MODEL_TYPE == "MultiModalGNN":
         model = MultiModalGNN(
             num_node_features=5,
             num_edge_features=3,
             clinical_input_dim=53,
-            hidden_channels=64
+            hidden_channels=64,
+            num_classes=2
         )
 
     return model.to(device)
@@ -87,13 +88,27 @@ def build_model():
 def load_dataset():
 
     file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
+    patient_split_df = pd.read_csv('files/clinical/patient_split_cleaned.csv')
 
     node_map_df = pd.read_csv('files/clinical/gene_ids_mapped.tsv', sep='\t')
     node_map = dict(zip(node_map_df.gene_id, node_map_df.gene_id_mapped))
 
-    dataset = PatientGraphDataset("data_graphs_processed", file_mapping_df, node_map)
+    train_df = file_mapping_df[file_mapping_df['case_id'].isin(
+        patient_split_df[patient_split_df['split'] == 'train']['cases.case_id'])]
 
-    return dataset
+    val_df = file_mapping_df[file_mapping_df['case_id'].isin(
+        patient_split_df[patient_split_df['split'] == 'val']['cases.case_id'])]
+
+    test_df = file_mapping_df[file_mapping_df['case_id'].isin(
+        patient_split_df[patient_split_df['split'] == 'test']['cases.case_id'])]
+
+    train_dataset = PatientGraphDataset("data_graphs_processed_train", train_df, node_map)
+    val_dataset = PatientGraphDataset("data_graphs_processed_validation", val_df, node_map)
+    test_dataset = PatientGraphDataset("data_graphs_processed_test", test_df, node_map)
+
+    full_train_dataset = train_dataset + val_dataset + test_dataset
+
+    return full_train_dataset
 
 # =====================================================
 # TRAIN

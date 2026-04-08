@@ -157,6 +157,11 @@ class PatientGraphDataset(Dataset):
 
         node_features_df['tpm_unstranded'] = np.log1p(node_features_df['tpm_unstranded'])  # so not to have too different scales
 
+        #TODO check
+        node_features_df.drop(node_features_df[node_features_df['gene_id'].isin(self.node_map) == False].index, inplace=True)
+        network_df.drop(network_df[network_df['gene1'].isin(self.node_map) == False].index, inplace=True)
+        network_df.drop(network_df[network_df['gene2'].isin(self.node_map) == False].index, inplace=True)
+
         # interactions aggregation by genes
         edge_features_df = network_df.groupby(['gene1', 'gene2']).agg(avg_combined_score=('combined_score', 'mean'),
                                                                       max_combined_score=('combined_score', 'max'),

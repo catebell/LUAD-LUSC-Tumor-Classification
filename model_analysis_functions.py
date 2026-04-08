@@ -129,7 +129,7 @@ def get_gene_attention_weights(model, device, loader, node_map_inv):
 
     logging.info("Genes with attention importance = 1.000:")
 
-    #TODO chekc data format e guarda solo quelli con score=1
+    #TODO check data format e guarda solo quelli con score=1
     for gene_id, score in gene_imp:
         names = gene_alias[gene_alias['gene_id'] == gene_id]['names'].iloc[0]
         logging.info(f"{gene_id}: {score:.4f}   {names}")

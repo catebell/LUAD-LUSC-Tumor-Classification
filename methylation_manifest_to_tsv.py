@@ -1,5 +1,8 @@
 import pandas as pd
 
+
+# DE-COMMENT WHAT NEEDED TO EXTRACT DIFFERENT MANIFEST TSV
+
 # not useful, too little values, 450k is ok
 '''
 df_meth27_manifest = pd.read_excel('methylation_manifests/originals_downloaded/illumina_humanmethylation27_content.xlsx',
@@ -11,8 +14,6 @@ df_meth27_manifest.drop(df_meth27_manifest[df_meth27_manifest['cpg_IlmnID'].str.
 df_meth27_manifest.dropna(subset=["cpg_IlmnID", "gene_symbol"], inplace=True)
 df_meth27_manifest.to_csv(r"methylation_manifests/methylation_manifest27.tsv", sep="\t", index=False)
 '''
-
-# DE-COMMENT TO EXTRACT TSV
 
 cols = ['IlmnID','CHR','Strand','UCSC_RefGene_Name','UCSC_RefGene_Group','Relation_to_UCSC_CpG_Island']
 df_meth450_manifest = pd.read_csv('methylation_manifests/originals_downloaded/humanmethylation450_15017482_v1-2.csv',
@@ -67,16 +68,10 @@ df_meth = pd.read_csv(f"files/methylation/{file_mapping_df[
     (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'methylation')
     ]['filename'].to_string(index=False)}", sep='\t', names=['cpg_IlmnID', 'beta_value'], dtype=str)
 
-df_match_cpg_gene = pd.read_csv("methylation_manifests/matched_cpg_genes_converted.csv", dtype=str)
-df_meth = pd.merge(df_meth, df_match_cpg_gene[['cpg_IlmnID', 'gene_chr', 'gene_id', 'gene_symbol']], on='cpg_IlmnID', how='left')
-print("Added symbols from matched_cpg_genes_converted.csv")
-print("Tot cpgIDs: " + str(len(df_meth)))
-print("Correspondences cpgIDs-symbols still missing: " + str(df_meth['gene_symbol'].isna().sum()))
 
 df_meth_manifest450 = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 df_meth = pd.merge(df_meth, df_meth_manifest450[['cpg_IlmnID', 'gene_symbol']], on='cpg_IlmnID', how='left')
 print("Added symbols from methylation_manifest450.tsv")
-#print("Correspondences cpgIDs-symbols missing with only 450k: " + str(df_meth['gene_symbol'].isna().sum()))
 print("Correspondences cpgIDs-symbols missing with only 450k: " + str(df_meth.iloc[:,-1].isna().sum()))
 
 

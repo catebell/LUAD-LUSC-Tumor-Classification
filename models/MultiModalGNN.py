@@ -13,7 +13,7 @@ class MultiModalGNN(nn.Module):
     - Final fusion classifier
     """
 
-    def __init__(self, num_node_features, num_edge_features, clinical_input_dim, hidden_channels):
+    def __init__(self, num_node_features, num_edge_features, clinical_input_dim, hidden_channels, num_classes):
         super().__init__()
 
         # genes graph features encoder
@@ -35,7 +35,7 @@ class MultiModalGNN(nn.Module):
         )
 
         self.classifier = nn.Sequential(
-            nn.Linear(hidden_channels * 2 + 8, 2)  # LUAD vs LUSC
+            nn.Linear(hidden_channels * 2 + 8, num_classes)  # LUAD vs LUSC
         )
 
 
@@ -45,13 +45,11 @@ class MultiModalGNN(nn.Module):
 
         emb_clinical = self.clinical_branch(clinical_data)  # clinical representation embedding
 
-        # L2 embeddings normalization  TODO try without
         emb_graph = torch.nn.functional.normalize(emb_graph, p=2, dim=1)
         emb_clinical = torch.nn.functional.normalize(emb_clinical, p=2, dim=1)
 
-        # TODO try without
+        # gate_score not necessary to reach 90% accuracy but can help, gives relative importance to clinical features
         gate_score = self.gate(torch.cat([emb_graph, emb_clinical], dim=1))  # gate assigns a [0-1] coefficient
-        print(gate_score)
         emb_combined = torch.cat([emb_graph, emb_clinical * gate_score], dim=-1)  # feature fusion
 
         return self.classifier(emb_combined)  # [batch_size, 2]

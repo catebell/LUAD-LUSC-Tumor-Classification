@@ -37,7 +37,7 @@ class GAT_graph_branch(torch.nn.Module):
         x = F.elu(x)
 
         x_mean = global_mean_pool(x, batch)
-        x_max = global_max_pool(x, batch)  # TODO try without
+        x_max = global_max_pool(x, batch)
         x = torch.cat([x_mean, x_max], dim=1)  # now x has dimension hidden_channels * 2
 
         if return_attention_weights:
