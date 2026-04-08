@@ -124,7 +124,7 @@ features_df['project.project_id'] = features_df['project.project_id'].map(mappin
    ```
 
 #### If you don't want to consider the clinical features, use only [models/GAT](models/GAT.py):
-1) Change the model initialization in [k_folds_graph_classification.py](k_folds_graph_classification.py) and/or [graph_classification.py](graph_classification.py):
+1) Change the model initialization in [graph_classification.py](graph_classification.py) and/or other files where it is needed:
    <p></p>
    
    ```
