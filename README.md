@@ -1,5 +1,8 @@
 Doc condiviso → https://docs.google.com/document/d/1N98eTXyuQqsBdpS_juzpIXrvbeDfqw0gvggBHOVsTjU/edit?usp=sharing
-(Drive con Dataset)
+
+→ [Paper]()
+- [click here](https://drive.google.com/file/d/1T_uj8j4KXscNW_96eOw5EVnfU75Fwzr9/view?usp=drive_link) to download our original dataset retrieved from GCD Data Portal
+- [click here](https://drive.google.com/file/d/1mIzf35TOcNY9JKtysnPBZnZqJvtpP_q_/view?usp=drive_link) to download the three folders [train/val/test] of our processed graphs Dataset
 
 ## Architecture
 
@@ -15,7 +18,7 @@ Doc condiviso → https://docs.google.com/document/d/1N98eTXyuQqsBdpS_juzpIXrvbe
 
 ### Get the data
 
-1) The desired dataset must be downloaded from the desired source and saved in a folder named **original_datset/**. For example, our data was originally in this form:
+1) The dataset must be downloaded from the desired source and saved in a folder named **original_dataset/**. For example, our data (click [here](https://drive.google.com/file/d/1T_uj8j4KXscNW_96eOw5EVnfU75Fwzr9/view?usp=drive_link) to download) was originally in this form:
 
 ```
 original_dataset/
@@ -51,8 +54,8 @@ files/
 - [9606.protein.aliases.v12.0.txt](https://stringdb-downloads.org/download/protein.links.v12.0/9606.protein.links.v12.0.txt.gz) 
 - [9606.protein.links.v12.0.txt](https://stringdb-downloads.org/download/protein.aliases.v12.0/9606.protein.aliases.v12.0.txt.gz)
 
-→ Put them in a new **STRING_downloaded_files/** folder and run [STRING_files_to_tsv.py](STRING_files_to_tsv.py): the first function creates **files/clinical/file_case_mapping.tsv**, the second one creates **STRING_downloaded_files/9606.protein.aliases.gene.tsv**.
-> ⚠️ The execution of the second function can take a few hours.
+→ Put them in a new **STRING_downloaded_files/** folder and run [STRING_files_to_tsv.py](STRING_files_to_tsv.py): the first function creates **STRING_downloaded_files/9606.protein.aliases.gene.tsv**, the second one creates **files/clinical/file_case_mapping.tsv**.
+> ⚠️ The execution of the first function can take a few hours.
 
 4) We need also a methylation manifest for the preprocessing of methylation data; we downloaded from the relative [Illumina support page](https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html) the one relative to the Illumina “450 K array” technology (click [here](https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv) to start the download).
 
@@ -93,7 +96,7 @@ files/
 - **data_graphs_processed_train/**
 - **data_graphs_processed_validation/**
 > ⚠️ The first execution can take a few hours. It will not start again unless the folders get deleted or renamed.
-
+###### Click [here](https://drive.google.com/file/d/1mIzf35TOcNY9JKtysnPBZnZqJvtpP_q_/view?usp=drive_link) to download the three folders [train/val/test] of our processed graphs Dataset
 
 ## Try with different tumor classes
 
