@@ -172,49 +172,10 @@ def extract_file_id_case_id():
     print(df_out[df_out.isnull().any(axis=1)])
 
 
-
-# EXTRACT_PROJECT_ID
-
-def extract_project_id():
-    """Search the case_id (cases.case_id) in features.tsv and take the corresponding project.project_id (LUAD/LUSC label) -> put in file_case_with_project.tsv"""
-
-    file_mapping = pd.read_csv(r"files/clinical/file_case_mapping.tsv", sep="\t")
-    clinical = pd.read_csv(r"files/clinical/features.tsv", sep="\t")
-
-    merged = pd.merge(
-        clinical,
-        file_mapping,
-        left_on='cases.case_id',
-        right_on='case_id',
-        how='left'
-    )
-
-    merged = merged.drop(columns=['cases.case_id'])
-    merged = merged.rename(columns={'project.project_id': 'project_id'})
-    merged = merged.sort_values(by="project_id").reset_index(drop=True)
-
-    final_df = merged.to_csv(
-        r"files/clinical/file_case_with_project.tsv",
-        sep="\t",
-        index=False
-    )
-
-    print("File created: file_case_with_project.tsv")
-    print(merged.head())
-    print(merged.shape)
-    print(merged.isnull().sum())
-    print("\nRows with null values:")
-    print(merged[merged.isnull().any(axis=1)])
-
-
-
-# MAIN
-
 def main():
     files_extraction()
     extract_file_id()
     extract_file_id_case_id()
-    extract_project_id()
 
 if __name__ == "__main__":
     main()

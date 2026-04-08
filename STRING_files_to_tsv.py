@@ -9,22 +9,20 @@ def create_genes_id_mapping_file():
     """Creates the tsv file that nodes/genes use to get their associated unique ordered id.
     Output saved in 'files/clinical/gene_ids_mapped.tsv'"""
 
-    # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
-    # file extracted using string_files_to_tsv.py --> create_protein_links()
-    genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv',
-                                   sep='\t')  # proteins-genes mapping df
+    genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
-    # unique genes_ids mapping to numerical index
+    # Remove any rows where gene_id is missing/None before getting unique values
+    genes_mapping_df = genes_mapping_df.dropna(subset=['gene_id'])
+
     unique_nodes = genes_mapping_df['gene_id'].unique()
-    node_map = {node: i for i, node in enumerate(
-        unique_nodes)}
-    node_map = node_map  # global dictionary for Gene_ID -> Index mapping
+
+    # Ensure 'None' as a string or object isn't lurking in the unique array
+    unique_nodes = [node for node in unique_nodes if node is not None and str(node).lower() != 'none']
+
+    node_map = {node: i for i, node in enumerate(unique_nodes)}
 
     genes_id_mapping_df = pd.DataFrame(node_map.items(), columns=['gene_id', 'gene_id_mapped'])
-
-    # save to file
     genes_id_mapping_df.to_csv('files/clinical/gene_ids_mapped.tsv', sep="\t", index=False)
-
 
 def create_gene_aliases_proteins_ids_mapping_file():
     """Run to re-create the 9606.protein.aliases.gene txt file with protein_id, gene_name and gene_id (retrieved using

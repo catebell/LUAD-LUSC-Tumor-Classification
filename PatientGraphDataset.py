@@ -144,7 +144,7 @@ class PatientGraphDataset(Dataset):
 
         node_features_df[features_cols] = node_features_df[features_cols].astype(float)
 
-        # unique nodes df
+    # unique nodes df
         node_features_df = node_features_df.groupby('gene_id_mapped').agg({
             'gene_id': 'first',
             'gene_name': 'first',
@@ -180,6 +180,7 @@ class PatientGraphDataset(Dataset):
         edge_index = torch.as_tensor(np.stack([
             edge_features_df['gene1'].map(self.node_map).values, edge_features_df['gene2'].map(self.node_map).values
         ]), dtype=torch.int64)
+
         edge_attr = torch.tensor(
             edge_features_df[['avg_combined_score', 'max_combined_score', 'num_protein_links']].values,
             dtype=torch.float)
