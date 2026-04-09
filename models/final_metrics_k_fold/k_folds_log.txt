@@ -1,0 +1,60 @@
+…
+
+2026-04-09 17:27:55,422 - INFO - Epoch: 090 | Train Loss: 0.2978 | Val Loss: 0.3499
+Train -> Acc: 0.9536, F1: 0.9571, AUC: 0.9877
+Val -> Acc: 0.9211, F1: 0.9268, AUC: 0.9627
+2026-04-09 17:27:55,430 - INFO - --- Found and saved a better model! ---
+
+2026-04-09 17:35:44,900 - INFO - Fold 1 Test Acc: 0.8592 | AUC: 0.9269 | AUPRC: 0.9547
+Precision: 0.9403 | Recall: 0.7975
+
+…
+
+2026-04-09 18:33:51,791 - INFO - Epoch: 076 | Train Loss: 0.2477 | Val Loss: 0.3021
+Train -> Acc: 0.9934, F1: 0.9940, AUC: 0.9995
+Val -> Acc: 0.9474, F1: 0.9531, AUC: 0.9841
+2026-04-09 18:33:51,798 - INFO - --- Found and saved a better model! ---
+
+2026-04-09 18:49:34,255 - INFO - --- Stopping training due to early stopping ---
+
+2026-04-09 18:49:39,130 - INFO - Fold 2 Test Acc: 0.9437 | AUC: 0.9879 | AUPRC: 0.9890
+Precision: 0.9383 | Recall: 0.9620
+
+…
+
+2026-04-09 19:54:55,249 - INFO - Epoch: 089 | Train Loss: 0.2567 | Val Loss: 0.3039
+Train -> Acc: 0.9846, F1: 0.9861, AUC: 0.9965
+Val -> Acc: 0.9469, F1: 0.9516, AUC: 0.9765
+2026-04-09 19:54:55,257 - INFO - --- Found and saved a better model! ---
+
+2026-04-09 20:03:23,642 - INFO - Fold 3 Test Acc: 0.8944 | AUC: 0.9572 | AUPRC: 0.9699
+Precision: 0.9000 | Recall: 0.9114
+
+…
+
+2026-04-09 20:53:33,178 - INFO - Epoch: 068 | Train Loss: 0.2766 | Val Loss: 0.3629
+Train -> Acc: 0.9802, F1: 0.9820, AUC: 0.9982
+Val -> Acc: 0.9027, F1: 0.9134, AUC: 0.9641
+2026-04-09 20:53:33,186 - INFO - --- Found and saved a better model! ---
+
+2026-04-09 21:09:25,027 - INFO - --- Stopping training due to early stopping ---
+
+2026-04-09 21:09:29,508 - INFO - Fold 4 Test Acc: 0.9155 | AUC: 0.9622 | AUPRC: 0.9749
+Precision: 0.9351 | Recall: 0.9114
+
+…
+
+2026-04-09 21:35:28,853 - INFO - Epoch: 035 | Train Loss: 0.3083 | Val Loss: 0.3618
+Train -> Acc: 0.9317, F1: 0.9350, AUC: 0.9926
+Val -> Acc: 0.8938, F1: 0.8983, AUC: 0.9643
+2026-04-09 21:35:28,861 - INFO - --- Found and saved a better model! ---
+
+2026-04-09 21:51:29,004 - INFO - --- Stopping training due to early stopping ---
+
+2026-04-09 21:51:33,506 - INFO - Fold 5 Test Acc: 0.9225 | AUC: 0.9636 | AUPRC: 0.9785
+Precision: 0.9722 | Recall: 0.8861
+
+
+2026-04-09 21:51:33,506 - INFO - Mean Test Accuracy: 0.9070 +/- 0.0287
+2026-04-09 21:51:33,506 - INFO - F1: 0.9138, AUC: 0.9596, , AUPRC: 0.9734, Precision: 0.9372, Recall: 0.8937
+2026-04-09 21:51:33,506 - INFO - Global Confusion Matrix -> TP: 353, TN: 291, FP: 24, FN: 42

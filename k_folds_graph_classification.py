@@ -337,10 +337,16 @@ df_results = pd.concat([df_results, pd.DataFrame([std_row])], ignore_index=True)
 if not os.path.exists("models/final_metrics_k_fold"):
     os.mkdir('models/final_metrics_k_fold')
 
-csv_filename = f'models/final_metrics_k_fold/{model.__class__}_final_metrics_comparison.csv'
+if model.__class__ == CancerGNN or model.__class__ == GAT:
+    csv_filename = 'models/final_metrics_k_fold/GNN_final_metrics_comparison.csv'
+elif model.__class__ == MLP:
+    csv_filename = 'models/final_metrics_k_fold/MLP_final_metrics_comparison.csv'
+else:  # MultiModalGNN
+    csv_filename = 'models/final_metrics_k_fold/MultiModalGNN_final_metrics_comparison.csv'
+
 df_results.to_csv(csv_filename, index=False)
 
-logging.info(f"Results save in {csv_filename}")
+logging.info(f"Results saved in {csv_filename}\n")
 
 
 import matplotlib.pyplot as plt
@@ -359,7 +365,7 @@ def plot_final_confusion_matrix(fold_results, filename='confusion_matrix_total.p
     cm_norm = np.array(cm) / np.array(cm).sum(axis=1)[:, np.newaxis]
 
     plt.figure(figsize=(8, 6))
-    sns.heatmap(cm_norm, annot=True, fmt='d', cmap='Blues',
+    sns.heatmap(cm_norm, annot=True, cmap='Blues',
                 xticklabels=['Pred LUAD (0)', 'Pred LUSC (1)'],
                 yticklabels=['True LUAD (0)', 'True LUSC (1)'])
 

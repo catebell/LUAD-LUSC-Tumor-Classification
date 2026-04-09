@@ -252,8 +252,6 @@ def train_and_save_model():
         else:
             early_stopping_counter += 1
 
-        plot_confusion_matrix(y_true, y_pred)
-
 
 if __name__ == "__main__":
     main()
