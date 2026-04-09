@@ -13,8 +13,8 @@ from models.MLP import MLP
 from models.MultiModalGNN import MultiModalGNN
 
 import warnings
-warnings.filterwarnings("ignore")
-# TODO rimuovere sta cosa
+warnings.filterwarnings("ignore")  # to temporarily not see warnings
+
 
 def main():
     train_and_save_model()
@@ -164,12 +164,12 @@ def train():
         else:  # MultiModalGNN
             out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch) # both
 
-        loss = criterion(out, data.y)  # Compute the loss.
+        loss = criterion(out, data.y)
         scaled_loss = loss
-        scaled_loss.backward()  # Derive gradients.
+        scaled_loss.backward()
 
-        optimizer.step()  # Update parameters based on gradients.
-        optimizer.zero_grad()  # Clear gradients.
+        optimizer.step()  # parameters update based on gradients
+        optimizer.zero_grad()
 
         total_loss += loss.item() * data.num_graphs
     return total_loss / len(train_dataset)
@@ -202,7 +202,7 @@ def test(model, loader):
      model.eval()
      correct = 0
 
-     for og in loader:  # Iterate in batches over the training/test dataset.
+     for og in loader:  # iterate in batches over the training/test dataset.
          data = og.clone()
          data = data.to(device)
          data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
@@ -216,9 +216,9 @@ def test(model, loader):
          else:  # MultiModalGNN
              out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)  # both
 
-         pred = out.argmax(dim=1)  # Use the class with the highest probability.
-         correct += int((pred == data.y).sum())  # Check against ground-truth labels.
-     return correct / len(loader.dataset)  # Derive ratio of correct predictions.
+         pred = out.argmax(dim=1)  # class with the highest probability
+         correct += int((pred == data.y).sum())  # check against ground-truth labels
+     return correct / len(loader.dataset)
 
 
 def train_and_save_model():
@@ -251,6 +251,8 @@ def train_and_save_model():
             break
         else:
             early_stopping_counter += 1
+
+        plot_confusion_matrix(y_true, y_pred)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import pandas as pd
 
 def main():
-    create_gene_aliases_proteins_ids_mapping_file()  # ⚠ COMMENT AFTER DOING ONCE
+    create_gene_aliases_proteins_ids_mapping_file()  # COMMENT AFTER DOING ONCE
     create_genes_id_mapping_file()
 
 

@@ -48,7 +48,7 @@ class MultiModalGNN(nn.Module):
         emb_graph = torch.nn.functional.normalize(emb_graph, p=2, dim=1)
         emb_clinical = torch.nn.functional.normalize(emb_clinical, p=2, dim=1)
 
-        # gate_score not necessary to reach 90% accuracy but can help, gives relative importance to clinical features
+        # gate_score gives relative importance to clinical features
         gate_score = self.gate(torch.cat([emb_graph, emb_clinical], dim=1))  # gate assigns a [0-1] coefficient
         emb_combined = torch.cat([emb_graph, emb_clinical * gate_score], dim=-1)  # feature fusion
 

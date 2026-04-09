@@ -190,9 +190,9 @@ def get_gene_saliency(model, device, loader, node_map_inv):
         max_val = gene_saliency[0][1]
         gene_saliency = [(g, s / max_val) for g, s in gene_saliency]
 
-    logging.info("Top 50 Genes saliency:")
+    logging.info("Top 100 Genes saliency:")
 
-    for gene_id, score in gene_saliency[:50]:
+    for gene_id, score in gene_saliency[:100]:
         names = gene_alias[gene_alias['gene_id'] == gene_id]['names'].iloc[0]
         logging.info(f"{gene_id}: {score:.4f}   {names}")
 
@@ -223,10 +223,8 @@ def collect_gene_data(loader, target_dict, ensg_to_idx, feature_idx):
                 node_idx = ensg_to_idx[ensg]
                 # first x [num_nodes, num_features] feature is 'tpm_unstranded'
                 tpm_val = float(data.x[node_idx, feature_idx].item())
-                #patient_data[str(names)] = tpm_val
                 patient_data[ensg] = tpm_val
             else:
-                #patient_data[str(names)] = np.nan
                 patient_data[ensg] = np.nan
         rows.append(patient_data)
 
@@ -241,14 +239,15 @@ def plot_boxplot(df, genes, i, filename = None):
         3: 'B-VALUE'
     }
 
-    plt.figure(figsize=(18, 5))
-    for j, name in enumerate(genes.keys(), 1):
-        plt.subplot(1, len(genes.keys()), j)
-        sns.boxplot(x='label', y=name, data=df, palette=['#3498db', '#e74c3c'])
-        sns.stripplot(x='label', y=name, data=df, color='black', size=2, alpha=0.3)
-        plt.title(f"{name}")
-        plt.xlabel("LUAD vs LUSC")
-        plt.ylabel(f"{features.get(i)}")
+    plt.figure(figsize=(20, 7))
+    plt.rc('font', size=13)
+    for j, (ensg, name) in enumerate(genes.items(), 1):
+        plt.subplot(1, len(genes.items()), j)
+        sns.boxplot(x='label', y=ensg, data=df, palette=['#e74c3c', '#3498db'])
+        sns.stripplot(x='label', y=ensg, data=df, color='black', size=2, alpha=0.3)
+        plt.title(f"{ensg}\n{name}", size=16)
+        plt.xlabel("LUAD vs LUSC", size=16)
+        plt.ylabel(f"{features.get(i)}", size=16)
 
     plt.tight_layout()
     plt.legend(['LUAD', 'LUSC'])
@@ -260,7 +259,8 @@ def plot_boxplot(df, genes, i, filename = None):
             file.write(str(genes))
 
         plt.savefig(f'analysis_plots/{filename}')
-    #plt.show()
+    else:
+        plt.show()
 
 
 logging.info("--- Feature Importance analysis (Best Model Saved) ---\n")
@@ -281,27 +281,43 @@ gene_alias.set_index('gene_id_mapped', inplace=True)
 
 gene_sal = get_gene_saliency(model, device, test_loader, node_map_inv)
 
+top_genes = {}
+
 for gene_id, score in gene_sal[:5]:
     names = gene_alias[gene_alias['gene_id'] == gene_id]['names'].iloc[0]
     top_genes[gene_id] = names
+
 '''
-# top 5 genes for saliency
+# top 5 genes for saliency (retrieved for speed)
 top_genes = {
     'ENSG00000185201': ['1-8D', 'DSPA2c', 'IFITM2'],
     'ENSG00000205420': ['CK-6C', 'CK-6E', 'K6C', 'KRT6C', 'PC3', 'CK-6C', 'CK-6E', 'CK6A', 'CK6C', 'CK6D', 'K6A', 'K6C', 'K6D', 'KRT6A', 'KRT6C', 'KRT6D', 'PC3'],
     'ENSG00000011600': ['DAP12', 'KARAP', 'PLOSL', 'PLOSL1', 'TYROBP'],
     'ENSG00000173599': ['PC', 'PC', 'PC', 'PC', 'PCB'],
     'ENSG00000019582': ['CD74', 'CLIP', 'DHLAG', 'HLADG', 'Ia-GAMMA', 'CLIP', 'II', 'II', 'P33', 'p33']
-}
+}  # KRT5, KRT12 and KRT16 too
 '''
 
+for (ensg, names) in top_genes.items():
+    if len(names) > 3:
+        top_genes[ensg] = names[:3]
+        top_genes[ensg].append('...')
+
+genes_to_plot = {
+    'ENSG00000128422': 'KRT17',
+    'ENSG00000166897': 'ELFN2',
+    'ENSG00000124107': 'KRT13',
+    'ENSG00000162733': 'KRT16',
+    'ENSG00000186081': 'KRT5'
+}
+
 for i in range(0,4):
-    df_plot = collect_gene_data(test_loader, top_genes, node_map, i)
     feature_dict = {
         0: 'expression',
         1: 'cnv',
         2: 'cnv_min_max_diff',
         3: 'beta_value'
     }
+    df_plot = collect_gene_data(test_loader, top_genes, node_map, i)
     plot_boxplot(df_plot, top_genes, i, f"genes_{feature_dict.get(i)}_boxplot.png")
 

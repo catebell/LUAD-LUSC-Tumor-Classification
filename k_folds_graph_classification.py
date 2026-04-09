@@ -1,5 +1,5 @@
 import logging
-
+import os
 import numpy as np
 import pandas as pd
 import torch
@@ -172,8 +172,6 @@ def evaluate(model, loader):
             all_preds.extend(pred.cpu().numpy())
             all_probs.extend(probs.cpu().numpy())
 
-            correct += int((pred == data_copy.y).sum())  # check against ground-truth labels
-
     tn, fp, fn, tp = confusion_matrix(all_targets, all_preds, labels=[0, 1]).ravel()
 
     metrics = {
@@ -191,7 +189,6 @@ def evaluate(model, loader):
 
     report = classification_report(all_targets, all_preds, output_dict=True, zero_division=0)
 
-    # return correct / len(loader.dataset)
     return metrics, report
 
 
@@ -268,8 +265,8 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
                 f'Epoch: {epoch:03d} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}\n'
                 f'Train -> Acc: {train_metrics["acc"]:.4f}, F1: {train_metrics["f1"]:.4f}, AUC: {train_metrics["auc"]:.4f}\n'
                 f'Val -> Acc: {val_metrics["acc"]:.4f}, F1: {val_metrics["f1"]:.4f}, AUC: {val_metrics["auc"]:.4f}\n'
-                f"Val Class 0 (LUAD) Precision: {val_report['0']['precision']:.4f} | "
-                f"Val Class 1 (LUSC) Precision: {val_report['1']['precision']:.4f}"
+                #f"Val Class 0 (LUAD) Precision: {val_report['0']['precision']:.4f} | "
+                #f"Val Class 1 (LUSC) Precision: {val_report['1']['precision']:.4f}"
             )
 
             torch.save(model.state_dict(), f'model_fold_{fold + 1}.pth')
@@ -287,10 +284,10 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
     fold_results.append(fold_test_metrics)
 
     logging.info(
-        f"Fold {fold + 1} Test Acc: {fold_test_metrics['acc']:.4f} | AUC: {fold_test_metrics['auc']:.4f}\n"
-        f"Precision: {fold_test_metrics['precision']:.4f} | Recall: {fold_test_metrics['recall']:.4f} | AUC: {fold_test_metrics['auc']:.4f}\n"
-        f"Class 0 (LUAD) Precision: {test_report['0']['precision']:.4f} | "
-        f"Class 1 (LUSC) Precision: {test_report['1']['precision']:.4f}\n"
+        f"Fold {fold + 1} Test Acc: {fold_test_metrics['acc']:.4f} | AUC: {fold_test_metrics['auc']:.4f} | AUPRC: {fold_test_metrics['auprc']:.4f}\n"
+        f"Precision: {fold_test_metrics['precision']:.4f} | Recall: {fold_test_metrics['recall']:.4f}\n"
+        #f"Class 0 (LUAD) Precision: {test_report['0']['precision']:.4f} | "
+        #f"Class 1 (LUSC) Precision: {test_report['1']['precision']:.4f}\n"
     )
 
 avg_acc = np.mean([metrics['acc'] for metrics in fold_results])
@@ -359,8 +356,10 @@ def plot_final_confusion_matrix(fold_results, filename='confusion_matrix_total.p
     cm = [[total_tn, total_fp],
           [total_fn, total_tp]]
 
+    cm_norm = np.array(cm) / np.array(cm).sum(axis=1)[:, np.newaxis]
+
     plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+    sns.heatmap(cm_norm, annot=True, fmt='d', cmap='Blues',
                 xticklabels=['Pred LUAD (0)', 'Pred LUSC (1)'],
                 yticklabels=['True LUAD (0)', 'True LUSC (1)'])
 

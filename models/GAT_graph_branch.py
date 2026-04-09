@@ -1,9 +1,7 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GATv2Conv, global_mean_pool, BatchNorm, global_max_pool
 
-# our GAT
 class GAT_graph_branch(torch.nn.Module):
     def __init__(self, num_node_features, num_edge_features, hidden_channels, heads=2):
         super(GAT_graph_branch, self).__init__()

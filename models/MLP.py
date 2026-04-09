@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 
 class MLP(nn.Module):
@@ -8,13 +7,11 @@ class MLP(nn.Module):
         self.mlp = nn.Sequential(
             nn.Dropout(0.2),
             nn.Linear(num_patient_features, 64),
-            #nn.BatchNorm1d(64),
             nn.LayerNorm(64),
             nn.SiLU(),
             nn.Dropout(0.5),
 
             nn.Linear(64, 8),
-            #nn.BatchNorm1d(8),
             nn.LayerNorm(8),
             nn.SiLU(),
             nn.Dropout(0.2)

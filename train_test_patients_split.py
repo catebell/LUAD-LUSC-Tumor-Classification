@@ -42,15 +42,15 @@ train_val, test = train_test_split(
     filtered_patients,
     test_size=0.20,
     stratify=filtered_patients['project.project_id'],
-    random_state=7  # or 42
+    random_state=7
 )
 
-# Train (70% totale) vs Val (10% totale)
+# Train (70% of total) vs Val (10% of total)
 train, val = train_test_split(
     train_val,
-    test_size=0.125,  # 0.125 * 0.8 ≈ 0.10
+    test_size=0.125,  # 0.125 * 0.8 --> 0.10
     stratify=train_val['project.project_id'],
-    random_state=7  # or 42
+    random_state=7
 )
 
 filtered_patients['split'] = 'none'
@@ -88,9 +88,9 @@ stats = (
     .unstack(fill_value=0)
 )
 
-print("Stats per split e progetto:\n", stats)
+print("Stats for split and project:\n", stats)
 '''
-Stats per split e progetto:
+Stats for split and project:
  project.project_id  TCGA-LUAD  TCGA-LUSC
 split                                   
 test                       63         79

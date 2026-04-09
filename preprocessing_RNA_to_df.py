@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import time
 
@@ -138,37 +137,3 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
 
 if __name__ == "__main__":
     main()
-
-
-# INFO UTILI
-
-# Motivazioni per tpm_unstranded_threshold:
-'''
-Rilevanza Biologica: Un'interazione proteina-proteina può avvenire solo se entrambe le proteine sono presenti.
-Se il trascritto è a 0, la proteina non verrà prodotta, quindi l'interazione è fisicamente impossibile in quel contesto.
-
-Riduzione dei Falsi Positivi: STRING database contiene milioni di interazioni potenziali.
-Filtrando i geni non espressi, la rete risultante sarà specifica per il campione.
-
-Efficienza delle API: STRING ha dei limiti sul numero di geni che puoi inviare in una singola richiesta.
-Rimuovendo i geni "spenti", si risparmia spazio per quelli più interessanti.
-
-Spesso in bioinformatica non ci si limita a togliere lo zero assoluto, ma si usa una soglia minima di TPM
-(es. tpm_unstranded > 0.5 o > 1), perché valori molto bassi potrebbero essere solo rumore di fondo del sequenziamento.
-'''
-
-# Conversione combined_score/1000:
-'''
-stringdb.get_network() ritorna score[0.34, 0.68, etc] mentre sul file si trova combined_score[145, 456, etc].
-La differenza tra i due è puramente formale (una questione di scala), ma il significato statistico è identico.
-Il `combined_score` nei file scaricati (es. 173, 471) è espresso in una scala che va da 0 a 1000.
-Lo `score` restituito dalle API o dalle librerie Python è espresso in una scala da 0 a 1.
-
---> combined_score=471 nel file scaricato corrisponde esattamente a score=0.471 nella risposta della funzione Python.
-
-In entrambi i casi, il valore rappresenta la confidenza probabilistica che l'interazione sia reale,
-basata sull'integrazione di diverse prove (esperimenti, co-espressione, database, text-mining, ecc.).
-STRING non usa una semplice somma delle prove, ma un modello probabilistico. Con più canali di prova
-(es. "escore" per esperimenti, "nscore" per vicinanza genica), il punteggio viene calcolato come una loro combinazione
-normalizzando gli score di ogni singolo canale.
-'''
