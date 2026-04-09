@@ -27,10 +27,6 @@ from models.MultiModalGNN import MultiModalGNN
 
 warnings.filterwarnings("ignore")
 
-# =====================================================
-# CONFIG
-# =====================================================
-
 MONTE_CARLO_ITER = 30
 TEST_SIZE = 0.2
 EPOCHS = 100
@@ -38,10 +34,6 @@ BATCH_SIZE = 4
 LR = 0.001
 
 MODEL_TYPE = "MultiModalGNN"
-
-# =====================================================
-# LOGGING
-# =====================================================
 
 logging.basicConfig(
     level=logging.INFO,
@@ -55,9 +47,6 @@ logging.basicConfig(
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logging.info(f"Device: {device}")
 
-# =====================================================
-# MODEL
-# =====================================================
 
 def build_model():
 
@@ -81,9 +70,6 @@ def build_model():
 
     return model.to(device)
 
-# =====================================================
-# DATASET
-# =====================================================
 
 def load_dataset():
 
@@ -110,9 +96,6 @@ def load_dataset():
 
     return full_train_dataset
 
-# =====================================================
-# TRAIN
-# =====================================================
 
 def train_epoch(model, loader, optimizer, criterion):
 
@@ -120,35 +103,25 @@ def train_epoch(model, loader, optimizer, criterion):
     total_loss = 0
 
     for data in loader:
-
         data = data.to(device)
-
         optimizer.zero_grad()
 
         if model.__class__ in [CancerGNN, GAT]:
             out = model(data.x, data.edge_index, data.edge_attr, data.batch)
-
         elif model.__class__ == MLP:
             out = model(data.clinical)
-
         else:
             out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)
 
         loss = criterion(out, data.y)
-
         loss.backward()
         optimizer.step()
 
         total_loss += loss.item() * data.num_graphs
-
     return total_loss / len(loader.dataset)
 
-# =====================================================
-# EVALUATION
-# =====================================================
 
 def evaluate(model, loader):
-
     model.eval()
 
     y_true = []
@@ -156,17 +129,13 @@ def evaluate(model, loader):
     y_prob = []
 
     with torch.no_grad():
-
         for data in loader:
-
             data = data.to(device)
 
             if model.__class__ in [CancerGNN, GAT]:
                 out = model(data.x, data.edge_index, data.edge_attr, data.batch)
-
             elif model.__class__ == MLP:
                 out = model(data.clinical)
-
             else:
                 out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)
 
@@ -181,14 +150,9 @@ def evaluate(model, loader):
     y_pred = np.array(y_pred)
     y_prob = np.array(y_prob)
 
-    metrics = {}
-
-    metrics["accuracy"] = np.mean(y_true == y_pred)
-    metrics["f1"] = f1_score(y_true, y_pred)
-    metrics["roc_auc"] = roc_auc_score(y_true, y_prob)
-    metrics["precision"] = precision_score(y_true, y_pred)
-    metrics["recall"] = recall_score(y_true, y_pred)
-    metrics["auprc"] = average_precision_score(y_true, y_prob)
+    metrics = {"accuracy": np.mean(y_true == y_pred), "f1": f1_score(y_true, y_pred),
+               "roc_auc": roc_auc_score(y_true, y_prob), "precision": precision_score(y_true, y_pred),
+               "recall": recall_score(y_true, y_pred), "auprc": average_precision_score(y_true, y_prob)}
 
     cm = confusion_matrix(y_true, y_pred)
 
@@ -199,14 +163,9 @@ def evaluate(model, loader):
 
     return metrics
 
-# =====================================================
-# MONTE CARLO
-# =====================================================
 
 def run_montecarlo():
-
     dataset = load_dataset()
-
     y_labels = np.array([dataset[i].y.item() for i in range(len(dataset))])
 
     splitter = StratifiedShuffleSplit(
@@ -242,7 +201,6 @@ def run_montecarlo():
         optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
         for epoch in range(EPOCHS):
-
             train_epoch(model, train_loader, optimizer, criterion)
 
         metrics = evaluate(model, test_loader)
@@ -258,14 +216,9 @@ def run_montecarlo():
 
     return results
 
-# =====================================================
-# FINAL STATS
-# =====================================================
 
 def summarize_results(results):
-
     df = pd.DataFrame(results)
-
     logging.info("\n===== FINAL RESULTS =====")
 
     for metric in ["accuracy","f1","roc_auc","precision","recall","auprc"]:
@@ -275,9 +228,6 @@ def summarize_results(results):
 
         logging.info(f"{metric}: {mean:.4f} ± {std:.4f}")
 
-# =====================================================
-# MAIN
-# =====================================================
 
 def main():
 

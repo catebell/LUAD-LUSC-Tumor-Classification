@@ -1,4 +1,5 @@
 import logging
+import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -76,6 +77,8 @@ def explain_clinical_importance(model, device, loader, clinical_features_names):
     for name, imp in clinical_imp:
         logging.info(f"{name}: {imp:.4f}\n")
 
+    logging.info("DONE\n\n")
+
     return clinical_imp
 
 
@@ -128,11 +131,13 @@ def get_gene_attention_weights(model, device, loader, node_map_inv):
     gene_importance = sorted(importance_list, key=lambda x: x[1], reverse=True)
 
     logging.info("Genes with attention importance = 1.000:")
+    genes = [(g, s) for g, s in gene_importance if s == 1]
 
-    #TODO check data format e guarda solo quelli con score=1
-    for gene_id, score in gene_imp:
-        names = gene_alias[gene_alias['gene_id'] == gene_id]['names'].iloc[0]
-        logging.info(f"{gene_id}: {score:.4f}   {names}")
+    for gene, score in genes:
+        names = gene_alias[gene_alias['gene_id'] == gene]['names'].iloc[0]
+        logging.info(f"{gene}: {score:.4f}   {names}")
+
+    logging.info("DONE\n\n")
 
     return gene_importance
 
@@ -185,37 +190,78 @@ def get_gene_saliency(model, device, loader, node_map_inv):
         max_val = gene_saliency[0][1]
         gene_saliency = [(g, s / max_val) for g, s in gene_saliency]
 
-    logging.info("Top 100 Genes saliency:")
+    logging.info("Top 50 Genes saliency:")
 
-    for gene_id, score in gene_saliency[:100]:
+    for gene_id, score in gene_saliency[:50]:
         names = gene_alias[gene_alias['gene_id'] == gene_id]['names'].iloc[0]
         logging.info(f"{gene_id}: {score:.4f}   {names}")
+
+    logging.info("DONE\n\n")
 
     return gene_saliency
 
 
-#TODO this
-# I geni top dalla tua Saliency
-top_genes = {
-    'ENSG00000185201': 'IFITM2',
-    'ENSG00000205420': 'KRT6C',
-    'ENSG00000186081': 'KRT5',
-    'ENSG00000147381': 'MAGEA4',
-    'ENSG00000019582': 'CD74'
-}
+def collect_gene_data(loader, target_dict, ensg_to_idx, feature_idx):
+    """Collect gene data from patients. Param feature_idx should be:
+    0 --> tpm (gene expression)
+    1 --> CNV (copy number value)
+    2 --> cnv_min_max_diff
+    3 --> weighted_beta_value"""
+
+    rows = []
+
+    logging.info(f"Extraction of {len(loader.dataset)} patients data...")
+
+    for i in range(len(loader.dataset)):
+        data = loader.dataset.get(i)
+        label = data.y.item()  # 0 = LUAD, 1 = LUSC
+
+        patient_data = {'label': label}
+
+        for ensg, names in target_dict.items():
+            if ensg in ensg_to_idx:
+                node_idx = ensg_to_idx[ensg]
+                # first x [num_nodes, num_features] feature is 'tpm_unstranded'
+                tpm_val = float(data.x[node_idx, feature_idx].item())
+                #patient_data[str(names)] = tpm_val
+                patient_data[ensg] = tpm_val
+            else:
+                #patient_data[str(names)] = np.nan
+                patient_data[ensg] = np.nan
+        rows.append(patient_data)
+
+    return pd.DataFrame(rows)
 
 
-def plot_gene_distributions(genes_expression_df, gene_dict):
-    plt.figure(figsize=(15, 10))
-    for i, (ensg, name) in enumerate(gene_dict.items(), 1):
-        plt.subplot(2, 3, i)
-        sns.boxplot(x='label', y=ensg, data=genes_expression_df, palette='Set2')
-        plt.title(f"{name}\n({ensg})")
-        plt.xlabel("Sottotipo (0=LUAD, 1=LUSC)")
-        plt.ylabel("Log2 Expression")
+def plot_boxplot(df, genes, i, filename = None):
+    features = {
+        0: 'Log1p(TPM)',
+        1: 'CNV',
+        2: 'CNV_MIN_MAX_diff',
+        3: 'B-VALUE'
+    }
+
+    plt.figure(figsize=(18, 5))
+    for j, name in enumerate(genes.keys(), 1):
+        plt.subplot(1, len(genes.keys()), j)
+        sns.boxplot(x='label', y=name, data=df, palette=['#3498db', '#e74c3c'])
+        sns.stripplot(x='label', y=name, data=df, color='black', size=2, alpha=0.3)
+        plt.title(f"{name}")
+        plt.xlabel("LUAD vs LUSC")
+        plt.ylabel(f"{features.get(i)}")
 
     plt.tight_layout()
-    plt.show()
+    plt.legend(['LUAD', 'LUSC'])
+    if filename is not None:
+        if not os.path.exists("analysis_plots"):
+            os.mkdir('analysis_plots')
+
+        with open('analysis_plots/top5_saliency_genes_ensg_names.txt', 'w') as file:
+            file.write(str(genes))
+
+        plt.savefig(f'analysis_plots/{filename}')
+    #plt.show()
+
 
 logging.info("--- Feature Importance analysis (Best Model Saved) ---\n")
 
@@ -229,10 +275,33 @@ gene_alias = gene_alias.groupby('gene_id')['alias'].apply(list).reset_index(name
 gene_alias['gene_id_mapped'] = gene_alias['gene_id'].map(node_map)
 gene_alias.set_index('gene_id_mapped', inplace=True)
 
-clinical_imp = explain_clinical_importance(model, device, test_loader, clinical_names)
+#clinical_imp = explain_clinical_importance(model, device, test_loader, clinical_names)
 
 #gene_imp = get_gene_attention_weights(model, device, test_loader, node_map_inv)  # (GAT Attention)
 
 gene_sal = get_gene_saliency(model, device, test_loader, node_map_inv)
 
-#plot_gene_distributions(gene_sal[:10], node_map)
+for gene_id, score in gene_sal[:5]:
+    names = gene_alias[gene_alias['gene_id'] == gene_id]['names'].iloc[0]
+    top_genes[gene_id] = names
+'''
+# top 5 genes for saliency
+top_genes = {
+    'ENSG00000185201': ['1-8D', 'DSPA2c', 'IFITM2'],
+    'ENSG00000205420': ['CK-6C', 'CK-6E', 'K6C', 'KRT6C', 'PC3', 'CK-6C', 'CK-6E', 'CK6A', 'CK6C', 'CK6D', 'K6A', 'K6C', 'K6D', 'KRT6A', 'KRT6C', 'KRT6D', 'PC3'],
+    'ENSG00000011600': ['DAP12', 'KARAP', 'PLOSL', 'PLOSL1', 'TYROBP'],
+    'ENSG00000173599': ['PC', 'PC', 'PC', 'PC', 'PCB'],
+    'ENSG00000019582': ['CD74', 'CLIP', 'DHLAG', 'HLADG', 'Ia-GAMMA', 'CLIP', 'II', 'II', 'P33', 'p33']
+}
+'''
+
+for i in range(0,4):
+    df_plot = collect_gene_data(test_loader, top_genes, node_map, i)
+    feature_dict = {
+        0: 'expression',
+        1: 'cnv',
+        2: 'cnv_min_max_diff',
+        3: 'beta_value'
+    }
+    plot_boxplot(df_plot, top_genes, i, f"genes_{feature_dict.get(i)}_boxplot.png")
+
