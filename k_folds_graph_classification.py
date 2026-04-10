@@ -147,7 +147,6 @@ def evaluate(model, loader):
     all_targets = []
     all_preds = []
     all_probs = []
-    correct = 0
 
     with torch.no_grad():
         for data in loader:  # iterate in batches.
@@ -205,11 +204,10 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
     val_loader = DataLoader(val_subset, batch_size=4, shuffle=True)
 
     # re-initialization for current fold
-    # model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
-    # model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
-    # model = MLP(num_patient_features=53, num_classes=2).to(device)
-    model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64,
-                          num_classes=2).to(device)
+    #model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
+    #model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
+    #model = MLP(num_patient_features=53, num_classes=2).to(device)
+    model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
     logging.info(model)
 
     optimizer = get_optimizer(model, 0.001, 1e-4)
@@ -303,7 +301,7 @@ total_fn = np.sum([metrics['fn'] for metrics in fold_results])
 total_tp = np.sum([metrics['tp'] for metrics in fold_results])
 
 logging.info(f"Mean Test Accuracy: {avg_acc:.4f} +/- {dev_std:.4f}")
-logging.info(f"F1: {avg_f1:.4f}, AUC: {avg_auc:.4f}, , AUPRC: {avg_auprc:.4f}, Precision: {avg_precision:.4f}, Recall: {avg_recall:.4f}")
+logging.info(f"F1: {avg_f1:.4f}, AUC: {avg_auc:.4f}, AUPRC: {avg_auprc:.4f}, Precision: {avg_precision:.4f}, Recall: {avg_recall:.4f}")
 logging.info(f"Global Confusion Matrix -> TP: {total_tp}, TN: {total_tn}, FP: {total_fp}, FN: {total_fn}")
 
 results_for_csv = []

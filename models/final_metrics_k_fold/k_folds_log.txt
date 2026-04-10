@@ -56,5 +56,5 @@ Precision: 0.9722 | Recall: 0.8861
 
 
 2026-04-09 21:51:33,506 - INFO - Mean Test Accuracy: 0.9070 +/- 0.0287
-2026-04-09 21:51:33,506 - INFO - F1: 0.9138, AUC: 0.9596, , AUPRC: 0.9734, Precision: 0.9372, Recall: 0.8937
+2026-04-09 21:51:33,506 - INFO - F1: 0.9138, AUC: 0.9596, AUPRC: 0.9734, Precision: 0.9372, Recall: 0.8937
 2026-04-09 21:51:33,506 - INFO - Global Confusion Matrix -> TP: 353, TN: 291, FP: 24, FN: 42

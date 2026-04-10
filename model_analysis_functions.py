@@ -265,7 +265,8 @@ def plot_boxplot(df, genes, i, filename = None):
 
 logging.info("--- Feature Importance analysis (Best Model Saved) ---\n")
 
-model.load_state_dict(torch.load('best_k_fold_gnn.pth', map_location=device))  # currently model_fold_3.pth
+model.load_state_dict(torch.load('example1_model_with_analysis/best_k_fold_gnn.pth', map_location=device))  # currently model_fold_3.pth
+#model.load_state_dict(torch.load('example2_model_with_analysis/model_fold_2.pth', map_location=device))  # currently model_fold_3.pth
 
 clinical_names = ['age_at_index', 'tobacco_years', 'pack_years_smoked', 'country_of_residence_at_enrollment_Australia', 'country_of_residence_at_enrollment_Germany', 'country_of_residence_at_enrollment_United States', 'country_of_residence_at_enrollment_Switzerland', 'country_of_residence_at_enrollment_Russia', 'country_of_residence_at_enrollment_Canada', 'country_of_residence_at_enrollment_Ukraine', 'country_of_residence_at_enrollment_Romania', 'country_of_residence_at_enrollment_Vietnam', 'ethnicity_not hispanic or latino', 'ethnicity_hispanic or latino', 'gender_male', 'gender_female', 'race_white', 'race_black or african american', 'race_asian', 'ajcc_pathologic_m_M0', 'ajcc_pathologic_m_M1a', 'ajcc_pathologic_m_M1', 'ajcc_pathologic_m_M1b', 'ajcc_pathologic_n_N1', 'ajcc_pathologic_n_N0', 'ajcc_pathologic_n_N2', 'ajcc_pathologic_n_N3', 'ajcc_pathologic_t_T2a', 'ajcc_pathologic_t_T2b', 'ajcc_pathologic_t_T2', 'ajcc_pathologic_t_T3', 'ajcc_pathologic_t_T4', 'ajcc_pathologic_t_T1b', 'ajcc_pathologic_t_T1', 'ajcc_pathologic_t_T1a', '3', '1', '2', '9', '8', '0', 'laterality_Left', 'laterality_Right', 'sites_of_involvement_Peripheral Lung', 'sites_of_involvement_Central Lung', 'tissue_or_organ_of_origin_Lower lobe, lung', 'tissue_or_organ_of_origin_Upper lobe, lung', 'tissue_or_organ_of_origin_Middle lobe, lung', 'tissue_or_organ_of_origin_Lung, NOS', 'tissue_or_organ_of_origin_Overlapping lesion of lung', 'tissue_or_organ_of_origin_Main bronchus', 'tobacco_smoker', 'ajcc_pathologic_stage']
 node_map_inv = {v: k for k, v in node_map.items()}
@@ -304,11 +305,11 @@ for (ensg, names) in top_genes.items():
         top_genes[ensg].append('...')
 
 genes_to_plot = {
-    'ENSG00000128422': 'KRT17',
-    'ENSG00000166897': 'ELFN2',
     'ENSG00000124107': 'KRT13',
     'ENSG00000162733': 'KRT16',
-    'ENSG00000186081': 'KRT5'
+    'ENSG00000128422': 'KRT17',
+    'ENSG00000166897': 'ELFN2',
+    'ENSG00000186081': 'KRT5',
 }
 
 for i in range(0,4):
