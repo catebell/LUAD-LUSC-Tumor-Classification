@@ -12,6 +12,60 @@
   <strong>Figure 1.</strong> High-level overview of the project architecture.
 </p>
 
+## Explainability
+
+[model_analysis_functions.py](model_analysis_functions.py) provides functions for the interpretation of the learned models decisional processes and what features they focus on:
+
+- Graph branch attention scores (get_gene_attention_weights()) retrieves the attention scores given to each gene by the GAT-GNN layers, with higher scores to the genes that the model learned to monitor more closely.
+
+```
+2026-04-09 11:56:00,592 - INFO - Genes with attention importance = 1.000:
+2026-04-09 11:56:00,737 - INFO - ENSG00000128422: 1.0000   ['PC2', 'PC2', 'PC2', 'PC2', 'Pc2', '39.1', 'CK-17', 'K17', 'KRT17', 'PC2', 'PCHC1']
+2026-04-09 11:56:00,741 - INFO - ENSG00000119147: 1.0000   ['C2orf40', 'ECRG4']
+2026-04-09 11:56:00,742 - INFO - ENSG00000119632: 1.0000   ['FAM14A', 'IFI27L2', 'ISG12B', 'TLH29']
+2026-04-09 11:56:00,857 - INFO - ENSG00000124107: 1.0000   ['ALP', 'ALK1', 'BLPI', 'HUSI', 'HUSI-I', 'SLPI', 'WAP4', 'WFDC4', 'ALP']
+2026-04-09 11:56:02,203 - INFO - ENSG00000162733: 1.0000   ['DDR2', 'MIG20a', 'NTRKR3', 'TYRO10', 'WRCN']
+...
+```
+
+- Saliency (get_gene_saliency()) computes which genes influence the model's decision by having more relevance in the gradient computation.
+
+```
+2026-04-09 17:10:59,946 - INFO - Top 100 Genes saliency:
+2026-04-09 17:10:59,950 - INFO - ENSG00000185201: 1.0000   ['1-8D', 'DSPA2c', 'IFITM2']
+2026-04-09 17:10:59,951 - INFO - ENSG00000205420: 0.6538   ['CK-6C', 'CK-6E', 'K6C', 'KRT6C', 'PC3', 'CK-6C', 'CK-6E', 'CK6A', 'CK6C', 'CK6D', 'K6A', 'K6C', 'K6D', 'KRT6A', 'KRT6C', 'KRT6D', 'PC3']
+2026-04-09 17:10:59,952 - INFO - ENSG00000011600: 0.5574   ['DAP12', 'KARAP', 'PLOSL', 'PLOSL1', 'TYROBP']
+2026-04-09 17:10:59,953 - INFO - ENSG00000173599: 0.4210   ['PC', 'PC', 'PC', 'PC', 'PCB']
+2026-04-09 17:10:59,954 - INFO - ENSG00000019582: 0.3975   ['CD74', 'CLIP', 'DHLAG', 'HLADG', 'Ia-GAMMA', 'CLIP', 'II', 'II', 'P33', 'p33']
+2026-04-09 17:10:59,955 - INFO - ENSG00000186395: 0.3811   ['EHK', 'BCIE', 'BIE', 'CK10', 'K10', 'KPP', 'KRT10', 'EHK2']
+2026-04-09 17:10:59,957 - INFO - ENSG00000171401: 0.3503   ['CK13', 'K13', 'KRT13', 'WSN2', 'K13']
+2026-04-09 17:10:59,958 - INFO - ENSG00000186832: 0.3351   ['CK16', 'FNEPPK', 'K16', 'K1CP', 'KRT16', 'KRT16A']
+2026-04-09 17:10:59,959 - INFO - ENSG00000186081: 0.3284   ['CK5', 'DDD', 'DDD1', 'EBS2', 'K5', 'KRT5', 'KRT5A']
+...
+```
+
+→ Boxplots are employed in the visualization of the selected genes features values through the test patients dataset:
+
+<p align="center">
+  <img src="https://github.com/catebell/LUAD-LUSC-Tumor-Classification/blob/master/example1_model_with_analysis/analysis_plots/genes_expression_boxplot.png">
+  <img src="https://github.com/catebell/LUAD-LUSC-Tumor-Classification/blob/master/example1_model_with_analysis/analysis_plots/genes_cnv_boxplot.png">
+  <img src="https://github.com/catebell/LUAD-LUSC-Tumor-Classification/blob/master/example1_model_with_analysis/analysis_plots/genes_beta_value_boxplot.png">
+</p>
+
+- Clinical importance (explain_clinical_importance()) explains which clinical features, if any, most influence the prediction accuracy.
+
+```
+2026-04-01 15:12:34,071 - INFO - Clinical Features importance:
+2026-04-01 15:12:34,071 - INFO - age_at_index: 0.0070
+2026-04-01 15:12:34,071 - INFO - country_of_residence_at_enrollment: 0.0070
+2026-04-01 15:12:34,071 - INFO - gender: 0.0070
+2026-04-01 15:12:34,071 - INFO - ajcc_pathologic_n: 0.0070
+2026-04-01 15:12:34,072 - INFO - tissue_or_organ_of_origin: 0.0070
+2026-04-01 15:12:34,072 - INFO - ethnicity: 0.0000
+2026-04-01 15:12:34,072 - INFO - race: 0.0000
+...
+```
+
 ## How to execute
 
 ### Get the data
