@@ -47,9 +47,15 @@
 → Boxplots are employed in the visualization of the selected genes features values through the test patients dataset:
 
 <p align="center">
-  <img src="https://github.com/catebell/LUAD-LUSC-Tumor-Classification/blob/master/example1_model_with_analysis/analysis_plots/genes_expression_boxplot.png">
-  <img src="https://github.com/catebell/LUAD-LUSC-Tumor-Classification/blob/master/example1_model_with_analysis/analysis_plots/genes_cnv_boxplot.png">
-  <img src="https://github.com/catebell/LUAD-LUSC-Tumor-Classification/blob/master/example1_model_with_analysis/analysis_plots/genes_beta_value_boxplot.png">
+
+Expression (RNA) values | Other biomarkers
+:-------------------------:|:-------------------------:
+![expr1](https://github.com/catebell/LUAD-LUSC-Tumor-Classification/blob/master/example1_model_with_analysis/analysis_plots/genes_expression_boxplot.png)  |  ![expr2](https://github.com/user-attachments/assets/9f1a3287-5033-4d3e-ad9a-bb44c68503bb)
+
+CNV values | Methylation values
+:-------------------------:|:-------------------------:
+![cnv](https://github.com/catebell/LUAD-LUSC-Tumor-Classification/blob/master/example1_model_with_analysis/analysis_plots/genes_cnv_boxplot.png)  |  ![](https://github.com/catebell/LUAD-LUSC-Tumor-Classification/blob/master/example1_model_with_analysis/analysis_plots/genes_beta_value_boxplot.png)
+
 </p>
 
 - Clinical importance (explain_clinical_importance()) explains which clinical features, if any, most influence the prediction accuracy.
