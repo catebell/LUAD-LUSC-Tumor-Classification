@@ -13,7 +13,8 @@ def main():
     print("Reading protein-aliases-gene file...")
     genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
-    create_cnv_df(example_case_id, file_mapping_df, genes_mapping_df)
+    cnv = create_cnv_df(example_case_id, file_mapping_df, genes_mapping_df)
+    print(cnv.head(3))
 
 
 def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df: pd.DataFrame):
@@ -47,9 +48,6 @@ def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     df_cnv['cnv_min_max_diff'] = df_cnv['max_copy_number'] - df_cnv['min_copy_number']
     df_cnv.drop(columns=['min_copy_number', 'max_copy_number'], inplace=True)
 
-    print("CNV df created, like:")
-    print(str(df_cnv.head(1)))
-
     # nodes data integration
     print("Adding matches from protein.aliases.gene file to find gene Ensembl ids...")
     genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
@@ -60,14 +58,13 @@ def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     df_cnv = df_cnv.rename(columns={'gene_id_y': 'gene_id'}).drop(columns='gene_id_x')
     df_cnv.reset_index(drop=True, inplace=True)
 
-    print("Grouping by gene_id (median) if more present...")
     df_cnv_grouped = df_cnv.groupby('gene_id').agg({
         'copy_number': 'median',
         'cnv_min_max_diff': 'max'
     }).reset_index()
-    print("--> " + str(len(df_cnv)) + " actual rows")
+    print("Grouped by gene_id (median) where more present: " + str(len(df_cnv)) + " final rows")
 
-    print("\n--- %s seconds ---\n" % (time.time() - start_time))
+    print("--- %s seconds ---\n" % (time.time() - start_time))
 
     return df_cnv_grouped
 

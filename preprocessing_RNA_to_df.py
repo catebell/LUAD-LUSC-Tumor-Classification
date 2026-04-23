@@ -33,7 +33,9 @@ def main():
     protein_links_df.reset_index(inplace=True, drop=True)
 
 
-    create_rna_df(example_case_id, file_mapping_df, genes_mapping_df, protein_links_df)
+    rna, network = create_rna_df(example_case_id, file_mapping_df, genes_mapping_df, protein_links_df)
+    print(rna.head(3))
+    print(network.head(3))
 
 
 def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df: pd.DataFrame, protein_links_df: pd.DataFrame):
@@ -62,22 +64,20 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     df_rna.reset_index(inplace=True, drop=True)
     print("--> " + str(len(df_rna)) + " rows")
 
-    print("Removing non protein-coding genes...")
+    n_rows = len(df_rna)
     df_rna.drop(df_rna[df_rna['gene_type'] != "protein_coding"].index, inplace=True)
     df_rna.drop('gene_type', axis=1, inplace=True)  # not useful anymore
-    print("--> " + str(len(df_rna)) + " actual rows")
+    print("Removed " + str(n_rows - len(df_rna)) + " non protein-coding genes.")
 
-    print("Removing genes with expression (tpm_unstranded) under " + str(tpm_unstranded_threshold) + "...")
+    n_rows = len(df_rna)
     df_rna.drop(df_rna[df_rna['tpm_unstranded'].astype(float) < tpm_unstranded_threshold].index, inplace=True)
     df_rna.reset_index(inplace=True, drop=True)
-    print("--> " + str(len(df_rna)) + " actual rows")
+    print("Removed " + str(n_rows - len(df_rna)) + " genes with expression (tpm_unstranded) under " + str(tpm_unstranded_threshold) + ".")
 
     # remove gene_ids (Ensembl) version (ENSG00000000003.15 --> ENSG00000000003)
     df_rna['gene_id'] = df_rna.gene_id.str.split('.', expand=True)[0]
     # remove genes (names) version (AL627309.1 --> AL627309)
     df_rna['gene_name'] = df_rna.gene_name.str.split('.', expand=True)[0]
-    print("RNA df created, like:")
-    print(str(df_rna.head(1)))
 
     # Retrieves only preferred protein_ids mapped to preferred STRING gene_name (we lose eventual aliases info)
     # Might be fine for RNA data, but for other omics a lot of genes get grouped as one, and eventual multiple proteins
@@ -106,14 +106,13 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     '''
 
     # nodes data integration
-    print("Adding matches from protein.aliases.gene file to find all coded proteins per gene...")
+    print("Adding matches from protein.aliases.gene file to find all protein isoforms coded per gene...")
     genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
     # add all protein_ids associated to a gene as multiple rows
     df_rna = pd.merge(df_rna, genes_mapping_df, how='left', on=['gene_name'])
     df_rna.dropna(inplace=True)
     df_rna = df_rna.rename(columns={'gene_id_y': 'gene_id'}).drop(columns='gene_id_x')
     df_rna.reset_index(drop=True, inplace=True)
-    print("--> " + str(len(df_rna)) + " actual rows")
 
     print("Retrieving protein-protein interactions from file protein.links...")
     # retrieve only interactions between genes both present in df_rna. Both ways interactions (p1-->p2 and p2-->p1)
@@ -130,7 +129,7 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
 
     print("Found " + str(len(network_df) / 2) + " bidirectional protein interactions.")
 
-    print("\n--- %s seconds ---\n" % (time.time() - start_time))
+    print("--- %s seconds ---\n" % (time.time() - start_time))
 
     return df_rna, network_df
 
