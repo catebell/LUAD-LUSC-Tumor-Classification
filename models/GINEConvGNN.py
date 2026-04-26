@@ -3,7 +3,7 @@ from torch_geometric.nn import GINEConv, global_mean_pool, BatchNorm
 import torch.nn.functional as F
 
 
-class CancerGNN(torch.nn.Module):
+class GINEConvGNN(torch.nn.Module):
     def __init__(self, num_node_features, num_edge_features, hidden_channels):
         super(CancerGNN, self).__init__()
 

@@ -7,7 +7,7 @@ from torch_geometric.loader import DataLoader
 from collections import Counter
 
 from PatientGraphDataset import PatientGraphDataset
-from models.CancerGNN import CancerGNN
+from models.GINEConvGNN import GINEConvGNN
 from models.GAT import GAT
 from models.MLP import MLP
 from models.MultiModalGNN import MultiModalGNN
@@ -32,7 +32,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 logging.info("Device: " + str(device))
 torch.cuda.empty_cache()
 
-#model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
+#model = GINEConvGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
 #model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
 #model = MLP(num_patient_features=53, num_classes=2).to(device)
 model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
@@ -49,16 +49,13 @@ file_mapping_df_test = file_mapping_df[file_mapping_df['case_id'].isin(
 file_mapping_df_val = file_mapping_df[file_mapping_df['case_id'].isin(
     patient_split_df[patient_split_df['split'] == 'val']['cases.case_id'])]
 
-node_map_df = pd.read_csv('files/clinical/gene_ids_mapped.tsv', sep='\t')
-node_map = dict(zip(node_map_df.gene_id, node_map_df.gene_id_mapped))
-
 # graph dataset initialization; if not exists, it gets created
 logging.info("Train Dataset init...")
-train_dataset = PatientGraphDataset(root='data_graphs_processed_train', file_mapping_df=file_mapping_df_train, node_map=node_map)
+train_dataset = PatientGraphDataset(root='data_graphs_processed_train', file_mapping_df=file_mapping_df_train)
 logging.info("Test Dataset init...")
-test_dataset = PatientGraphDataset(root='data_graphs_processed_test', file_mapping_df=file_mapping_df_test, node_map=node_map)
+test_dataset = PatientGraphDataset(root='data_graphs_processed_test', file_mapping_df=file_mapping_df_test)
 logging.info("Val Dataset init...")
-val_dataset = PatientGraphDataset(root='data_graphs_processed_validation', file_mapping_df=file_mapping_df_val, node_map=node_map)
+val_dataset = PatientGraphDataset(root='data_graphs_processed_validation', file_mapping_df=file_mapping_df_val)
 
 dataset = train_dataset
 
@@ -157,7 +154,7 @@ def train():
         data.edge_attr[:,2] = (data.edge_attr[:,2] - e_min) / (e_max - e_min + 1e-6)
 
         # perform a single forward pass
-        if model.__class__ == CancerGNN or model.__class__ == GAT:
+        if model.__class__ == GINEConvGNN or model.__class__ == GAT:
             out = model(data.x, data.edge_index, data.edge_attr, data.batch)  # just graph
         elif model.__class__ == MLP:
             out = model(data.clinical) # just clinical features
@@ -186,7 +183,7 @@ def validate():
         data.edge_attr[:, 2] = (data.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
         with torch.no_grad():
-            if model.__class__ == CancerGNN or model.__class__ == GAT:
+            if model.__class__ == GINEConvGNN or model.__class__ == GAT:
                 out = model(data.x, data.edge_index, data.edge_attr, data.batch)  # just graph
             elif model.__class__ == MLP:
                 out = model(data.clinical)  # just clinical features
@@ -209,7 +206,7 @@ def test(model, loader):
          data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
          data.edge_attr[:, 2] = (data.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
-         if model.__class__ == CancerGNN or model.__class__ == GAT:
+         if model.__class__ == GINEConvGNN or model.__class__ == GAT:
              out = model(data.x, data.edge_index, data.edge_attr, data.batch)  # just graph
          elif model.__class__ == MLP:
              out = model(data.clinical)  # just clinical features

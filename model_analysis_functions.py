@@ -6,12 +6,15 @@ import pandas as pd
 import seaborn as sns
 import torch
 
-from graph_classification import test, clinical_mean, clinical_std, x_mean, x_std, e_min, e_max, model, device, \
+from graph_classification import test, clinical_mean, clinical_std, x_mean, x_std, e_min, e_max, device, \
     test_loader, node_map
 from models.CancerGNN import CancerGNN
 from models.GAT import GAT
 from models.MLP import MLP
+from models.MultiModalGNN import MultiModalGNN
 
+#model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
+model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
 
 def explain_clinical_importance(model, device, loader, clinical_features_names):
     """

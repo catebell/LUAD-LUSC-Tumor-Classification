@@ -3,8 +3,6 @@ import time
 
 pd.set_option('display.max_colwidth', None)
 
-tpm_unstranded_threshold = 1  # gene expression threshold to ignore lower-expression genes
-
 # ISOLATED EXECUTION
 def main():
     file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
@@ -70,9 +68,6 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     print("Removed " + str(n_rows - len(df_rna)) + " non protein-coding genes.")
 
     n_rows = len(df_rna)
-    df_rna.drop(df_rna[df_rna['tpm_unstranded'].astype(float) < tpm_unstranded_threshold].index, inplace=True)
-    df_rna.reset_index(inplace=True, drop=True)
-    print("Removed " + str(n_rows - len(df_rna)) + " genes with expression (tpm_unstranded) under " + str(tpm_unstranded_threshold) + ".")
 
     # remove gene_ids (Ensembl) version (ENSG00000000003.15 --> ENSG00000000003)
     df_rna['gene_id'] = df_rna.gene_id.str.split('.', expand=True)[0]
@@ -127,7 +122,7 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     network_df['gene2'] = network_df['protein2'].map(prot_to_gene)
     network_df = network_df.dropna(subset=['gene1', 'gene2'])
 
-    print("Found " + str(len(network_df) / 2) + " bidirectional protein interactions.")
+    print(str(len(df_rna)) + " final rows and found " + str(len(network_df)/2) + " protein isoforms interactions.")
 
     print("--- %s seconds ---\n" % (time.time() - start_time))
 

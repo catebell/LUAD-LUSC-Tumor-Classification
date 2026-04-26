@@ -100,12 +100,15 @@ df_meth = create_meth_df(case_id, file_mapping_df, genes_mapping_df, meth_manife
 node_features_df = pd.merge(node_features_df, df_meth, how='left', on=['gene_id'])
 
 node_features_df[['copy_number', 'cnv_min_max_diff', 'weighted_beta_value']] = node_features_df[['copy_number', 'cnv_min_max_diff', 'weighted_beta_value']].fillna(0)
+#node_features_df[['copy_number', 'cnv_min_max_diff', 'beta_value']] = node_features_df[['copy_number', 'cnv_min_max_diff', 'beta_value']].fillna(0)
 
 node_features_df['meth_data_present'] = np.where(node_features_df['weighted_beta_value'] > 0, 1, 0)
-# so the net should learn that when meth_data_present = 0 weighted_beta_value doesn't matter
+#node_features_df['meth_data_present'] = np.where(node_features_df['beta_value'] > 0, 1, 0)
+# so the net should learn that when meth_data_present = 0 beta_value doesn't matter
 
 # only numerical features assigned to nodes, to be used for classification
 features_cols = ['tpm_unstranded', 'copy_number', 'cnv_min_max_diff', 'weighted_beta_value', 'meth_data_present']
+#features_cols = ['tpm_unstranded', 'copy_number', 'cnv_min_max_diff', 'beta_value', 'meth_data_present']
 node_features_df[features_cols] = node_features_df[features_cols].astype(float)
 
 
@@ -117,6 +120,7 @@ node_features_df = node_features_df.groupby('gene_id_mapped').agg({
     'copy_number': 'mean',
     'cnv_min_max_diff': 'max',
     'weighted_beta_value': 'mean',
+    #'beta_value': 'mean',
     'meth_data_present': 'max'
 })
 
@@ -129,7 +133,6 @@ edge_features_df = network_df.groupby(['gene1', 'gene2']).agg(avg_combined_score
                                                               max_combined_score=('combined_score', 'max'),
                                                               num_protein_links=('combined_score', 'count')  # how many proteins of these 2 genes interacts
 ).reset_index()
-
 
 # no bidirectional edges, added later: here we remove duplicate pairs after sort (gene1 < gene2)
 edge_features_df[['gene1', 'gene2']] = np.sort(edge_features_df[['gene1', 'gene2']].values, axis=1)
@@ -200,6 +203,7 @@ print(scaler)
 
 # scaling
 cols_to_scale = ['tpm_unstranded', 'copy_number', 'cnv_min_max_diff', 'weighted_beta_value']
+#cols_to_scale = ['tpm_unstranded', 'copy_number', 'cnv_min_max_diff', 'beta_value']
 node_features_df[cols_to_scale] = StandardScaler().fit_transform(node_features_df[cols_to_scale])
 
 cols_to_scale = ['num_protein_links']

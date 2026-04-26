@@ -9,9 +9,11 @@ from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_sco
 from torch.utils.data import Subset
 from torch_geometric.loader import DataLoader
 from collections import Counter
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from PatientGraphDataset import PatientGraphDataset
-from models.CancerGNN import CancerGNN
+from models.GINEConvGNN import GINEConvGNN
 from models.GAT import GAT
 from models.MLP import MLP
 from models.MultiModalGNN import MultiModalGNN
@@ -44,19 +46,13 @@ file_mapping_df_test = file_mapping_df[file_mapping_df['case_id'].isin(
 file_mapping_df_val = file_mapping_df[file_mapping_df['case_id'].isin(
     patient_split_df[patient_split_df['split'] == 'val']['cases.case_id'])]
 
-node_map_df = pd.read_csv('files/clinical/gene_ids_mapped.tsv', sep='\t')
-node_map = dict(zip(node_map_df.gene_id, node_map_df.gene_id_mapped))
-
 # graph dataset initialization; if not exists, it gets created
 logging.info("Train Dataset init...")
-train_dataset = PatientGraphDataset(root='data_graphs_processed_train', file_mapping_df=file_mapping_df_train,
-                                    node_map=node_map)
+train_dataset = PatientGraphDataset(root='data_graphs_processed_train', file_mapping_df=file_mapping_df_train)
 logging.info("Test Dataset init...")
-test_dataset = PatientGraphDataset(root='data_graphs_processed_test', file_mapping_df=file_mapping_df_test,
-                                   node_map=node_map)
+test_dataset = PatientGraphDataset(root='data_graphs_processed_test', file_mapping_df=file_mapping_df_test)
 logging.info("Val Dataset init...")
-val_dataset = PatientGraphDataset(root='data_graphs_processed_validation', file_mapping_df=file_mapping_df_val,
-                                  node_map=node_map)
+val_dataset = PatientGraphDataset(root='data_graphs_processed_validation', file_mapping_df=file_mapping_df_val)
 
 full_train_dataset = train_dataset + val_dataset
 
@@ -103,8 +99,8 @@ def train(model, loader, optimizer, criterion):
 
         optimizer.zero_grad()
 
-        if model.__class__ == CancerGNN or model.__class__ == GAT:
-            out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
+        if model.__class__ == GINEConvGNN or model.__class__ == GAT:
+            out = model(data_copy.x[:,3:], data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
         elif model.__class__ == MLP:
             out = model(data_copy.clinical)  # just clinical features
         else:  # MultiModalGNN
@@ -129,8 +125,8 @@ def validate(model, loader, criterion):
         data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
         data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
-        if model.__class__ == CancerGNN or model.__class__ == GAT:
-            out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
+        if model.__class__ == GINEConvGNN or model.__class__ == GAT:
+            out = model(data_copy.x[:,3:], data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
         elif model.__class__ == MLP:
             out = model(data_copy.clinical)  # just clinical features
         else:  # MultiModalGNN
@@ -156,8 +152,8 @@ def evaluate(model, loader):
             data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
             data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
-            if model.__class__ == CancerGNN or model.__class__ == GAT:
-                out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
+            if model.__class__ == GINEConvGNN or model.__class__ == GAT:
+                out = model(data_copy.x[:,3:], data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
             elif model.__class__ == MLP:
                 out = model(data_copy.clinical)  # just clinical features
             else:  # MultiModalGNN
@@ -191,7 +187,32 @@ def evaluate(model, loader):
     return metrics, report
 
 
-test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
+def plot_final_confusion_matrix(fold_results, model):
+    filename = f'confusion_matrix_{model._get_name()}.png'
+
+    total_tp = sum([res['tp'] for res in fold_results])
+    total_tn = sum([res['tn'] for res in fold_results])
+    total_fp = sum([res['fp'] for res in fold_results])
+    total_fn = sum([res['fn'] for res in fold_results])
+
+    cm = [[total_tn, total_fp],
+          [total_fn, total_tp]]
+
+    cm_norm = np.array(cm) / np.array(cm).sum(axis=1)[:, np.newaxis]
+
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm_norm, annot=True, cmap='Blues',
+                xticklabels=['Pred LUAD (0)', 'Pred LUSC (1)'],
+                yticklabels=['True LUAD (0)', 'True LUSC (1)'])
+
+    plt.title('Global Confusion Matrix (Sum and avg for all folds)')
+    plt.ylabel('Real Label')
+    plt.xlabel('Model Prediction')
+
+    plt.savefig(f'models/final_metrics_k_fold/{filename}', bbox_inches='tight', dpi=300)
+    plt.show()
+    logging.info(f"Confusion Matrix saved.")
+
 max_epochs = 100
 
 for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y_labels)):
@@ -203,11 +224,14 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
     train_loader = DataLoader(train_subset, batch_size=4, shuffle=True)
     val_loader = DataLoader(val_subset, batch_size=4, shuffle=True)
 
+    test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
+
     # re-initialization for current fold
-    #model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
-    #model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
+    #model = GINEConvGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
+    #model = GAT(num_node_features=1, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
     #model = MLP(num_patient_features=53, num_classes=2).to(device)
     model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
+
     logging.info(model)
 
     optimizer = get_optimizer(model, 0.001, 1e-4)
@@ -335,44 +359,10 @@ df_results = pd.concat([df_results, pd.DataFrame([std_row])], ignore_index=True)
 if not os.path.exists("models/final_metrics_k_fold"):
     os.mkdir('models/final_metrics_k_fold')
 
-if model.__class__ == CancerGNN or model.__class__ == GAT:
-    csv_filename = 'models/final_metrics_k_fold/GNN_final_metrics_comparison.csv'
-elif model.__class__ == MLP:
-    csv_filename = 'models/final_metrics_k_fold/MLP_final_metrics_comparison.csv'
-else:  # MultiModalGNN
-    csv_filename = 'models/final_metrics_k_fold/MultiModalGNN_final_metrics_comparison.csv'
+csv_filename = f'models/final_metrics_k_fold/{model._get_name()}_final_metrics_comparison.csv'
 
 df_results.to_csv(csv_filename, index=False)
 
 logging.info(f"Results saved in {csv_filename}\n")
 
-
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import confusion_matrix
-
-def plot_final_confusion_matrix(fold_results, filename='confusion_matrix_total.png'):
-    total_tp = sum([res['tp'] for res in fold_results])
-    total_tn = sum([res['tn'] for res in fold_results])
-    total_fp = sum([res['fp'] for res in fold_results])
-    total_fn = sum([res['fn'] for res in fold_results])
-
-    cm = [[total_tn, total_fp],
-          [total_fn, total_tp]]
-
-    cm_norm = np.array(cm) / np.array(cm).sum(axis=1)[:, np.newaxis]
-
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm_norm, annot=True, cmap='Blues',
-                xticklabels=['Pred LUAD (0)', 'Pred LUSC (1)'],
-                yticklabels=['True LUAD (0)', 'True LUSC (1)'])
-
-    plt.title('Global Confusion Matrix (Sum for all folds)')
-    plt.ylabel('Real Label')
-    plt.xlabel('Model Prediction')
-
-    plt.savefig(f'models/final_metrics_k_fold/{filename}', bbox_inches='tight', dpi=300)
-    plt.show()
-    logging.info(f"Confusion Matrix saved.")
-
-plot_final_confusion_matrix(fold_results)
+plot_final_confusion_matrix(fold_results, model)

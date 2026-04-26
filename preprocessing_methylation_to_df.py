@@ -67,11 +67,8 @@ def create_meth_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df
 
     # UCSC terms identifying Promoters (TSS200 = Proximal promoter, TSS1500 = Distal promoter)
     promoter_terms = ['TSS200', 'TSS1500', '1stExon', "5'UTR"]
-    # many 450k probes map on more transcripts. ".str.contains('|'.join(promoter_terms), na=False)" catches also the ones classified as Body for a gene and promoter for another
+    # many 450k probes map on more transcripts: ".str.contains('|'.join(promoter_terms), na=False)" catches also the ones classified as Body for a gene and promoter for another
     is_promoter = df_meth['cpg_region'].str.contains('|'.join(promoter_terms), na=False)
-    # "Islands" --> consider only the cores of the promoters:
-    #is_island = df_meth['cpg_position'] == 'Island'
-    #df_meth = df_meth[is_promoter & is_island]  # comment if you don't want to consider only islands positions
     df_meth = df_meth[is_promoter]
 
     # have different rows for the possible gene names variants
@@ -84,7 +81,6 @@ def create_meth_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df
     df_meth.dropna(inplace=True)  # only genes protein coding kept (not present in mapping file from STRING)
     df_meth.drop_duplicates(inplace=True)
 
-    # de-comment if you don't want to consider only islands [comment "is_island = df_meth['cpg_position'] == 'Island'"]
     pos_priority_map = {
         'Island': 1.0,
         'N_Shore': 0.6,
@@ -100,11 +96,6 @@ def create_meth_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df
     ).reset_index()
     df_meth_grouped.rename(columns={0: 'weighted_beta_value'}, inplace=True)
 
-    '''
-    df_meth_grouped = df_meth.groupby('gene_id').agg({
-        'beta_value': 'mean',
-    }).reset_index()
-    '''
     print("Grouped by gene_id (averaging b-values) where more present: " + str(len(df_meth_grouped)) + " final rows")
 
     print("--- %s seconds ---\n" % (time.time() - start_time))
