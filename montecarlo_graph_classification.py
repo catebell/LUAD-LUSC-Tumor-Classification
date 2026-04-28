@@ -84,7 +84,7 @@ def load_dataset():
     file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
     patient_split_df = pd.read_csv('files/clinical/patient_split_cleaned.csv')
 
-    node_map_df = pd.read_csv('files/clinical/gene_ids_mapped.tsv', sep='\t')
+    node_map_df = pd.read_csv('STRING_downloaded_files/gene_ids_mapped.tsv', sep='\t')
     node_map = dict(zip(node_map_df.gene_id, node_map_df.gene_id_mapped))
 
     train_df = file_mapping_df[file_mapping_df['case_id'].isin(

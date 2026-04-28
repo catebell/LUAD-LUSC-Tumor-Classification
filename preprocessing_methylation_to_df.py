@@ -7,7 +7,7 @@ pd.set_option('display.max_colwidth', None)
 # ISOLATED EXECUTION
 def main():
     file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
-    example_case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb'
+    example_case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb'  #TODO prendi il primo paziente invece di uno specifico
 
     # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
     # file extracted using create_tsv_from_STRING_files.create_gene_aliases_proteins_ids_mapping_file()
@@ -60,11 +60,7 @@ def create_meth_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df
     df_meth.reset_index(inplace=True, drop=True)
     print("Removed " + str(n_rows - len(df_meth)) + " cpgIDs-names values still missing (gene not tracked).")
 
-
     print("Splitting gene name variants and keeping only promoter regions...")
-    values_list = df_meth['gene_name'].str.split(';')
-    df_meth['gene_name'] = values_list.apply(lambda x: list(set(x)))  # so to have single name variants as list
-
     # UCSC terms identifying Promoters (TSS200 = Proximal promoter, TSS1500 = Distal promoter)
     promoter_terms = ['TSS200', 'TSS1500', '1stExon', "5'UTR"]
     # many 450k probes map on more transcripts: ".str.contains('|'.join(promoter_terms), na=False)" catches also the ones classified as Body for a gene and promoter for another
@@ -72,6 +68,8 @@ def create_meth_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df
     df_meth = df_meth[is_promoter]
 
     # have different rows for the possible gene names variants
+    values_list = df_meth['gene_name'].str.split(';')
+    df_meth['gene_name'] = values_list.apply(lambda x: list(set(x)))  # so to have single name variants as list
     df_meth = df_meth.explode(column=['gene_name']).reset_index(drop=True)
 
     # nodes data integration

@@ -111,7 +111,7 @@ files/
 - [9606.protein.aliases.v12.0.txt](https://stringdb-downloads.org/download/protein.links.v12.0/9606.protein.links.v12.0.txt.gz) 
 - [9606.protein.links.v12.0.txt](https://stringdb-downloads.org/download/protein.aliases.v12.0/9606.protein.aliases.v12.0.txt.gz)
 
-→ Put them in a new **STRING_downloaded_files/** folder and run [STRING_files_to_tsv.py](STRING_files_to_tsv.py): the first function creates **STRING_downloaded_files/9606.protein.aliases.gene.tsv**, the second one creates **files/clinical/gene_ids_mapped.tsv**.
+→ Put them in a new **STRING_downloaded_files/** folder and run [STRING_files_to_tsv.py](STRING_files_to_tsv.py): the first function creates **STRING_downloaded_files/9606.protein.aliases.gene.tsv**, the second one creates **STRING_downloaded_files/gene_ids_mapped.tsv**.
 > ⚠️ The execution of the first function can take a few hours.
 
 4) We need also a methylation manifest for the preprocessing of methylation data; we downloaded from the relative [Illumina support page](https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html) the one relative to the Illumina “450 K array” technology (click [here](https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv) to start the download).
@@ -129,7 +129,6 @@ files/
         features_considered.tsv  ←
         features_encoded.tsv  ←
         file_case_mapping.tsv
-        gene_ids_mapped.tsv
         omics_files.tsv
 ```
 
@@ -141,7 +140,6 @@ files/
         features_considered.tsv
         features_encoded.tsv
         file_case_mapping.tsv
-        gene_ids_mapped.tsv
         omics_files.tsv
         patient_split_cleaned.csv  ←
 ```

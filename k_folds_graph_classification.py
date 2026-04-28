@@ -240,12 +240,13 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
 
     # different weights to classes based on number of samples
-    fold_train_labels = y_labels[train_idx]
-    counts = Counter(fold_train_labels)
-    # class n weight = N_tot / (N_classes * N_elem_of_class_n)
-    w0 = len(fold_train_labels) / (2 * counts[0])
-    w1 = len(fold_train_labels) / (2 * counts[1])
-    weights = torch.tensor([w0, w1], dtype=torch.float).to(device)
+    train_labels = [data.y.item() for data in train_dataset]
+    counts = Counter(train_labels)
+    weights = [0] * len(counts)
+    for i in range(len(counts)):
+        # N_tot / (N_classes * N_elem_of_class_n)
+        weights[i] = len(train_labels) / (len(counts) * counts[i])
+    weights = torch.tensor(weights, dtype=torch.float).to(device)
     criterion = torch.nn.CrossEntropyLoss(weight=weights, label_smoothing=0.1)
 
     node_feat_scaler = StandardScaler()
