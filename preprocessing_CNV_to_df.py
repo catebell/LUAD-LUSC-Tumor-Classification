@@ -6,7 +6,7 @@ pd.set_option('display.max_colwidth', None)
 # ISOLATED EXECUTION
 def main():
     file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
-    example_case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb'
+    example_case_id = file_mapping_df['case_id'][0]
 
     # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
     # file extracted using create_tsv_from_STRING_files.create_gene_aliases_proteins_ids_mapping_file()

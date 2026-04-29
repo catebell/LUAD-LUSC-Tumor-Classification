@@ -2,12 +2,14 @@ import numpy as np
 import pandas as pd
 import time
 
+import config
+
 pd.set_option('display.max_colwidth', None)
 
 # ISOLATED EXECUTION
 def main():
-    file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
-    example_case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb'  #TODO prendi il primo paziente invece di uno specifico
+    file_mapping_df = pd.read_csv(f'{config.FILES}/clinical/file_case_mapping.tsv', sep='\t')
+    example_case_id = file_mapping_df['case_id'][0]
 
     # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
     # file extracted using create_tsv_from_STRING_files.create_gene_aliases_proteins_ids_mapping_file()
@@ -38,7 +40,7 @@ def create_meth_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df
 
     start_time = time.time()
 
-    df_meth = pd.read_csv(f"files/methylation/{file_mapping_df[
+    df_meth = pd.read_csv(f"files/lung/methylation/{file_mapping_df[
         (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'methylation')
         ]['filename'].to_string(index=False)}", sep='\t', names=['cpg_IlmnID', 'beta_value'])
 
