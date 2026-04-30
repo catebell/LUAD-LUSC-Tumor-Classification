@@ -134,7 +134,7 @@ class PatientGraphDataset(Dataset):
 
         clinical_features_df = pd.read_csv('files/clinical/features_encoded.tsv', sep='\t')
 
-        node_map_df = pd.read_csv('files/clinical/gene_ids_mapped.tsv', sep='\t')
+        node_map_df = pd.read_csv('STRING_downloaded_files/gene_ids_mapped.tsv', sep='\t')
         node_map = dict(zip(node_map_df.gene_id, node_map_df.gene_id_mapped))
 
         # PROTEINS LINKS

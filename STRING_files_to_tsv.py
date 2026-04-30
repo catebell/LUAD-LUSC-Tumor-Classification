@@ -77,7 +77,7 @@ def create_gene_aliases_proteins_ids_mapping_file():
 
 def create_genes_id_mapping_file():
     """Creates the tsv file that nodes/genes use to get their associated unique ordered id.
-    Output saved in 'files/clinical/gene_ids_mapped.tsv'"""
+    Output saved in 'STRING_downloaded_files/gene_ids_mapped.tsv'"""
 
     # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
     # file extracted using string_files_to_tsv.py --> create_protein_links()
@@ -96,7 +96,7 @@ def create_genes_id_mapping_file():
     genes_id_mapping_df = pd.DataFrame(node_map.items(), columns=['gene_id', 'gene_id_mapped'])
 
     # save to file
-    genes_id_mapping_df.to_csv('files/clinical/gene_ids_mapped.tsv', sep="\t", index=False)
+    genes_id_mapping_df.to_csv('STRING_downloaded_files/gene_ids_mapped.tsv', sep="\t", index=False)
 
 
 if __name__ == "__main__":

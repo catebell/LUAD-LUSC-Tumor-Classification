@@ -35,7 +35,7 @@ class MultiModalGNN(nn.Module):
         )
 
         self.classifier = nn.Sequential(
-            nn.Linear(hidden_channels * 2 + 8, num_classes)  # LUAD vs LUSC
+            nn.Linear(hidden_channels * 2 + 8, num_classes)  # Tumor Classes
         )
 
 
@@ -52,4 +52,4 @@ class MultiModalGNN(nn.Module):
         gate_score = self.gate(torch.cat([emb_graph, emb_clinical], dim=1))  # gate assigns a [0-1] coefficient
         emb_combined = torch.cat([emb_graph, emb_clinical * gate_score], dim=-1)  # feature fusion
 
-        return self.classifier(emb_combined)  # [batch_size, 2]
+        return self.classifier(emb_combined)
