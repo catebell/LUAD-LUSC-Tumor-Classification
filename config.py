@@ -1,5 +1,11 @@
-DATASET_LUNG = "original_dataset/lung"
-DATASET_KIDNEY = "original_dataset/kidney"
+'''
+Change the tumor name here
+'''
+tumor = "lung"
+# tumor = "kidney"
 
-FILES_LUNG = "files/lung"
-FILES_KIDNEY = "files/kidney"
+'''
+Predefined paths
+'''
+DATASET = "original_dataset"
+FILES = "files"

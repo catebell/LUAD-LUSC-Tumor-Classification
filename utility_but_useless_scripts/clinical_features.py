@@ -5,7 +5,7 @@ import pandas as pd
     rimozione duplicati case_id e tenere dati solo relativi a tumori primary
 '''
 
-df = pd.read_csv("../original_dataset/clinical/clinical.tsv", sep="\t")
+df = pd.read_csv("../original_dataset/lung/clinical/clinical.tsv", sep="\t")
 df.dropna(inplace=True)
 print("Shape: ", df.shape)
 
@@ -33,7 +33,7 @@ for i in no_duplicates.columns:
 print("Possibly ", len(columns), " columns with useful data.")
 
 
-# don't consider columns with same value for everyone
+# don't consider columns with the same value for everyone
 cols_no_single_value = []
 print("Number of unique values per column: ")
 for i in columns:

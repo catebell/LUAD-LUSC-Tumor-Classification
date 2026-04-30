@@ -3,13 +3,31 @@ import glob
 import os
 import shutil
 import pandas as pd
+import argparse
 import config
 
-""" Extract files from original_dataset/ into files/ """
+""" Extract files from original_dataset/<dataset>/ into files/<dataset>/ """
 
-# EXTRACT_FILES
+def build_paths(dataset_name):
+    """Build the paths for the dataset and the files"""
+    dataset_dir = os.path.join(config.DATASET, dataset_name)
+    files_dir = os.path.join(config.FILES, dataset_name)
+
+    return dataset_dir, files_dir
+
+def get_available_datasets():
+    """Return all subfolders inside original_dataset/ so the dataset available"""
+    if not os.path.isdir(config.DATASET):
+        return []
+
+    return sorted([
+        folder
+        for folder in os.listdir(config.DATASET)
+        if os.path.isdir(os.path.join(config.DATASET, folder))
+    ])
 
 def safe_copy(src, dst_dir):
+    """Copy a file only if the destination does not exist"""
     os.makedirs(dst_dir, exist_ok=True)
 
     base = os.path.basename(src)
@@ -21,6 +39,7 @@ def safe_copy(src, dst_dir):
 
 
 def extract_files(base_dir, extension, out_dir):
+    """Extract all files recursively"""
     for root, dirs, files in os.walk(base_dir):
 
         dirs[:] = [d for d in dirs if d.lower() != "logs"]
@@ -74,9 +93,6 @@ def files_extraction(INPUT_DIR, OUTPUT_DIR):
             print(f"Directory not found: {base_path}")
 
     print("Completed")
-
-
-# EXTRACT_FILE_ID
 
 def extract_file_id(FILES_DIR):
     """Extract file_id from filename in files -> put in omics_files.tsv"""
@@ -133,8 +149,6 @@ def extract_file_id(FILES_DIR):
     print(df.head())
     print(df.shape)
     print(df.isnull().sum().sum())
-
-# EXTRACT_FILE_ID_CASE_ID
 
 def extract_file_id_case_id(DATASET_DIR, FILES_DIR):
     """Search the file_id in the metadata.json file and take the corresponding case_id -> put in file_case_mapping.tsv"""
@@ -230,7 +244,11 @@ def extract_file_id_case_id(DATASET_DIR, FILES_DIR):
     print(df_out.shape)
 
 def process_dataset(dataset_dir, files_dir):
+    """ Full extraction + mapping pipeline """
     num_partial = count_partial_files(dataset_dir)
+
+    print("INPUT :", dataset_dir)
+    print("OUTPUT:", files_dir)
 
     if num_partial > 0:
         print(f"Skipped {dataset_dir}")
@@ -240,12 +258,34 @@ def process_dataset(dataset_dir, files_dir):
     extract_file_id(FILES_DIR=files_dir)
     extract_file_id_case_id(FILES_DIR=files_dir, DATASET_DIR=dataset_dir)
 
-def main():
-    print("\n=== LUNG ===")
-    process_dataset(config.DATASET_LUNG, config.FILES_LUNG)
+    print("Completed")
 
-    print("\n=== KIDNEY ===")
-    process_dataset(config.DATASET_KIDNEY, config.FILES_KIDNEY)
+def parse_args():
+    """Parse the command line arguments"""
+    datasets = get_available_datasets()
+
+    parser = argparse.ArgumentParser(
+        description="Files extraction and mapping"
+    )
+
+    parser.add_argument(
+        "--dataset",
+        default=config.tumor,
+        choices=datasets,
+        help=f"Available datasets: {', '.join(datasets)}"
+    )
+
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+
+    dataset_dir, files_dir = build_paths(args.dataset)
+
+    process_dataset(
+        dataset_dir=dataset_dir,
+        files_dir=files_dir
+    )
 
 if __name__ == "__main__":
     main()
