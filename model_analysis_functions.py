@@ -7,14 +7,21 @@ import seaborn as sns
 import torch
 
 from graph_classification import test, clinical_mean, clinical_std, x_mean, x_std, e_min, e_max, device, \
-    test_loader, node_map
-from models.CancerGNN import CancerGNN
+    test_loader
+
 from models.GAT import GAT
 from models.MLP import MLP
 from models.MultiModalGNN import MultiModalGNN
 
+'''
+Functions suggested by Gemini.
+'''
+
 #model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
 model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
+
+node_map = pd.read_csv('string_downloaded_files/gene_ids_mapped.tsv', sep='\t')
+node_map = dict(zip(node_map['gene_id'], node_map['gene_id_mapped']))
 
 def explain_clinical_importance(model, device, loader, clinical_features_names):
     """
@@ -25,19 +32,19 @@ def explain_clinical_importance(model, device, loader, clinical_features_names):
     baseline_acc = test(model, loader)
     feature_importances = {}
 
-    features = ['age_at_index','tobacco_years','pack_years_smoked','country_of_residence_at_enrollment','ethnicity',
-                'gender','race','ajcc_pathologic_m','ajcc_pathologic_n','ajcc_pathologic_t','icd_10_code','laterality',
-                'sites_of_involvement','tissue_or_organ_of_origin','tobacco_smoker','ajcc_pathologic_stage']
-    '''
-    for example:
-    country_of_residence_at_enrollment_Germany,
-    country_of_residence_at_enrollment_Ukraine,
-    country_of_residence_at_enrollment_Switzerland
-    will all be found by contains.('country_of_residence_at_enrollment')
-    '''
+    features_df = pd.read_csv(f'files/{config.tumor}/clinical/features_considered.tsv', sep='\t')
+
+    features = features_df.columns.values[2:]
 
     for target_feat in features:
         # find all cols idx corresponding to a single feature to regroup the one-hot-encoded ones:
+        '''
+        for example:
+        country_of_residence_at_enrollment_Germany,
+        country_of_residence_at_enrollment_Ukraine,
+        country_of_residence_at_enrollment_Switzerland
+        will all be found by contains.('country_of_residence_at_enrollment')
+        '''
         col_indices = []
         for i, col_name in enumerate(clinical_features_names):
             if col_name == target_feat or col_name.startswith(target_feat + "_"):
@@ -60,7 +67,7 @@ def explain_clinical_importance(model, device, loader, clinical_features_names):
                 data_copy.clinical[:, idx] = data_copy.clinical[perm, idx]
 
             with torch.no_grad():
-                if model.__class__ == CancerGNN or model.__class__ == GAT:
+                if model.__class__ == GAT:
                     out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)
                 elif model.__class__ == MLP:
                     out = model(data_copy.clinical)
@@ -85,7 +92,59 @@ def explain_clinical_importance(model, device, loader, clinical_features_names):
     return clinical_imp
 
 
-def get_gene_attention_weights(model, device, loader, node_map_inv):
+def explain_edge_features_importance(model, device, loader):
+    """
+    Edge features importance computed by Permutation Importance.
+    0.05 --> accuracy drops by 5% without that feature, 0.00 --> useless feature, accuracy doesn't drop.
+    """
+    model.eval()
+    baseline_acc = test(model, loader)
+    feature_importances = {}
+    features = ['avg_combined_score', 'max_combined_score', 'num_prot_isoforms_links']
+
+    for idx, target_feat in enumerate(features):
+        correct = 0
+        total = 0
+
+        for data in loader:
+            data_copy = data.clone().to(device)
+
+            data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+            data_copy.x[:, :4] = (data_copy.x[:, :4] - x_mean) / (x_std + 1e-6)
+            data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
+
+            perm = torch.randperm(data_copy.edge_attr.size(0))
+
+            # permutation applied to the col of the current feature
+            data_copy.edge_attr[:, idx] = data_copy.edge_attr[perm, idx]
+
+            with torch.no_grad():
+                if model.__class__ == GAT:
+                    out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)
+                elif model.__class__ == MLP:
+                    out = model(data_copy.clinical)
+                else:  # MultiModalGNN
+                    out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.clinical,
+                                data_copy.batch)
+
+                pred = out.argmax(dim=1)
+                correct += int((pred == data_copy.y).sum())
+                total += data_copy.num_graphs
+
+        permuted_acc = correct / total
+        feature_importances[target_feat] = baseline_acc - permuted_acc
+
+    edge_features_imp = sorted(feature_importances.items(), key=lambda x: x[1], reverse=True)
+    logging.info("Edge Features importance:")
+    for name, imp in edge_features_imp:
+        logging.info(f"{name}: {imp:.4f}\n")
+
+    logging.info("DONE\n\n")
+
+    return edge_features_imp
+
+
+def get_genes_and_edges_attention_weights(model, device, loader, node_map_inv):
     """Extract genes with the highest attention weights from GAT.
     Says which ones are important "hubs" in the graph structure."""
     model.eval()
@@ -94,6 +153,10 @@ def get_gene_attention_weights(model, device, loader, node_map_inv):
     num_unique_genes = len(node_map_inv)
     gene_scores = torch.zeros(num_unique_genes).to(device)
     counts = torch.zeros(num_unique_genes).to(device)
+
+    # Dictionary to map (gene_A, gene_B) -> sum_attention
+    edge_attention_sum = {}
+    edge_counts = {}
 
     for data in loader:
         data_copy = data.clone().to(device)
@@ -110,6 +173,8 @@ def get_gene_attention_weights(model, device, loader, node_map_inv):
             # avg for attention heads
             mean_att = att_weights.mean(dim=1)
 
+            # FOR GENES ATTENTION
+
             # remapping to unique genes in a batch
             # target_nodes = idx in batch (es. 0...77963 if batch_size=4 and genes=19491)
             target_nodes_batch = edge_index[1]
@@ -122,27 +187,60 @@ def get_gene_attention_weights(model, device, loader, node_map_inv):
             ones = torch.ones_like(mean_att)
             counts.scatter_add_(0, target_nodes_original, ones)
 
+            # FOR EDGES ATTENTION
+
+            edges = edge_index.cpu().numpy()
+
+            # Iterations edges in the batch
+            for i in range(edges.shape[1]):
+                src_idx = edges[0, i] % num_unique_genes
+                tgt_idx = edges[1, i] % num_unique_genes
+
+                # Creation of unique key for the interaction
+                edge_key = tuple(sorted((int(src_idx), int(tgt_idx))))
+
+                edge_attention_sum[edge_key] = edge_attention_sum.get(edge_key, 0) + mean_att[i]
+                edge_counts[edge_key] = edge_counts.get(edge_key, 0) + 1
+
+    # FOR GENES ATTENTION
+
     avg_scores = (gene_scores / (counts + 1e-6)).cpu().numpy()
 
-    importance_list = []
+    gene_attention_list = []
     for idx, score in enumerate(avg_scores):
         gene_id = node_map_inv.get(idx, f"Unknown_{idx}")
         # just genes present in the dataset
         if counts[idx] > 0:
-            importance_list.append((gene_id, score))
+            gene_attention_list.append((gene_id, score))
 
-    gene_importance = sorted(importance_list, key=lambda x: x[1], reverse=True)
+    gene_importance = sorted(gene_attention_list, key=lambda x: x[1], reverse=True)
 
-    logging.info("Genes with attention importance = 1.000:")
-    genes = [(g, s) for g, s in gene_importance if s == 1]
+    #logging.info("Genes with attention importance = 1.000:")
+    #gene_importance = [(g, s) for g, s in gene_importance if s == 1]
 
-    for gene, score in genes:
+    for gene, score in gene_importance[:50]:
         names = gene_alias[gene_alias['gene_id'] == gene]['names'].iloc[0]
         logging.info(f"{gene}: {score:.4f}   {names}")
 
+    # FOR EDGES ATTENTION
+
+    # Computing media + decoding of genes names
+    final_edge_scores = []
+    for edge_key, total_att in edge_attention_sum.items():
+        avg_att = total_att / edge_counts[edge_key]
+        gene_a = node_map_inv[edge_key[0]]
+        gene_b = node_map_inv[edge_key[1]]
+        final_edge_scores.append(((gene_a, gene_b), avg_att))
+
+    final_edge_scores.sort(key=lambda x: x[1], reverse=True)
+
+    logging.info("Top 50 edges attention scores:")
+    for edge_key, score in final_edge_scores[:50]:
+        logging.info(f"{edge_key}: {score:.4f}")
+
     logging.info("DONE\n\n")
 
-    return gene_importance
+    return gene_importance, final_edge_scores
 
 
 def get_gene_saliency(model, device, loader, node_map_inv):
@@ -248,7 +346,7 @@ def plot_boxplot(df, genes, i, filename = None):
         plt.subplot(1, len(genes.items()), j)
         sns.boxplot(x='label', y=ensg, data=df, palette=['#e74c3c', '#3498db'])
         sns.stripplot(x='label', y=ensg, data=df, color='black', size=2, alpha=0.3)
-        plt.title(f"{ensg}\n{name}", size=16)
+        plt.title(f"{ensg}", size=16)
         plt.xlabel("LUAD vs LUSC", size=16)
         plt.ylabel(f"{features.get(i)}", size=16)
 
@@ -268,10 +366,12 @@ def plot_boxplot(df, genes, i, filename = None):
 
 logging.info("--- Feature Importance analysis (Best Model Saved) ---\n")
 
-model.load_state_dict(torch.load('example1_model_with_analysis/best_k_fold_gnn.pth', map_location=device))  # currently model_fold_3.pth
+model.load_state_dict(torch.load('examples/example1_model_with_analysis/best_k_fold_gnn.pth', map_location=device))  # currently model_fold_3.pth
 #model.load_state_dict(torch.load('example2_model_with_analysis/model_fold_2.pth', map_location=device))  # currently model_fold_3.pth
 
-clinical_names = ['age_at_index', 'tobacco_years', 'pack_years_smoked', 'country_of_residence_at_enrollment_Australia', 'country_of_residence_at_enrollment_Germany', 'country_of_residence_at_enrollment_United States', 'country_of_residence_at_enrollment_Switzerland', 'country_of_residence_at_enrollment_Russia', 'country_of_residence_at_enrollment_Canada', 'country_of_residence_at_enrollment_Ukraine', 'country_of_residence_at_enrollment_Romania', 'country_of_residence_at_enrollment_Vietnam', 'ethnicity_not hispanic or latino', 'ethnicity_hispanic or latino', 'gender_male', 'gender_female', 'race_white', 'race_black or african american', 'race_asian', 'ajcc_pathologic_m_M0', 'ajcc_pathologic_m_M1a', 'ajcc_pathologic_m_M1', 'ajcc_pathologic_m_M1b', 'ajcc_pathologic_n_N1', 'ajcc_pathologic_n_N0', 'ajcc_pathologic_n_N2', 'ajcc_pathologic_n_N3', 'ajcc_pathologic_t_T2a', 'ajcc_pathologic_t_T2b', 'ajcc_pathologic_t_T2', 'ajcc_pathologic_t_T3', 'ajcc_pathologic_t_T4', 'ajcc_pathologic_t_T1b', 'ajcc_pathologic_t_T1', 'ajcc_pathologic_t_T1a', '3', '1', '2', '9', '8', '0', 'laterality_Left', 'laterality_Right', 'sites_of_involvement_Peripheral Lung', 'sites_of_involvement_Central Lung', 'tissue_or_organ_of_origin_Lower lobe, lung', 'tissue_or_organ_of_origin_Upper lobe, lung', 'tissue_or_organ_of_origin_Middle lobe, lung', 'tissue_or_organ_of_origin_Lung, NOS', 'tissue_or_organ_of_origin_Overlapping lesion of lung', 'tissue_or_organ_of_origin_Main bronchus', 'tobacco_smoker', 'ajcc_pathologic_stage']
+features_encoded_df = pd.read_csv(f'files/{config.tumor}/clinical/features_encoded.tsv', sep='\t')
+
+clinical_names = features_encoded_df.columns.values.tolist()[2:]
 node_map_inv = {v: k for k, v in node_map.items()}
 
 gene_alias = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t', usecols=['gene_id', 'alias'])
@@ -279,40 +379,28 @@ gene_alias = gene_alias.groupby('gene_id')['alias'].apply(list).reset_index(name
 gene_alias['gene_id_mapped'] = gene_alias['gene_id'].map(node_map)
 gene_alias.set_index('gene_id_mapped', inplace=True)
 
-#clinical_imp = explain_clinical_importance(model, device, test_loader, clinical_names)
+clinical_imp = explain_clinical_importance(model, device, test_loader, clinical_names)
 
-#gene_imp = get_gene_attention_weights(model, device, test_loader, node_map_inv)  # (GAT Attention)
+edge_features_importance = explain_edge_features_importance(model, device, test_loader)
 
+#gene_imp, edges_imp = get_genes_and_edges_attention_weights(model, device, test_loader, node_map_inv)  # (GAT Attention)
+
+'''
 gene_sal = get_gene_saliency(model, device, test_loader, node_map_inv)
 
 top_genes = {}
 
 for gene_id, score in gene_sal[:5]:
     names = gene_alias[gene_alias['gene_id'] == gene_id]['names'].iloc[0]
-    top_genes[gene_id] = names
+    top_genes[gene_id] = names    
 
-'''
 # top 5 genes for saliency (retrieved for speed)
-top_genes = {
-    'ENSG00000185201': ['1-8D', 'DSPA2c', 'IFITM2'],
-    'ENSG00000205420': ['CK-6C', 'CK-6E', 'K6C', 'KRT6C', 'PC3', 'CK-6C', 'CK-6E', 'CK6A', 'CK6C', 'CK6D', 'K6A', 'K6C', 'K6D', 'KRT6A', 'KRT6C', 'KRT6D', 'PC3'],
-    'ENSG00000011600': ['DAP12', 'KARAP', 'PLOSL', 'PLOSL1', 'TYROBP'],
-    'ENSG00000173599': ['PC', 'PC', 'PC', 'PC', 'PCB'],
-    'ENSG00000019582': ['CD74', 'CLIP', 'DHLAG', 'HLADG', 'Ia-GAMMA', 'CLIP', 'II', 'II', 'P33', 'p33']
-}  # KRT5, KRT12 and KRT16 too
-'''
-
-for (ensg, names) in top_genes.items():
-    if len(names) > 3:
-        top_genes[ensg] = names[:3]
-        top_genes[ensg].append('...')
-
 genes_to_plot = {
-    'ENSG00000124107': 'KRT13',
-    'ENSG00000162733': 'KRT16',
-    'ENSG00000128422': 'KRT17',
-    'ENSG00000166897': 'ELFN2',
-    'ENSG00000186081': 'KRT5',
+    'ENSG00000185201',
+    'ENSG00000205420',
+    'ENSG00000011600',
+    'ENSG00000173599',
+    'ENSG00000019582',
 }
 
 for i in range(0,4):
@@ -324,4 +412,4 @@ for i in range(0,4):
     }
     df_plot = collect_gene_data(test_loader, top_genes, node_map, i)
     plot_boxplot(df_plot, top_genes, i, f"genes_{feature_dict.get(i)}_boxplot.png")
-
+'''

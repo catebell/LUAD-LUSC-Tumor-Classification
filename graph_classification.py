@@ -44,7 +44,7 @@ def get_available_models():
     return sorted(models)
 
 def parse_args():
-    """ Parse command line arguments """
+    """ Parse command line arguments or set defaul values for model_name and tumor dataset """
     datasets = get_available_datasets()
     models = get_available_models()
 
@@ -61,7 +61,7 @@ def parse_args():
     parser.add_argument(
         "--model-name",
         type=str,
-        required=True,
+        default=config.model,
         choices=models,
         help=f"Available models: {', '.join(models)}"
     )
@@ -91,29 +91,15 @@ def load_model(model_name, device):
     module = importlib.import_module(f"models.{model_name}")
     model_class = getattr(module, model_name)
 
+    clinical_df = pd.read_csv(f'files/{config.tumor}/clinical/features_considered.tsv', sep='\t')
+    num_patient_features = len(clinical_df.columns.tolist()[2:])
+
     if model_name in ["GINEConvGNN", "GAT"]:
-        model = model_class(
-            num_node_features=5,
-            num_edge_features=3,
-            hidden_channels=64,
-            num_classes=2
-        )
-
+        model = model_class(num_node_features=5, num_edge_features=3, hidden_channels=64, num_classes=2)
     elif model_name == "MLP":
-        model = model_class(
-            num_patient_features=53,
-            num_classes=2
-        )
-
+        model = model_class(num_patient_features=num_patient_features, num_classes=2)
     elif model_name == "MultiModalGNN":
-        model = model_class(
-            num_node_features=5,
-            num_edge_features=3,
-            clinical_input_dim=51,
-            hidden_channels=64,
-            num_classes=2
-        )
-
+        model = model_class(num_node_features=5, num_edge_features=3, clinical_input_dim=num_patient_features, hidden_channels=64, num_classes=2)
     else:
         model = model_class()
 
@@ -196,7 +182,6 @@ def train_and_save_model(dataset_name, model, model_name):
         edge_attr_scaler.partial_fit(data.edge_attr[:,2].numpy().reshape(-1,1))  # only cols of number of links
         clinical_feat_scaler.partial_fit(data.clinical[:,:3].numpy()) # only pack_years_smoked, tobacco_years, age_at_index
 
-
     # to make things faster by applying scaler transformations manually:
     x_mean = torch.tensor(node_feat_scaler.mean_, dtype=torch.float, device=device)
     x_std = torch.tensor(node_feat_scaler.scale_, dtype=torch.float, device=device)
@@ -214,13 +199,8 @@ def train_and_save_model(dataset_name, model, model_name):
     # different weights to classes based on number of samples
     train_labels = [data.y.item() for data in train_dataset]
     counts = Counter(train_labels)
-    weights = [0] * len(counts)
-    for i in range(len(counts)):
-        # N_tot / (N_classes * N_elem_of_class_n)
-        weights[i] = len(train_labels) / (len(counts) * counts[i])
-    weights = torch.tensor(weights, dtype=torch.float).to(device)
 
-    criterion = torch.nn.CrossEntropyLoss(weights, label_smoothing=0.1)
+    criterion = torch.nn.CrossEntropyLoss()
 
     logging.info(str(model) + '\n')
 

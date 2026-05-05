@@ -25,7 +25,7 @@ class GAT(torch.nn.Module):
 
     def forward(self, x, edge_index, edge_attr, batch):
         x_projected = self.skip_conn_projection1(x)
-        x = self.conv1(x, edge_index, edge_attr=edge_attr)
+        x = self.conv1(x, edge_index, edge_attr=edge_attr, return_attention_weights=True)
         x = self.bn1(x)
         x = x + x_projected
         x = F.elu(x)

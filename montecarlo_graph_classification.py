@@ -22,10 +22,11 @@ from torch.utils.data import Subset
 from torch_geometric.loader import DataLoader
 
 from PatientGraphDataset import PatientGraphDataset
-from models.CancerGNN import CancerGNN
 from models.GAT import GAT
 from models.MLP import MLP
 from models.MultiModalGNN import MultiModalGNN
+
+import config
 
 warnings.filterwarnings("ignore")
 
@@ -62,9 +63,7 @@ logging.info(f"Device: {device}")
 
 
 def build_model():
-    if MODEL_TYPE == "CancerGNN":
-        model = CancerGNN(num_node_features=5, num_edge_features=3, hidden_channels=64)
-    elif MODEL_TYPE == "GAT":
+    if MODEL_TYPE == "GAT":
         model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64)
     elif MODEL_TYPE == "MLP":
         model = MLP(num_patient_features=53, num_classes=2)
@@ -81,8 +80,8 @@ def build_model():
 
 
 def load_dataset():
-    file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
-    patient_split_df = pd.read_csv('files/clinical/patient_split_cleaned.csv')
+    file_mapping_df = pd.read_csv(f'files/{config.tumor}/clinical/file_case_mapping.tsv', sep='\t').dropna()
+    patient_split_df = pd.read_csv(f'files/{config.tumor}/clinical/patient_split_cleaned.csv')
 
     node_map_df = pd.read_csv('STRING_downloaded_files/gene_ids_mapped.tsv', sep='\t')
     node_map = dict(zip(node_map_df.gene_id, node_map_df.gene_id_mapped))
@@ -96,9 +95,9 @@ def load_dataset():
     test_df = file_mapping_df[file_mapping_df['case_id'].isin(
         patient_split_df[patient_split_df['split'] == 'test']['cases.case_id'])]
 
-    train_dataset = PatientGraphDataset("data_graphs_processed_train", train_df, node_map)
-    val_dataset = PatientGraphDataset("data_graphs_processed_validation", val_df, node_map)
-    test_dataset = PatientGraphDataset("data_graphs_processed_test", test_df, node_map)
+    train_dataset = PatientGraphDataset(f'data_graphs_processed/{config.tumor}/data_graphs_processed_train', train_df)
+    val_dataset = PatientGraphDataset(f'data_graphs_processed/{config.tumor}/data_graphs_processed_validation', val_df)
+    test_dataset = PatientGraphDataset(f'data_graphs_processed/{config.tumor}/data_graphs_processed_test', test_df)
 
     full_dataset = train_dataset + val_dataset + test_dataset
 
@@ -115,7 +114,7 @@ def train_epoch(model, loader, optimizer, criterion):
         data = data.to(device)
         optimizer.zero_grad()
 
-        if model.__class__ in [CancerGNN, GAT]:
+        if model.__class__ in [GAT]:
             out = model(data.x, data.edge_index, data.edge_attr, data.batch)
         elif model.__class__ == MLP:
             out = model(data.clinical)
@@ -143,7 +142,7 @@ def evaluate(model, loader):
         for data in loader:
             data = data.to(device)
 
-            if model.__class__ in [CancerGNN, GAT]:
+            if model.__class__ in [GAT]:
                 out = model(data.x, data.edge_index, data.edge_attr, data.batch)
             elif model.__class__ == MLP:
                 out = model(data.clinical)
@@ -169,7 +168,6 @@ def evaluate(model, loader):
         "roc_auc": roc_auc_score(y_true, y_prob),
         "precision": precision_score(y_true, y_pred),
         "recall": recall_score(y_true, y_pred),
-        "auprc": average_precision_score(y_true, y_prob),
         "tn": cm[0,0],
         "fp": cm[0,1],
         "fn": cm[1,0],
@@ -253,7 +251,7 @@ def summarize_results(results):
     df = pd.DataFrame(results)
     rows = []
 
-    for metric in ["accuracy","f1_score","roc_auc","precision","recall","auprc"]:
+    for metric in ["accuracy","f1_score","roc_auc","precision","recall"]:
         mean = df[metric].mean()
         std = df[metric].std()
         n = len(df)

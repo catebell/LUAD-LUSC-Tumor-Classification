@@ -1,5 +1,5 @@
 import pandas as pd
-
+import config
 
 # DE-COMMENT WHAT NEEDED TO EXTRACT DIFFERENT MANIFEST TSV
 
@@ -64,11 +64,11 @@ def see_example_values():
 
     pd.set_option('display.max_colwidth', None) # or else it can't take whole filename from file_case_mapping.tsv
 
-    file_mapping_df = pd.read_csv('files/lung/clinical/file_case_mapping.tsv', sep='\t', dtype=str)
+    file_mapping_df = pd.read_csv(f'files/{config.tumor}/clinical/file_case_mapping.tsv', sep='\t', dtype=str)
 
     case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb' # for example
 
-    df_meth = pd.read_csv(f"files/lung/methylation/{file_mapping_df[
+    df_meth = pd.read_csv(f"files/{config.tumor}/methylation/{file_mapping_df[
         (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'methylation')
         ]['filename'].to_string(index=False)}", sep='\t', names=['cpg_IlmnID', 'beta_value'], dtype=str)
 

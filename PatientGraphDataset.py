@@ -101,9 +101,9 @@ class PatientGraphDataset(Dataset):
         """
         '''
         return [(
-            f"files/RNA/{file_mapping_df[(file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'RNA')]['filename'].to_string(index=False)},"
-            f"files/CNV/{file_mapping_df[(file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'CNV')]['filename'].to_string(index=False)},"
-            f"files/methylation/{file_mapping_df[(file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'methylation')]['filename'].to_string(index=False)}"
+            f"files/{config.tumor}/RNA/{file_mapping_df[(file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'RNA')]['filename'].to_string(index=False)},"
+            f"files/{config.tumor}/CNV/{file_mapping_df[(file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'CNV')]['filename'].to_string(index=False)},"
+            f"files/{config.tumor}/methylation/{file_mapping_df[(file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'methylation')]['filename'].to_string(index=False)}"
         ) for case_id in self.patient_list]
         '''
         return []
@@ -133,7 +133,8 @@ class PatientGraphDataset(Dataset):
         genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv',
                                        sep='\t')  # proteins-genes mapping df
 
-        # clinical_features_df = pd.read_csv('files/clinical/features_encoded.tsv', sep='\t')
+        # TODO check DATASET etc?
+        # clinical_features_df = pd.read_csv(f'files/{config.tumor}/clinical/features_encoded.tsv', sep='\t')
         clinical_features_df = pd.read_csv(f'{config.FILES}/{self.dataset}/clinical/features_encoded.tsv', sep='\t')
 
         node_map_df = pd.read_csv('STRING_downloaded_files/gene_ids_mapped.tsv', sep='\t')

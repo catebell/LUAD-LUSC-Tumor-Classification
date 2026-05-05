@@ -1,0 +1,1003 @@
+2026-05-02 10:44:35,267 - INFO - --- FOLD 1/5 ---
+
+2026-05-02 10:44:35,472 - INFO - GAT(
+  (skip_conn_projection1): Linear(in_features=5, out_features=128, bias=True)
+  (conv1): GATv2Conv(5, 64, heads=2)
+  (bn1): BatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (skip_conn_projection2): Linear(in_features=128, out_features=64, bias=True)
+  (conv2): GATv2Conv(128, 64, heads=1)
+  (bn2): BatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (dropout): Dropout(p=0.5, inplace=False)
+  (classifier): Linear(in_features=128, out_features=2, bias=True)
+)
+2026-05-02 10:45:40,395 - INFO - Epoch: 001 | Train Loss: 2.3318 | Val Loss: 0.7577
+Train -> Acc: 0.6093, F1: 0.7306, AUC: 0.6812
+Val -> Acc: 0.5526, F1: 0.6982, AUC: 0.6645
+
+2026-05-02 10:45:40,402 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 10:46:38,932 - INFO - Epoch: 002 | Train Loss: 0.9556 | Val Loss: 0.6935
+Train -> Acc: 0.5828, F1: 0.5953, AUC: 0.6289
+Val -> Acc: 0.5439, F1: 0.5185, AUC: 0.5705
+
+2026-05-02 10:46:38,937 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 10:47:33,894 - INFO - Epoch: 003 | Train Loss: 0.8867 | Val Loss: 0.6577
+Train -> Acc: 0.6512, F1: 0.6996, AUC: 0.6991
+Val -> Acc: 0.6228, F1: 0.6767, AUC: 0.6692
+
+2026-05-02 10:47:33,899 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 10:48:28,692 - INFO - Epoch: 004 | Train Loss: 0.7524 | Val Loss: 0.6458
+Train -> Acc: 0.6932, F1: 0.7372, AUC: 0.7353
+Val -> Acc: 0.6842, F1: 0.7391, AUC: 0.7345
+
+2026-05-02 10:48:28,698 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 10:51:13,548 - INFO - Epoch: 007 | Train Loss: 0.6932 | Val Loss: 0.6289
+Train -> Acc: 0.6777, F1: 0.6867, AUC: 0.7434
+Val -> Acc: 0.6842, F1: 0.6897, AUC: 0.7389
+
+2026-05-02 10:51:13,553 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 10:54:53,368 - INFO - Epoch: 011 | Train Loss: 0.6840 | Val Loss: 0.6275
+Train -> Acc: 0.7219, F1: 0.7658, AUC: 0.7642
+Val -> Acc: 0.7105, F1: 0.7660, AUC: 0.7688
+
+2026-05-02 10:54:53,373 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 10:56:43,332 - INFO - Epoch: 013 | Train Loss: 0.6467 | Val Loss: 0.6045
+Train -> Acc: 0.7241, F1: 0.7495, AUC: 0.7821
+Val -> Acc: 0.7544, F1: 0.7846, AUC: 0.7846
+
+2026-05-02 10:56:43,337 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:00:22,592 - INFO - Epoch: 017 | Train Loss: 0.6517 | Val Loss: 0.5882
+Train -> Acc: 0.7461, F1: 0.7866, AUC: 0.8197
+Val -> Acc: 0.7456, F1: 0.7852, AUC: 0.8263
+
+2026-05-02 11:00:22,597 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:03:21,045 - INFO - Epoch: 020 | Train Loss: 0.6104 | Val Loss: 0.5579
+Train -> Acc: 0.7616, F1: 0.8085, AUC: 0.8592
+Val -> Acc: 0.7719, F1: 0.8116, AUC: 0.8680
+
+2026-05-02 11:03:21,050 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:04:16,039 - INFO - Epoch: 021 | Train Loss: 0.5872 | Val Loss: 0.5451
+Train -> Acc: 0.8102, F1: 0.8453, AUC: 0.8930
+Val -> Acc: 0.7982, F1: 0.8345, AUC: 0.9088
+
+2026-05-02 11:04:16,045 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:05:10,990 - INFO - Epoch: 022 | Train Loss: 0.6192 | Val Loss: 0.5322
+Train -> Acc: 0.8057, F1: 0.8062, AUC: 0.9076
+Val -> Acc: 0.7895, F1: 0.7857, AUC: 0.9119
+
+2026-05-02 11:05:10,996 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:06:12,840 - INFO - Epoch: 023 | Train Loss: 0.5809 | Val Loss: 0.4932
+Train -> Acc: 0.8565, F1: 0.8703, AUC: 0.9266
+Val -> Acc: 0.8772, F1: 0.8889, AUC: 0.9437
+
+2026-05-02 11:06:12,845 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:07:07,975 - INFO - Epoch: 024 | Train Loss: 0.5218 | Val Loss: 0.4544
+Train -> Acc: 0.8675, F1: 0.8770, AUC: 0.9381
+Val -> Acc: 0.8860, F1: 0.8960, AUC: 0.9505
+
+2026-05-02 11:07:07,980 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:08:02,822 - INFO - Epoch: 025 | Train Loss: 0.5414 | Val Loss: 0.4516
+Train -> Acc: 0.9073, F1: 0.9153, AUC: 0.9572
+Val -> Acc: 0.9123, F1: 0.9231, AUC: 0.9679
+
+2026-05-02 11:08:02,827 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:08:57,462 - INFO - Epoch: 026 | Train Loss: 0.5334 | Val Loss: 0.4476
+Train -> Acc: 0.8521, F1: 0.8540, AUC: 0.9432
+Val -> Acc: 0.8333, F1: 0.8403, AUC: 0.9499
+
+2026-05-02 11:08:57,467 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:09:52,051 - INFO - Epoch: 027 | Train Loss: 0.5044 | Val Loss: 0.4211
+Train -> Acc: 0.8940, F1: 0.9024, AUC: 0.9550
+Val -> Acc: 0.8772, F1: 0.8939, AUC: 0.9577
+
+2026-05-02 11:09:52,056 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:10:46,733 - INFO - Epoch: 028 | Train Loss: 0.5319 | Val Loss: 0.4062
+Train -> Acc: 0.9117, F1: 0.9190, AUC: 0.9623
+Val -> Acc: 0.9386, F1: 0.9457, AUC: 0.9791
+
+2026-05-02 11:10:46,738 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:14:28,585 - INFO - Epoch: 032 | Train Loss: 0.4612 | Val Loss: 0.3768
+Train -> Acc: 0.9249, F1: 0.9306, AUC: 0.9649
+Val -> Acc: 0.9123, F1: 0.9219, AUC: 0.9726
+
+2026-05-02 11:14:28,591 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:17:13,702 - INFO - Epoch: 035 | Train Loss: 0.4502 | Val Loss: 0.3686
+Train -> Acc: 0.9316, F1: 0.9374, AUC: 0.9770
+Val -> Acc: 0.9211, F1: 0.9302, AUC: 0.9760
+
+2026-05-02 11:17:13,707 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:18:08,498 - INFO - Epoch: 036 | Train Loss: 0.4195 | Val Loss: 0.3615
+Train -> Acc: 0.8874, F1: 0.8879, AUC: 0.9807
+Val -> Acc: 0.9035, F1: 0.9043, AUC: 0.9795
+
+2026-05-02 11:18:08,503 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:20:52,540 - INFO - Epoch: 039 | Train Loss: 0.4010 | Val Loss: 0.3579
+Train -> Acc: 0.9294, F1: 0.9328, AUC: 0.9800
+Val -> Acc: 0.9298, F1: 0.9355, AUC: 0.9664
+
+2026-05-02 11:20:52,545 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:21:49,138 - INFO - Epoch: 040 | Train Loss: 0.3896 | Val Loss: 0.3515
+Train -> Acc: 0.9382, F1: 0.9442, AUC: 0.9815
+Val -> Acc: 0.9123, F1: 0.9231, AUC: 0.9779
+
+2026-05-02 11:21:49,143 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:28:11,001 - INFO - Epoch: 047 | Train Loss: 0.4184 | Val Loss: 0.3513
+Train -> Acc: 0.9360, F1: 0.9412, AUC: 0.9826
+Val -> Acc: 0.9123, F1: 0.9231, AUC: 0.9763
+
+2026-05-02 11:28:11,006 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:33:38,494 - INFO - Epoch: 053 | Train Loss: 0.4076 | Val Loss: 0.3480
+Train -> Acc: 0.9272, F1: 0.9317, AUC: 0.9847
+Val -> Acc: 0.9211, F1: 0.9291, AUC: 0.9810
+
+2026-05-02 11:33:38,499 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:36:22,344 - INFO - Epoch: 056 | Train Loss: 0.3676 | Val Loss: 0.3232
+Train -> Acc: 0.9470, F1: 0.9508, AUC: 0.9892
+Val -> Acc: 0.9298, F1: 0.9365, AUC: 0.9819
+
+2026-05-02 11:36:22,349 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:39:28,808 - INFO - Epoch: 059 | Train Loss: 0.3303 | Val Loss: 0.3214
+Train -> Acc: 0.9558, F1: 0.9588, AUC: 0.9910
+Val -> Acc: 0.9474, F1: 0.9524, AUC: 0.9801
+
+2026-05-02 11:39:28,813 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:40:23,454 - INFO - Epoch: 060 | Train Loss: 0.3449 | Val Loss: 0.3125
+Train -> Acc: 0.9581, F1: 0.9610, AUC: 0.9931
+Val -> Acc: 0.9386, F1: 0.9440, AUC: 0.9854
+
+2026-05-02 11:40:23,459 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:49:37,179 - INFO - Epoch: 070 | Train Loss: 0.3244 | Val Loss: 0.3091
+Train -> Acc: 0.9558, F1: 0.9587, AUC: 0.9946
+Val -> Acc: 0.9474, F1: 0.9516, AUC: 0.9847
+
+2026-05-02 11:49:37,184 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 11:52:21,172 - INFO - Epoch: 073 | Train Loss: 0.3243 | Val Loss: 0.3072
+Train -> Acc: 0.9625, F1: 0.9651, AUC: 0.9953
+Val -> Acc: 0.9474, F1: 0.9516, AUC: 0.9863
+
+2026-05-02 11:52:21,177 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:05:11,775 - INFO - Epoch: 087 | Train Loss: 0.2974 | Val Loss: 0.3063
+Train -> Acc: 0.9625, F1: 0.9651, AUC: 0.9977
+Val -> Acc: 0.9474, F1: 0.9508, AUC: 0.9882
+
+2026-05-02 12:05:11,781 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:08:56,069 - INFO - Epoch: 091 | Train Loss: 0.2964 | Val Loss: 0.3005
+Train -> Acc: 0.9669, F1: 0.9693, AUC: 0.9985
+Val -> Acc: 0.9474, F1: 0.9508, AUC: 0.9872
+
+2026-05-02 12:08:56,075 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:11:39,996 - INFO - Epoch: 094 | Train Loss: 0.2827 | Val Loss: 0.3000
+Train -> Acc: 0.9669, F1: 0.9693, AUC: 0.9981
+Val -> Acc: 0.9474, F1: 0.9508, AUC: 0.9891
+
+2026-05-02 12:11:40,002 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:17:18,608 - INFO - Fold 1 Test Acc: 0.9366 | AUC: 0.9807 | AUPRC: 0.9858
+Precision: 0.9861 | Recall: 0.8987
+
+2026-05-02 12:17:18,608 - INFO - --- FOLD 2/5 ---
+
+2026-05-02 12:17:18,617 - INFO - GAT(
+  (skip_conn_projection1): Linear(in_features=5, out_features=128, bias=True)
+  (conv1): GATv2Conv(5, 64, heads=2)
+  (bn1): BatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (skip_conn_projection2): Linear(in_features=128, out_features=64, bias=True)
+  (conv2): GATv2Conv(128, 64, heads=1)
+  (bn2): BatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (dropout): Dropout(p=0.5, inplace=False)
+  (classifier): Linear(in_features=128, out_features=2, bias=True)
+)
+2026-05-02 12:18:22,213 - INFO - Epoch: 001 | Train Loss: 1.2986 | Val Loss: 0.6808
+Train -> Acc: 0.6313, F1: 0.6936, AUC: 0.6676
+Val -> Acc: 0.6842, F1: 0.7391, AUC: 0.7389
+
+2026-05-02 12:18:22,218 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:19:16,840 - INFO - Epoch: 002 | Train Loss: 0.9369 | Val Loss: 0.6500
+Train -> Acc: 0.5717, F1: 0.5076, AUC: 0.6774
+Val -> Acc: 0.6404, F1: 0.5773, AUC: 0.7423
+
+2026-05-02 12:19:16,846 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:20:11,591 - INFO - Epoch: 003 | Train Loss: 0.7322 | Val Loss: 0.6407
+Train -> Acc: 0.5916, F1: 0.5477, AUC: 0.6880
+Val -> Acc: 0.6754, F1: 0.6408, AUC: 0.7435
+
+2026-05-02 12:20:11,596 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:21:06,375 - INFO - Epoch: 004 | Train Loss: 0.7112 | Val Loss: 0.6340
+Train -> Acc: 0.6667, F1: 0.7308, AUC: 0.6953
+Val -> Acc: 0.6754, F1: 0.7218, AUC: 0.7526
+
+2026-05-02 12:21:06,380 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:25:40,019 - INFO - Epoch: 009 | Train Loss: 0.6705 | Val Loss: 0.6306
+Train -> Acc: 0.6446, F1: 0.7160, AUC: 0.7101
+Val -> Acc: 0.6667, F1: 0.7164, AUC: 0.7414
+
+2026-05-02 12:25:40,024 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:26:34,712 - INFO - Epoch: 010 | Train Loss: 0.6847 | Val Loss: 0.6185
+Train -> Acc: 0.6402, F1: 0.6236, AUC: 0.7274
+Val -> Acc: 0.6754, F1: 0.6606, AUC: 0.7678
+
+2026-05-02 12:26:34,717 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:28:24,047 - INFO - Epoch: 012 | Train Loss: 0.6594 | Val Loss: 0.6106
+Train -> Acc: 0.6821, F1: 0.7085, AUC: 0.7286
+Val -> Acc: 0.7018, F1: 0.7258, AUC: 0.7631
+
+2026-05-02 12:28:24,052 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:29:18,779 - INFO - Epoch: 013 | Train Loss: 0.6559 | Val Loss: 0.6099
+Train -> Acc: 0.6821, F1: 0.7293, AUC: 0.7467
+Val -> Acc: 0.7105, F1: 0.7481, AUC: 0.7694
+
+2026-05-02 12:29:18,784 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:32:06,679 - INFO - Epoch: 016 | Train Loss: 0.6428 | Val Loss: 0.6004
+Train -> Acc: 0.6932, F1: 0.7591, AUC: 0.7668
+Val -> Acc: 0.7281, F1: 0.7770, AUC: 0.7874
+
+2026-05-02 12:32:06,684 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:33:01,331 - INFO - Epoch: 017 | Train Loss: 0.6836 | Val Loss: 0.6003
+Train -> Acc: 0.7130, F1: 0.7584, AUC: 0.7691
+Val -> Acc: 0.7193, F1: 0.7576, AUC: 0.8021
+
+2026-05-02 12:33:01,335 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:33:55,864 - INFO - Epoch: 018 | Train Loss: 0.6630 | Val Loss: 0.5953
+Train -> Acc: 0.6932, F1: 0.7237, AUC: 0.7479
+Val -> Acc: 0.7281, F1: 0.7520, AUC: 0.7865
+
+2026-05-02 12:33:55,869 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:35:45,113 - INFO - Epoch: 020 | Train Loss: 0.6273 | Val Loss: 0.5687
+Train -> Acc: 0.6998, F1: 0.6964, AUC: 0.7921
+Val -> Acc: 0.7632, F1: 0.7611, AUC: 0.8260
+
+2026-05-02 12:35:45,118 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:36:41,463 - INFO - Epoch: 021 | Train Loss: 0.6124 | Val Loss: 0.5470
+Train -> Acc: 0.7307, F1: 0.7313, AUC: 0.8416
+Val -> Acc: 0.7544, F1: 0.7500, AUC: 0.8547
+
+2026-05-02 12:36:41,468 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:39:25,153 - INFO - Epoch: 024 | Train Loss: 0.6058 | Val Loss: 0.5197
+Train -> Acc: 0.7925, F1: 0.8050, AUC: 0.8695
+Val -> Acc: 0.8246, F1: 0.8333, AUC: 0.8939
+
+2026-05-02 12:39:25,158 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:40:19,802 - INFO - Epoch: 025 | Train Loss: 0.5854 | Val Loss: 0.4972
+Train -> Acc: 0.8565, F1: 0.8799, AUC: 0.9315
+Val -> Acc: 0.8246, F1: 0.8507, AUC: 0.9178
+
+2026-05-02 12:40:19,806 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:42:08,964 - INFO - Epoch: 027 | Train Loss: 0.5617 | Val Loss: 0.4675
+Train -> Acc: 0.8587, F1: 0.8609, AUC: 0.9435
+Val -> Acc: 0.8246, F1: 0.8182, AUC: 0.9437
+
+2026-05-02 12:42:08,969 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:43:58,925 - INFO - Epoch: 029 | Train Loss: 0.5933 | Val Loss: 0.4652
+Train -> Acc: 0.8631, F1: 0.8843, AUC: 0.9405
+Val -> Acc: 0.8333, F1: 0.8571, AUC: 0.9440
+
+2026-05-02 12:43:58,930 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:47:42,747 - INFO - Epoch: 033 | Train Loss: 0.5458 | Val Loss: 0.4582
+Train -> Acc: 0.8852, F1: 0.9000, AUC: 0.9489
+Val -> Acc: 0.8772, F1: 0.8923, AUC: 0.9415
+
+2026-05-02 12:47:42,752 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:51:21,999 - INFO - Epoch: 037 | Train Loss: 0.5236 | Val Loss: 0.4321
+Train -> Acc: 0.8940, F1: 0.9084, AUC: 0.9613
+Val -> Acc: 0.8684, F1: 0.8837, AUC: 0.9627
+
+2026-05-02 12:51:22,004 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:53:10,716 - INFO - Epoch: 039 | Train Loss: 0.4956 | Val Loss: 0.4098
+Train -> Acc: 0.9051, F1: 0.9121, AUC: 0.9583
+Val -> Acc: 0.8947, F1: 0.9000, AUC: 0.9549
+
+2026-05-02 12:53:10,721 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:54:05,247 - INFO - Epoch: 040 | Train Loss: 0.4563 | Val Loss: 0.3944
+Train -> Acc: 0.9117, F1: 0.9174, AUC: 0.9613
+Val -> Acc: 0.9035, F1: 0.9060, AUC: 0.9586
+
+2026-05-02 12:54:05,252 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 12:54:59,949 - INFO - Epoch: 041 | Train Loss: 0.4785 | Val Loss: 0.3689
+Train -> Acc: 0.9272, F1: 0.9308, AUC: 0.9664
+Val -> Acc: 0.9123, F1: 0.9153, AUC: 0.9642
+
+2026-05-02 12:54:59,954 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:00:27,567 - INFO - Epoch: 047 | Train Loss: 0.4176 | Val Loss: 0.3500
+Train -> Acc: 0.9404, F1: 0.9459, AUC: 0.9748
+Val -> Acc: 0.9123, F1: 0.9180, AUC: 0.9763
+
+2026-05-02 13:00:27,572 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:02:22,675 - INFO - Epoch: 049 | Train Loss: 0.4067 | Val Loss: 0.3399
+Train -> Acc: 0.9382, F1: 0.9419, AUC: 0.9727
+Val -> Acc: 0.9211, F1: 0.9244, AUC: 0.9676
+
+2026-05-02 13:02:22,680 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:08:48,395 - INFO - Epoch: 056 | Train Loss: 0.3877 | Val Loss: 0.3223
+Train -> Acc: 0.9470, F1: 0.9512, AUC: 0.9795
+Val -> Acc: 0.9474, F1: 0.9516, AUC: 0.9860
+
+2026-05-02 13:08:48,400 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:12:32,600 - INFO - Epoch: 060 | Train Loss: 0.3924 | Val Loss: 0.3213
+Train -> Acc: 0.9470, F1: 0.9508, AUC: 0.9829
+Val -> Acc: 0.9123, F1: 0.9167, AUC: 0.9829
+
+2026-05-02 13:12:32,605 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:13:27,285 - INFO - Epoch: 061 | Train Loss: 0.3501 | Val Loss: 0.3199
+Train -> Acc: 0.9514, F1: 0.9549, AUC: 0.9841
+Val -> Acc: 0.9298, F1: 0.9344, AUC: 0.9807
+
+2026-05-02 13:13:27,290 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:33:02,707 - INFO - --- Stopping training due to early stopping ---
+
+2026-05-02 13:33:08,246 - INFO - Fold 2 Test Acc: 0.9085 | AUC: 0.9586 | AUPRC: 0.9749
+Precision: 0.9342 | Recall: 0.8987
+
+2026-05-02 13:33:08,246 - INFO - --- FOLD 3/5 ---
+
+2026-05-02 13:33:08,254 - INFO - GAT(
+  (skip_conn_projection1): Linear(in_features=5, out_features=128, bias=True)
+  (conv1): GATv2Conv(5, 64, heads=2)
+  (bn1): BatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (skip_conn_projection2): Linear(in_features=128, out_features=64, bias=True)
+  (conv2): GATv2Conv(128, 64, heads=1)
+  (bn2): BatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (dropout): Dropout(p=0.5, inplace=False)
+  (classifier): Linear(in_features=128, out_features=2, bias=True)
+)
+2026-05-02 13:34:10,862 - INFO - Epoch: 001 | Train Loss: 2.2828 | Val Loss: 0.7276
+Train -> Acc: 0.5639, F1: 0.4677, AUC: 0.6313
+Val -> Acc: 0.4956, F1: 0.3736, AUC: 0.5467
+
+2026-05-02 13:34:10,868 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:35:04,670 - INFO - Epoch: 002 | Train Loss: 0.9683 | Val Loss: 0.6301
+Train -> Acc: 0.6696, F1: 0.6822, AUC: 0.7299
+Val -> Acc: 0.6283, F1: 0.6557, AUC: 0.7238
+
+2026-05-02 13:35:04,675 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:38:44,491 - INFO - Epoch: 006 | Train Loss: 0.6736 | Val Loss: 0.6258
+Train -> Acc: 0.6850, F1: 0.7134, AUC: 0.7413
+Val -> Acc: 0.6726, F1: 0.6891, AUC: 0.7330
+
+2026-05-02 13:38:44,497 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:42:19,630 - INFO - Epoch: 010 | Train Loss: 0.6539 | Val Loss: 0.6129
+Train -> Acc: 0.7225, F1: 0.7397, AUC: 0.7874
+Val -> Acc: 0.6549, F1: 0.6486, AUC: 0.7702
+
+2026-05-02 13:42:19,635 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:45:54,675 - INFO - Epoch: 014 | Train Loss: 0.6429 | Val Loss: 0.5983
+Train -> Acc: 0.7577, F1: 0.7764, AUC: 0.8244
+Val -> Acc: 0.7257, F1: 0.7350, AUC: 0.7946
+
+2026-05-02 13:45:54,680 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:46:54,895 - INFO - Epoch: 015 | Train Loss: 0.6384 | Val Loss: 0.5974
+Train -> Acc: 0.7687, F1: 0.8052, AUC: 0.8479
+Val -> Acc: 0.7611, F1: 0.7907, AUC: 0.8086
+
+2026-05-02 13:46:54,899 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:47:48,674 - INFO - Epoch: 016 | Train Loss: 0.6268 | Val Loss: 0.5758
+Train -> Acc: 0.7687, F1: 0.8080, AUC: 0.8446
+Val -> Acc: 0.7522, F1: 0.7941, AUC: 0.8260
+
+2026-05-02 13:47:48,679 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:48:42,437 - INFO - Epoch: 017 | Train Loss: 0.6203 | Val Loss: 0.5727
+Train -> Acc: 0.8040, F1: 0.8305, AUC: 0.8825
+Val -> Acc: 0.7876, F1: 0.8125, AUC: 0.8498
+
+2026-05-02 13:48:42,442 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:49:36,229 - INFO - Epoch: 018 | Train Loss: 0.6057 | Val Loss: 0.5586
+Train -> Acc: 0.8106, F1: 0.8442, AUC: 0.8892
+Val -> Acc: 0.7965, F1: 0.8271, AUC: 0.8632
+
+2026-05-02 13:49:36,235 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:50:30,052 - INFO - Epoch: 019 | Train Loss: 0.5721 | Val Loss: 0.5378
+Train -> Acc: 0.8040, F1: 0.8195, AUC: 0.8826
+Val -> Acc: 0.7965, F1: 0.8067, AUC: 0.8622
+
+2026-05-02 13:50:30,058 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:51:28,119 - INFO - Epoch: 020 | Train Loss: 0.5643 | Val Loss: 0.5276
+Train -> Acc: 0.8304, F1: 0.8566, AUC: 0.9045
+Val -> Acc: 0.8230, F1: 0.8438, AUC: 0.8803
+
+2026-05-02 13:51:28,125 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:52:21,976 - INFO - Epoch: 021 | Train Loss: 0.5630 | Val Loss: 0.5016
+Train -> Acc: 0.8524, F1: 0.8595, AUC: 0.9367
+Val -> Acc: 0.7965, F1: 0.8000, AUC: 0.9089
+
+2026-05-02 13:52:21,982 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:54:09,573 - INFO - Epoch: 023 | Train Loss: 0.5186 | Val Loss: 0.4865
+Train -> Acc: 0.8767, F1: 0.8871, AUC: 0.9408
+Val -> Acc: 0.8319, F1: 0.8348, AUC: 0.9076
+
+2026-05-02 13:54:09,578 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:55:03,410 - INFO - Epoch: 024 | Train Loss: 0.5473 | Val Loss: 0.4583
+Train -> Acc: 0.8656, F1: 0.8811, AUC: 0.9378
+Val -> Acc: 0.8673, F1: 0.8800, AUC: 0.9283
+
+2026-05-02 13:55:03,415 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:55:57,284 - INFO - Epoch: 025 | Train Loss: 0.5019 | Val Loss: 0.4560
+Train -> Acc: 0.8678, F1: 0.8739, AUC: 0.9479
+Val -> Acc: 0.8142, F1: 0.8174, AUC: 0.9267
+
+2026-05-02 13:55:57,289 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:57:03,267 - INFO - Epoch: 026 | Train Loss: 0.4904 | Val Loss: 0.4321
+Train -> Acc: 0.8833, F1: 0.8894, AUC: 0.9501
+Val -> Acc: 0.8761, F1: 0.8833, AUC: 0.9365
+
+2026-05-02 13:57:03,272 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:57:57,019 - INFO - Epoch: 027 | Train Loss: 0.4817 | Val Loss: 0.4206
+Train -> Acc: 0.8877, F1: 0.8917, AUC: 0.9612
+Val -> Acc: 0.8761, F1: 0.8814, AUC: 0.9340
+
+2026-05-02 13:57:57,025 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 13:58:50,831 - INFO - Epoch: 028 | Train Loss: 0.4704 | Val Loss: 0.4174
+Train -> Acc: 0.8921, F1: 0.9018, AUC: 0.9591
+Val -> Acc: 0.8761, F1: 0.8871, AUC: 0.9444
+
+2026-05-02 13:58:50,836 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:01:34,618 - INFO - Epoch: 031 | Train Loss: 0.4457 | Val Loss: 0.3893
+Train -> Acc: 0.9119, F1: 0.9174, AUC: 0.9696
+Val -> Acc: 0.9027, F1: 0.9076, AUC: 0.9571
+
+2026-05-02 14:01:34,622 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:03:22,205 - INFO - Epoch: 033 | Train Loss: 0.4326 | Val Loss: 0.3744
+Train -> Acc: 0.9097, F1: 0.9130, AUC: 0.9733
+Val -> Acc: 0.9027, F1: 0.9076, AUC: 0.9673
+
+2026-05-02 14:03:22,210 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:05:09,930 - INFO - Epoch: 035 | Train Loss: 0.4016 | Val Loss: 0.3707
+Train -> Acc: 0.8987, F1: 0.9009, AUC: 0.9711
+Val -> Acc: 0.9027, F1: 0.9043, AUC: 0.9594
+
+2026-05-02 14:05:09,935 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:06:03,739 - INFO - Epoch: 036 | Train Loss: 0.4114 | Val Loss: 0.3637
+Train -> Acc: 0.9229, F1: 0.9278, AUC: 0.9771
+Val -> Acc: 0.9027, F1: 0.9076, AUC: 0.9578
+
+2026-05-02 14:06:03,744 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:08:45,019 - INFO - Epoch: 039 | Train Loss: 0.3912 | Val Loss: 0.3520
+Train -> Acc: 0.9273, F1: 0.9328, AUC: 0.9781
+Val -> Acc: 0.9027, F1: 0.9076, AUC: 0.9660
+
+2026-05-02 14:08:45,024 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:10:32,563 - INFO - Epoch: 041 | Train Loss: 0.3918 | Val Loss: 0.3356
+Train -> Acc: 0.9207, F1: 0.9250, AUC: 0.9818
+Val -> Acc: 0.9204, F1: 0.9231, AUC: 0.9689
+
+2026-05-02 14:10:32,568 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:11:26,496 - INFO - Epoch: 042 | Train Loss: 0.3925 | Val Loss: 0.3331
+Train -> Acc: 0.9361, F1: 0.9402, AUC: 0.9834
+Val -> Acc: 0.9204, F1: 0.9244, AUC: 0.9730
+
+2026-05-02 14:11:26,501 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:19:30,711 - INFO - Epoch: 051 | Train Loss: 0.3445 | Val Loss: 0.3280
+Train -> Acc: 0.9427, F1: 0.9467, AUC: 0.9888
+Val -> Acc: 0.9292, F1: 0.9333, AUC: 0.9768
+
+2026-05-02 14:19:30,716 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:24:53,609 - INFO - Epoch: 057 | Train Loss: 0.3530 | Val Loss: 0.3271
+Train -> Acc: 0.9471, F1: 0.9504, AUC: 0.9899
+Val -> Acc: 0.9204, F1: 0.9244, AUC: 0.9813
+
+2026-05-02 14:24:53,614 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:25:47,337 - INFO - Epoch: 058 | Train Loss: 0.3564 | Val Loss: 0.3253
+Train -> Acc: 0.9493, F1: 0.9528, AUC: 0.9908
+Val -> Acc: 0.9204, F1: 0.9244, AUC: 0.9778
+
+2026-05-02 14:25:47,342 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:26:44,553 - INFO - Epoch: 059 | Train Loss: 0.3562 | Val Loss: 0.3208
+Train -> Acc: 0.9471, F1: 0.9504, AUC: 0.9929
+Val -> Acc: 0.9115, F1: 0.9153, AUC: 0.9883
+
+2026-05-02 14:26:44,558 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:35:09,439 - INFO - Epoch: 068 | Train Loss: 0.3214 | Val Loss: 0.3172
+Train -> Acc: 0.9581, F1: 0.9615, AUC: 0.9955
+Val -> Acc: 0.9204, F1: 0.9244, AUC: 0.9835
+
+2026-05-02 14:35:09,444 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:45:54,282 - INFO - Epoch: 080 | Train Loss: 0.3064 | Val Loss: 0.3171
+Train -> Acc: 0.9581, F1: 0.9608, AUC: 0.9986
+Val -> Acc: 0.9204, F1: 0.9244, AUC: 0.9854
+
+2026-05-02 14:45:54,287 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:46:48,190 - INFO - Epoch: 081 | Train Loss: 0.2883 | Val Loss: 0.3125
+Train -> Acc: 0.9736, F1: 0.9756, AUC: 0.9988
+Val -> Acc: 0.9292, F1: 0.9333, AUC: 0.9844
+
+2026-05-02 14:46:48,195 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:49:29,565 - INFO - Epoch: 084 | Train Loss: 0.2910 | Val Loss: 0.3121
+Train -> Acc: 0.9736, F1: 0.9757, AUC: 0.9991
+Val -> Acc: 0.9292, F1: 0.9333, AUC: 0.9841
+
+2026-05-02 14:49:29,571 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 14:53:07,138 - INFO - Epoch: 088 | Train Loss: 0.2746 | Val Loss: 0.3069
+Train -> Acc: 0.9780, F1: 0.9798, AUC: 0.9991
+Val -> Acc: 0.9292, F1: 0.9333, AUC: 0.9870
+
+2026-05-02 14:53:07,143 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:04:05,132 - INFO - Fold 3 Test Acc: 0.9296 | AUC: 0.9769 | AUPRC: 0.9864
+Precision: 0.9600 | Recall: 0.9114
+
+2026-05-02 15:04:05,133 - INFO - --- FOLD 4/5 ---
+
+2026-05-02 15:04:05,139 - INFO - GAT(
+  (skip_conn_projection1): Linear(in_features=5, out_features=128, bias=True)
+  (conv1): GATv2Conv(5, 64, heads=2)
+  (bn1): BatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (skip_conn_projection2): Linear(in_features=128, out_features=64, bias=True)
+  (conv2): GATv2Conv(128, 64, heads=1)
+  (bn2): BatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (dropout): Dropout(p=0.5, inplace=False)
+  (classifier): Linear(in_features=128, out_features=2, bias=True)
+)
+2026-05-02 15:05:07,871 - INFO - Epoch: 001 | Train Loss: 2.1999 | Val Loss: 0.8101
+Train -> Acc: 0.6432, F1: 0.6318, AUC: 0.7088
+Val -> Acc: 0.5221, F1: 0.4808, AUC: 0.6035
+
+2026-05-02 15:05:07,877 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:06:01,608 - INFO - Epoch: 002 | Train Loss: 0.9004 | Val Loss: 0.6873
+Train -> Acc: 0.5639, F1: 0.4072, AUC: 0.7148
+Val -> Acc: 0.4779, F1: 0.2532, AUC: 0.6352
+
+2026-05-02 15:06:01,613 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:07:17,144 - INFO - Epoch: 003 | Train Loss: 0.8472 | Val Loss: 0.6731
+Train -> Acc: 0.6300, F1: 0.6019, AUC: 0.6945
+Val -> Acc: 0.6018, F1: 0.5872, AUC: 0.6425
+
+2026-05-02 15:07:17,150 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:08:10,812 - INFO - Epoch: 004 | Train Loss: 0.7307 | Val Loss: 0.6580
+Train -> Acc: 0.6630, F1: 0.6637, AUC: 0.7095
+Val -> Acc: 0.6195, F1: 0.6325, AUC: 0.6660
+
+2026-05-02 15:08:10,817 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:12:39,488 - INFO - Epoch: 009 | Train Loss: 0.6726 | Val Loss: 0.6571
+Train -> Acc: 0.6894, F1: 0.7163, AUC: 0.7523
+Val -> Acc: 0.6460, F1: 0.6923, AUC: 0.6784
+
+2026-05-02 15:12:39,493 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:18:01,703 - INFO - Epoch: 015 | Train Loss: 0.6481 | Val Loss: 0.6422
+Train -> Acc: 0.6608, F1: 0.6262, AUC: 0.7873
+Val -> Acc: 0.6018, F1: 0.5545, AUC: 0.7194
+
+2026-05-02 15:18:01,708 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:19:49,202 - INFO - Epoch: 017 | Train Loss: 0.6324 | Val Loss: 0.6415
+Train -> Acc: 0.6410, F1: 0.5788, AUC: 0.7917
+Val -> Acc: 0.5752, F1: 0.5000, AUC: 0.7381
+
+2026-05-02 15:19:49,208 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:21:36,669 - INFO - Epoch: 019 | Train Loss: 0.6397 | Val Loss: 0.6324
+Train -> Acc: 0.7335, F1: 0.7686, AUC: 0.8033
+Val -> Acc: 0.6903, F1: 0.7518, AUC: 0.7311
+
+2026-05-02 15:21:36,675 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:22:30,382 - INFO - Epoch: 020 | Train Loss: 0.6205 | Val Loss: 0.6109
+Train -> Acc: 0.7533, F1: 0.7778, AUC: 0.8229
+Val -> Acc: 0.7080, F1: 0.7519, AUC: 0.7756
+
+2026-05-02 15:22:30,388 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:25:11,533 - INFO - Epoch: 023 | Train Loss: 0.6048 | Val Loss: 0.5770
+Train -> Acc: 0.7885, F1: 0.7885, AUC: 0.8744
+Val -> Acc: 0.6991, F1: 0.7069, AUC: 0.8444
+
+2026-05-02 15:25:11,537 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:28:46,540 - INFO - Epoch: 027 | Train Loss: 0.5844 | Val Loss: 0.5745
+Train -> Acc: 0.8084, F1: 0.8368, AUC: 0.8903
+Val -> Acc: 0.7522, F1: 0.8000, AUC: 0.8343
+
+2026-05-02 15:28:46,545 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:29:40,281 - INFO - Epoch: 028 | Train Loss: 0.5675 | Val Loss: 0.5533
+Train -> Acc: 0.8480, F1: 0.8660, AUC: 0.9061
+Val -> Acc: 0.7788, F1: 0.8201, AUC: 0.8708
+
+2026-05-02 15:29:40,286 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:30:33,987 - INFO - Epoch: 029 | Train Loss: 0.5381 | Val Loss: 0.5484
+Train -> Acc: 0.8260, F1: 0.8523, AUC: 0.9234
+Val -> Acc: 0.7699, F1: 0.8194, AUC: 0.8822
+
+2026-05-02 15:30:33,992 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:31:29,945 - INFO - Epoch: 030 | Train Loss: 0.5443 | Val Loss: 0.5153
+Train -> Acc: 0.8546, F1: 0.8711, AUC: 0.9227
+Val -> Acc: 0.7876, F1: 0.8154, AUC: 0.8898
+
+2026-05-02 15:31:29,950 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:33:17,507 - INFO - Epoch: 032 | Train Loss: 0.5151 | Val Loss: 0.5022
+Train -> Acc: 0.8656, F1: 0.8753, AUC: 0.9323
+Val -> Acc: 0.7788, F1: 0.8000, AUC: 0.8971
+
+2026-05-02 15:33:17,512 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:34:11,258 - INFO - Epoch: 033 | Train Loss: 0.4928 | Val Loss: 0.4918
+Train -> Acc: 0.8678, F1: 0.8859, AUC: 0.9426
+Val -> Acc: 0.8142, F1: 0.8511, AUC: 0.9197
+
+2026-05-02 15:34:11,263 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:35:05,001 - INFO - Epoch: 034 | Train Loss: 0.5111 | Val Loss: 0.4713
+Train -> Acc: 0.8855, F1: 0.8939, AUC: 0.9447
+Val -> Acc: 0.8407, F1: 0.8594, AUC: 0.9219
+
+2026-05-02 15:35:05,006 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:35:58,727 - INFO - Epoch: 035 | Train Loss: 0.5151 | Val Loss: 0.4569
+Train -> Acc: 0.8590, F1: 0.8584, AUC: 0.9508
+Val -> Acc: 0.8319, F1: 0.8257, AUC: 0.9406
+
+2026-05-02 15:35:58,732 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:40:27,226 - INFO - Epoch: 040 | Train Loss: 0.4849 | Val Loss: 0.4430
+Train -> Acc: 0.8855, F1: 0.8930, AUC: 0.9608
+Val -> Acc: 0.8673, F1: 0.8800, AUC: 0.9305
+
+2026-05-02 15:40:27,231 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:41:20,942 - INFO - Epoch: 041 | Train Loss: 0.4684 | Val Loss: 0.4176
+Train -> Acc: 0.8987, F1: 0.9046, AUC: 0.9640
+Val -> Acc: 0.8673, F1: 0.8780, AUC: 0.9378
+
+2026-05-02 15:41:20,947 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:43:28,639 - INFO - Epoch: 043 | Train Loss: 0.4628 | Val Loss: 0.4059
+Train -> Acc: 0.9053, F1: 0.9091, AUC: 0.9622
+Val -> Acc: 0.9027, F1: 0.9060, AUC: 0.9473
+
+2026-05-02 15:43:28,644 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:44:22,324 - INFO - Epoch: 044 | Train Loss: 0.4549 | Val Loss: 0.4046
+Train -> Acc: 0.9053, F1: 0.9083, AUC: 0.9681
+Val -> Acc: 0.9027, F1: 0.9060, AUC: 0.9413
+
+2026-05-02 15:44:22,329 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:45:16,027 - INFO - Epoch: 045 | Train Loss: 0.4248 | Val Loss: 0.3926
+Train -> Acc: 0.9119, F1: 0.9149, AUC: 0.9750
+Val -> Acc: 0.8938, F1: 0.8966, AUC: 0.9575
+
+2026-05-02 15:45:16,032 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:49:45,758 - INFO - Epoch: 050 | Train Loss: 0.4263 | Val Loss: 0.3792
+Train -> Acc: 0.9251, F1: 0.9289, AUC: 0.9819
+Val -> Acc: 0.8938, F1: 0.8983, AUC: 0.9530
+
+2026-05-02 15:49:45,763 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:51:35,983 - INFO - Epoch: 052 | Train Loss: 0.4078 | Val Loss: 0.3684
+Train -> Acc: 0.9273, F1: 0.9305, AUC: 0.9803
+Val -> Acc: 0.9115, F1: 0.9153, AUC: 0.9590
+
+2026-05-02 15:51:35,989 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 15:57:54,444 - INFO - Epoch: 059 | Train Loss: 0.3799 | Val Loss: 0.3658
+Train -> Acc: 0.9317, F1: 0.9350, AUC: 0.9855
+Val -> Acc: 0.9115, F1: 0.9167, AUC: 0.9610
+
+2026-05-02 15:57:54,449 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:06:05,386 - INFO - Epoch: 068 | Train Loss: 0.3652 | Val Loss: 0.3606
+Train -> Acc: 0.9295, F1: 0.9325, AUC: 0.9899
+Val -> Acc: 0.9027, F1: 0.9076, AUC: 0.9600
+
+2026-05-02 16:06:05,391 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:08:48,146 - INFO - Epoch: 071 | Train Loss: 0.3577 | Val Loss: 0.3577
+Train -> Acc: 0.9361, F1: 0.9389, AUC: 0.9912
+Val -> Acc: 0.9027, F1: 0.9076, AUC: 0.9657
+
+2026-05-02 16:08:48,152 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:10:36,533 - INFO - Epoch: 073 | Train Loss: 0.3554 | Val Loss: 0.3513
+Train -> Acc: 0.9383, F1: 0.9409, AUC: 0.9926
+Val -> Acc: 0.9027, F1: 0.9060, AUC: 0.9733
+
+2026-05-02 16:10:36,538 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:16:07,147 - INFO - Epoch: 079 | Train Loss: 0.3385 | Val Loss: 0.3399
+Train -> Acc: 0.9559, F1: 0.9587, AUC: 0.9938
+Val -> Acc: 0.9469, F1: 0.9516, AUC: 0.9781
+
+2026-05-02 16:16:07,153 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:18:15,458 - INFO - Epoch: 081 | Train Loss: 0.3576 | Val Loss: 0.3355
+Train -> Acc: 0.9515, F1: 0.9544, AUC: 0.9917
+Val -> Acc: 0.9469, F1: 0.9516, AUC: 0.9794
+
+2026-05-02 16:18:15,463 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:29:16,799 - INFO - Epoch: 093 | Train Loss: 0.3298 | Val Loss: 0.3309
+Train -> Acc: 0.9581, F1: 0.9608, AUC: 0.9963
+Val -> Acc: 0.9469, F1: 0.9516, AUC: 0.9775
+
+2026-05-02 16:29:16,805 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:31:06,501 - INFO - Epoch: 095 | Train Loss: 0.3014 | Val Loss: 0.3301
+Train -> Acc: 0.9670, F1: 0.9692, AUC: 0.9981
+Val -> Acc: 0.9381, F1: 0.9431, AUC: 0.9775
+
+2026-05-02 16:31:06,507 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:33:50,161 - INFO - Epoch: 098 | Train Loss: 0.3110 | Val Loss: 0.3283
+Train -> Acc: 0.9604, F1: 0.9628, AUC: 0.9987
+Val -> Acc: 0.9381, F1: 0.9431, AUC: 0.9794
+
+2026-05-02 16:33:50,167 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:34:44,581 - INFO - Epoch: 099 | Train Loss: 0.3081 | Val Loss: 0.3282
+Train -> Acc: 0.9714, F1: 0.9734, AUC: 0.9990
+Val -> Acc: 0.9204, F1: 0.9291, AUC: 0.9800
+
+2026-05-02 16:34:44,587 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:35:44,496 - INFO - Fold 4 Test Acc: 0.9437 | AUC: 0.9781 | AUPRC: 0.9843
+Precision: 0.9733 | Recall: 0.9241
+
+2026-05-02 16:35:44,496 - INFO - --- FOLD 5/5 ---
+
+2026-05-02 16:35:44,504 - INFO - GAT(
+  (skip_conn_projection1): Linear(in_features=5, out_features=128, bias=True)
+  (conv1): GATv2Conv(5, 64, heads=2)
+  (bn1): BatchNorm(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (skip_conn_projection2): Linear(in_features=128, out_features=64, bias=True)
+  (conv2): GATv2Conv(128, 64, heads=1)
+  (bn2): BatchNorm(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+  (dropout): Dropout(p=0.5, inplace=False)
+  (classifier): Linear(in_features=128, out_features=2, bias=True)
+)
+2026-05-02 16:36:52,301 - INFO - Epoch: 001 | Train Loss: 1.8323 | Val Loss: 0.8880
+Train -> Acc: 0.5859, F1: 0.5948, AUC: 0.6308
+Val -> Acc: 0.6991, F1: 0.7069, AUC: 0.7192
+
+2026-05-02 16:36:52,308 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:37:47,676 - INFO - Epoch: 002 | Train Loss: 1.0667 | Val Loss: 0.8374
+Train -> Acc: 0.6145, F1: 0.7352, AUC: 0.7146
+Val -> Acc: 0.6283, F1: 0.7308, AUC: 0.7290
+
+2026-05-02 16:37:47,681 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:38:42,980 - INFO - Epoch: 003 | Train Loss: 0.7580 | Val Loss: 0.6636
+Train -> Acc: 0.6542, F1: 0.6161, AUC: 0.7182
+Val -> Acc: 0.6106, F1: 0.6071, AUC: 0.6926
+
+2026-05-02 16:38:42,985 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:39:38,354 - INFO - Epoch: 004 | Train Loss: 0.7357 | Val Loss: 0.6618
+Train -> Acc: 0.6432, F1: 0.5867, AUC: 0.7210
+Val -> Acc: 0.6106, F1: 0.5926, AUC: 0.6841
+
+2026-05-02 16:39:38,359 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:40:33,549 - INFO - Epoch: 005 | Train Loss: 0.6966 | Val Loss: 0.6562
+Train -> Acc: 0.6542, F1: 0.6667, AUC: 0.7330
+Val -> Acc: 0.6460, F1: 0.6774, AUC: 0.7128
+
+2026-05-02 16:40:33,555 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:43:22,984 - INFO - Epoch: 008 | Train Loss: 0.6670 | Val Loss: 0.6435
+Train -> Acc: 0.6894, F1: 0.6773, AUC: 0.7813
+Val -> Acc: 0.6814, F1: 0.6786, AUC: 0.7533
+
+2026-05-02 16:43:22,990 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:45:13,660 - INFO - Epoch: 010 | Train Loss: 0.6694 | Val Loss: 0.6421
+Train -> Acc: 0.6344, F1: 0.5585, AUC: 0.7766
+Val -> Acc: 0.6372, F1: 0.5941, AUC: 0.7135
+
+2026-05-02 16:45:13,667 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:48:57,709 - INFO - Epoch: 014 | Train Loss: 0.6564 | Val Loss: 0.6204
+Train -> Acc: 0.7445, F1: 0.7521, AUC: 0.8375
+Val -> Acc: 0.7257, F1: 0.7350, AUC: 0.7691
+
+2026-05-02 16:48:57,714 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:54:50,285 - INFO - Epoch: 020 | Train Loss: 0.5872 | Val Loss: 0.5733
+Train -> Acc: 0.8194, F1: 0.8447, AUC: 0.9027
+Val -> Acc: 0.7788, F1: 0.8062, AUC: 0.8362
+
+2026-05-02 16:54:50,290 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:56:40,348 - INFO - Epoch: 022 | Train Loss: 0.5661 | Val Loss: 0.5148
+Train -> Acc: 0.8502, F1: 0.8759, AUC: 0.9443
+Val -> Acc: 0.7965, F1: 0.8296, AUC: 0.8969
+
+2026-05-02 16:56:40,353 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:57:35,313 - INFO - Epoch: 023 | Train Loss: 0.5601 | Val Loss: 0.4949
+Train -> Acc: 0.8744, F1: 0.8834, AUC: 0.9422
+Val -> Acc: 0.8407, F1: 0.8525, AUC: 0.9001
+
+2026-05-02 16:57:35,317 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:58:30,077 - INFO - Epoch: 024 | Train Loss: 0.5068 | Val Loss: 0.4585
+Train -> Acc: 0.8877, F1: 0.8998, AUC: 0.9566
+Val -> Acc: 0.8584, F1: 0.8730, AUC: 0.9200
+
+2026-05-02 16:58:30,082 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 16:59:25,187 - INFO - Epoch: 025 | Train Loss: 0.4703 | Val Loss: 0.4552
+Train -> Acc: 0.8811, F1: 0.8977, AUC: 0.9615
+Val -> Acc: 0.8496, F1: 0.8702, AUC: 0.9342
+
+2026-05-02 16:59:25,192 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 17:00:20,558 - INFO - Epoch: 026 | Train Loss: 0.4602 | Val Loss: 0.4165
+Train -> Acc: 0.9053, F1: 0.9121, AUC: 0.9711
+Val -> Acc: 0.8761, F1: 0.8852, AUC: 0.9428
+
+2026-05-02 17:00:20,562 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 17:05:52,340 - INFO - Epoch: 032 | Train Loss: 0.4216 | Val Loss: 0.3938
+Train -> Acc: 0.9405, F1: 0.9452, AUC: 0.9838
+Val -> Acc: 0.8938, F1: 0.9032, AUC: 0.9459
+
+2026-05-02 17:05:52,345 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 17:06:49,052 - INFO - Epoch: 033 | Train Loss: 0.3988 | Val Loss: 0.3857
+Train -> Acc: 0.9471, F1: 0.9510, AUC: 0.9841
+Val -> Acc: 0.9115, F1: 0.9167, AUC: 0.9466
+
+2026-05-02 17:06:49,057 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 17:08:38,264 - INFO - Epoch: 035 | Train Loss: 0.4157 | Val Loss: 0.3763
+Train -> Acc: 0.9405, F1: 0.9439, AUC: 0.9846
+Val -> Acc: 0.9204, F1: 0.9231, AUC: 0.9500
+
+2026-05-02 17:08:38,270 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 17:14:06,674 - INFO - Epoch: 041 | Train Loss: 0.3786 | Val Loss: 0.3753
+Train -> Acc: 0.9449, F1: 0.9497, AUC: 0.9895
+Val -> Acc: 0.9115, F1: 0.9180, AUC: 0.9551
+
+2026-05-02 17:14:06,680 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 17:18:47,053 - INFO - Epoch: 046 | Train Loss: 0.3738 | Val Loss: 0.3691
+Train -> Acc: 0.9559, F1: 0.9603, AUC: 0.9917
+Val -> Acc: 0.9381, F1: 0.9431, AUC: 0.9583
+
+2026-05-02 17:18:47,058 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 17:19:41,906 - INFO - Epoch: 047 | Train Loss: 0.3497 | Val Loss: 0.3676
+Train -> Acc: 0.9626, F1: 0.9657, AUC: 0.9905
+Val -> Acc: 0.9292, F1: 0.9344, AUC: 0.9551
+
+2026-05-02 17:19:41,911 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 17:21:36,411 - INFO - Epoch: 049 | Train Loss: 0.3684 | Val Loss: 0.3620
+Train -> Acc: 0.9670, F1: 0.9698, AUC: 0.9927
+Val -> Acc: 0.9381, F1: 0.9421, AUC: 0.9579
+
+2026-05-02 17:21:36,416 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 17:31:05,402 - INFO - Epoch: 059 | Train Loss: 0.3361 | Val Loss: 0.3574
+Train -> Acc: 0.9604, F1: 0.9637, AUC: 0.9953
+Val -> Acc: 0.9292, F1: 0.9344, AUC: 0.9636
+
+2026-05-02 17:31:05,407 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 17:43:03,178 - INFO - Epoch: 072 | Train Loss: 0.2954 | Val Loss: 0.3569
+Train -> Acc: 0.9802, F1: 0.9820, AUC: 0.9981
+Val -> Acc: 0.9381, F1: 0.9421, AUC: 0.9627
+
+2026-05-02 17:43:03,184 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 17:43:57,953 - INFO - Epoch: 073 | Train Loss: 0.3132 | Val Loss: 0.3524
+Train -> Acc: 0.9758, F1: 0.9777, AUC: 0.9987
+Val -> Acc: 0.9204, F1: 0.9244, AUC: 0.9627
+
+2026-05-02 17:43:57,958 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 17:49:31,881 - INFO - Epoch: 079 | Train Loss: 0.3037 | Val Loss: 0.3513
+Train -> Acc: 0.9736, F1: 0.9759, AUC: 0.9981
+Val -> Acc: 0.9381, F1: 0.9421, AUC: 0.9636
+
+2026-05-02 17:49:31,886 - INFO - --- Found and saved a better model! ---
+
+2026-05-02 18:09:10,195 - INFO - --- Stopping training due to early stopping ---
+
+2026-05-02 18:09:15,776 - INFO - Fold 5 Test Acc: 0.9577 | AUC: 0.9741 | AUPRC: 0.9838
+Precision: 0.9740 | Recall: 0.9494
+
+2026-05-02 18:09:15,777 - INFO - Mean Test Accuracy: 0.9352 +/- 0.0163
+2026-05-02 18:09:15,777 - INFO - F1: 0.9402, AUC: 0.9737, AUPRC: 0.9831, Precision: 0.9655, Recall: 0.9165
+2026-05-02 18:09:15,777 - INFO - Global Confusion Matrix -> TP: 362, TN: 302, FP: 13, FN: 33
+2026-05-02 18:09:15,788 - INFO - Results saved in models/final_metrics_k_fold/GAT_final_metrics_comparison.csv
+
+2026-05-02 18:09:16,120 - INFO - Confusion Matrix saved.

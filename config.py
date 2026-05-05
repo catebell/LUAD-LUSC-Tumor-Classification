@@ -1,11 +1,11 @@
-'''
+"""
 Change the tumor name and the model name here
-'''
+"""
 tumor = "lung"
 # tumor = "kidney"
 
 model = "MultiModalGNN"
-# model = "GAT_graph_branch"
+# model = "GAT"
 
 '''
 Predefined paths

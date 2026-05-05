@@ -1,5 +1,7 @@
 import logging
 import os
+import argparse
+import importlib
 import numpy as np
 import pandas as pd
 import torch
@@ -11,12 +13,15 @@ from torch_geometric.loader import DataLoader
 from collections import Counter
 import matplotlib.pyplot as plt
 import seaborn as sns
+from torch_geometric.nn import global_mean_pool
 
 from PatientGraphDataset import PatientGraphDataset
+from models.BasicGraphConvGNN import GNN
 from models.GINEConvGNN import GINEConvGNN
 from models.GAT import GAT
 from models.MLP import MLP
 from models.MultiModalGNN import MultiModalGNN
+import config
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -34,8 +39,89 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 logging.info("Device: " + str(device))
 torch.cuda.empty_cache()
 
-file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t').dropna()
-patient_split_df = pd.read_csv('files/clinical/patient_split_cleaned.csv')
+
+def get_available_datasets():
+    """Return all subfolders inside original_dataset/ so the dataset available"""
+    if not os.path.isdir(config.DATASET):
+        return []
+
+    return sorted([
+        folder
+        for folder in os.listdir(config.DATASET)
+        if os.path.isdir(os.path.join(config.DATASET, folder))
+    ])
+
+
+def get_available_models():
+    """Return all the models available in the models/ folder"""
+    models_dir = "models"
+
+    if not os.path.isdir(models_dir):
+        return []
+
+    models = []
+
+    for file in os.listdir(models_dir):
+        if file.endswith(".py") and file != "__init__.py":
+            models.append(os.path.splitext(file)[0])
+
+    return sorted(models)
+
+
+def parse_args():
+    """ Parse command line arguments or set defaul values for model_name and tumor dataset """
+    datasets = get_available_datasets()
+    models = get_available_models()
+
+    parser = argparse.ArgumentParser(description="Training GNN")
+
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default=config.tumor,
+        choices=datasets,
+        help=f"Available datasets: {', '.join(datasets)}"
+    )
+
+    parser.add_argument(
+        "--model-name",
+        type=str,
+        default=config.model,
+        choices=models,
+        help=f"Available models: {', '.join(models)}"
+    )
+
+    return parser.parse_args()
+
+
+def load_model(model_name, num_classes, device):
+    module = importlib.import_module(f"models.{model_name}")
+    model_class = getattr(module, model_name)
+
+    clinical_df = pd.read_csv(f'files/{config.tumor}/clinical/features_considered.tsv', sep='\t')
+    num_patient_features = len(clinical_df.columns.tolist()[2:])
+
+    if model_name in ["GINEConvGNN", "GAT"]:
+        model = model_class(num_node_features=5, num_edge_features=3, hidden_channels=64, num_classes=num_classes)
+    elif model_name == "MLP":
+        model = model_class(num_patient_features=num_patient_features, num_classes=num_classes)
+    elif model_name == "MultiModalGNN":  #TODO cambia 53
+        model = model_class(num_node_features=5, num_edge_features=3, clinical_input_dim=53,
+                            hidden_channels=64, num_classes=num_classes)
+    else:
+        model = model_class()
+
+    return model.to(device)
+
+
+#args = parse_args()
+#model_name = args.model_name
+#tumor = args.tumor
+model_name = config.model
+# TODO fare parse e modificare il file di config invece? poi ovunque è chiamato con config.tumor o .model
+
+file_mapping_df = pd.read_csv(f'files/{config.tumor}/clinical/file_case_mapping.tsv', sep='\t').dropna()
+patient_split_df = pd.read_csv(f'files/{config.tumor}/clinical/patient_split_cleaned.csv')
 
 file_mapping_df_train = file_mapping_df[file_mapping_df['case_id'].isin(
     patient_split_df[patient_split_df['split'] == 'train']['cases.case_id'])]
@@ -48,11 +134,11 @@ file_mapping_df_val = file_mapping_df[file_mapping_df['case_id'].isin(
 
 # graph dataset initialization; if not exists, it gets created
 logging.info("Train Dataset init...")
-train_dataset = PatientGraphDataset(root='data_graphs_processed_train', file_mapping_df=file_mapping_df_train)
+train_dataset = PatientGraphDataset(root=f'data_graphs_processed/{config.tumor}/data_graphs_processed_train', file_mapping_df=file_mapping_df_train)
 logging.info("Test Dataset init...")
-test_dataset = PatientGraphDataset(root='data_graphs_processed_test', file_mapping_df=file_mapping_df_test)
+test_dataset = PatientGraphDataset(root=f'data_graphs_processed/{config.tumor}/data_graphs_processed_test', file_mapping_df=file_mapping_df_test)
 logging.info("Val Dataset init...")
-val_dataset = PatientGraphDataset(root='data_graphs_processed_validation', file_mapping_df=file_mapping_df_val)
+val_dataset = PatientGraphDataset(root=f'data_graphs_processed/{config.tumor}/data_graphs_processed_validation', file_mapping_df=file_mapping_df_val)
 
 full_train_dataset = train_dataset + val_dataset
 
@@ -60,6 +146,10 @@ y_labels = []
 for i in range(len(full_train_dataset)):
     y_labels.append(full_train_dataset[i].y.item())
 y_labels = np.array(y_labels)
+
+unique_labels = np.unique(y_labels)
+logging.info(f"Unique labels found in dataset: {unique_labels}")
+num_classes = len(unique_labels)
 
 k_folds = 5
 skf = StratifiedKFold(n_splits=k_folds, shuffle=True, random_state=42)
@@ -100,9 +190,14 @@ def train(model, loader, optimizer, criterion):
         optimizer.zero_grad()
 
         if model.__class__ == GINEConvGNN or model.__class__ == GAT:
-            out = model(data_copy.x[:,3:], data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
+            out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
+        elif model.__class__ == GNN:
+            out = model(data_copy.x, data_copy.edge_index, data_copy.batch)
         elif model.__class__ == MLP:
-            out = model(data_copy.clinical)  # just clinical features
+            # out = model(data_copy.clinical)  # just clinical features
+            # need to aggregate graph nodes
+            x_pooled = global_mean_pool(data_copy.x, data_copy.batch)
+            out = model(x_pooled)
         else:  # MultiModalGNN
             out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.clinical,
                         data_copy.batch)  # both
@@ -126,9 +221,14 @@ def validate(model, loader, criterion):
         data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
         if model.__class__ == GINEConvGNN or model.__class__ == GAT:
-            out = model(data_copy.x[:,3:], data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
+            out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
+        elif model.__class__ == GNN:
+            out = model(data_copy.x, data_copy.edge_index, data_copy.batch)
         elif model.__class__ == MLP:
-            out = model(data_copy.clinical)  # just clinical features
+            # out = model(data_copy.clinical)  # just clinical features
+            # need to aggregate graph nodes
+            x_pooled = global_mean_pool(data_copy.x, data_copy.batch)
+            out = model(x_pooled)
         else:  # MultiModalGNN
             out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.clinical,
                         data_copy.batch)  # both
@@ -153,67 +253,75 @@ def evaluate(model, loader):
             data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
             if model.__class__ == GINEConvGNN or model.__class__ == GAT:
-                out = model(data_copy.x[:,3:], data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
+                out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
+            elif model.__class__ == GNN:
+                out = model(data_copy.x, data_copy.edge_index, data_copy.batch)
             elif model.__class__ == MLP:
-                out = model(data_copy.clinical)  # just clinical features
+                #out = model(data_copy.clinical)  # just clinical features
+                # need to aggregate graph nodes
+                x_pooled = global_mean_pool(data_copy.x, data_copy.batch)
+                out = model(x_pooled)
             else:  # MultiModalGNN
                 out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.clinical,
                             data_copy.batch)  # both
 
-            probs = torch.softmax(out, dim=1)[:, 1]  # class 1 probability
+            probs = torch.softmax(out, dim=1)
             pred = out.argmax(dim=1)  # use the class with the highest probability
 
             all_targets.extend(data_copy.y.cpu().numpy())
             all_preds.extend(pred.cpu().numpy())
             all_probs.extend(probs.cpu().numpy())
 
-    tn, fp, fn, tp = confusion_matrix(all_targets, all_preds, labels=[0, 1]).ravel()
+    all_targets = np.array(all_targets)
+    all_preds = np.array(all_preds)
+    all_probs = np.array(all_probs)
+
+    if len(unique_labels) == 2:
+        auc_val = roc_auc_score(all_targets, all_probs[:, 1])
+    elif len(set(all_targets)) > 2:
+        auc_val = roc_auc_score(all_targets, all_probs, multi_class='ovr')
+    else:
+        auc_val = 0.0
 
     metrics = {
-        'acc': np.mean(np.array(all_preds) == np.array(all_targets)),
-        'precision': precision_score(all_targets, all_preds, zero_division=0),
-        'recall': recall_score(all_targets, all_preds, zero_division=0),
-        'f1': f1_score(all_targets, all_preds, zero_division=0),
-        'auc': roc_auc_score(all_targets, all_probs) if len(set(all_targets)) > 1 else 0.0,
-        'auprc': average_precision_score(all_targets, all_probs) if len(set(all_targets)) > 1 else 0.0,
-        'tn': int(tn),
-        'fp': int(fp),
-        'fn': int(fn),
-        'tp': int(tp)
+        'acc': np.mean(all_preds == all_targets),
+        'precision': precision_score(all_targets, all_preds, average='macro', zero_division=0),
+        'recall': recall_score(all_targets, all_preds, average='macro', zero_division=0),
+        'f1': f1_score(all_targets, all_preds, average='macro', zero_division=0),
+        # Muliti-Class AUC --> OvR strategy (One-vs-Rest)
+        'auc': auc_val,
     }
 
     report = classification_report(all_targets, all_preds, output_dict=True, zero_division=0)
 
-    return metrics, report
+    return metrics, report, all_targets, all_preds
 
 
-def plot_final_confusion_matrix(fold_results, model):
+def plot_final_confusion_matrix(model, all_targets, all_preds):
+    from preprocessing_clinical_features_to_file import class_mapping
+    class_mapping_inv = {v: k for k, v in class_mapping.items()}
+
     filename = f'confusion_matrix_{model._get_name()}.png'
 
-    total_tp = sum([res['tp'] for res in fold_results])
-    total_tn = sum([res['tn'] for res in fold_results])
-    total_fp = sum([res['fp'] for res in fold_results])
-    total_fn = sum([res['fn'] for res in fold_results])
+    cm = confusion_matrix(all_targets, all_preds)
+    cm_norm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
-    cm = [[total_tn, total_fp],
-          [total_fn, total_tp]]
-
-    cm_norm = np.array(cm) / np.array(cm).sum(axis=1)[:, np.newaxis]
-
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(10, 8))
     sns.heatmap(cm_norm, annot=True, cmap='Blues',
-                xticklabels=['Pred LUAD (0)', 'Pred LUSC (1)'],
-                yticklabels=['True LUAD (0)', 'True LUSC (1)'])
+                xticklabels=[f'Pred {class_mapping_inv.get(l)}' for l in unique_labels],
+                yticklabels=[f'True {class_mapping_inv.get(l)}' for l in unique_labels])
 
     plt.title('Global Confusion Matrix (Sum and avg for all folds)')
     plt.ylabel('Real Label')
     plt.xlabel('Model Prediction')
 
-    plt.savefig(f'models/final_metrics_k_fold/{filename}', bbox_inches='tight', dpi=300)
+    plt.savefig(f'models/final_metrics_k_fold/{config.tumor}/{filename}', bbox_inches='tight', dpi=300)
     plt.show()
     logging.info(f"Confusion Matrix saved.")
 
 max_epochs = 100
+cumulative_targets = []
+cumulative_preds = []
 
 for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y_labels)):
     logging.info(f"--- FOLD {fold + 1}/{k_folds} ---\n")
@@ -227,19 +335,23 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
     test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
 
     # re-initialization for current fold
+    model = load_model(model_name, len(unique_labels), device)
+    #TODO remove
+    #model = GNN(num_node_features=5, num_classes=len(unique_labels), hidden_channels=64).to(device)
     #model = GINEConvGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
-    #model = GAT(num_node_features=1, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
-    #model = MLP(num_patient_features=53, num_classes=2).to(device)
-    model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
-
+    #model = GAT(num_node_features=5, num_edge_features=3, num_classes=len(unique_labels), hidden_channels=64).to(device)
+    #model = MLP(num_patient_features=53, num_classes=len(unique_labels)).to(device)
+    #model = MLP(num_patient_features=5, num_classes=len(unique_labels)).to(device)
+    #model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=len(unique_labels)).to(device)
     logging.info(model)
 
+    # optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
     optimizer = get_optimizer(model, 0.001, 1e-4)
 
-    # optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
 
     # different weights to classes based on number of samples
+    '''
     train_labels = [data.y.item() for data in train_dataset]
     counts = Counter(train_labels)
     weights = [0] * len(counts)
@@ -248,6 +360,8 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
         weights[i] = len(train_labels) / (len(counts) * counts[i])
     weights = torch.tensor(weights, dtype=torch.float).to(device)
     criterion = torch.nn.CrossEntropyLoss(weight=weights, label_smoothing=0.1)
+    '''
+    criterion = torch.nn.CrossEntropyLoss()
 
     node_feat_scaler = StandardScaler()
     edge_attr_scaler = MinMaxScaler()
@@ -275,8 +389,8 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
         train_loss = train(model, train_loader, optimizer, criterion)
         val_loss = validate(model, val_loader, criterion)
 
-        train_metrics, train_report = evaluate(model, train_loader)
-        val_metrics, val_report = evaluate(model, val_loader)
+        train_metrics, train_report, _, _ = evaluate(model, train_loader)
+        val_metrics, val_report, _, _ = evaluate(model, val_loader)
 
         scheduler.step(val_loss)
 
@@ -292,7 +406,7 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
                 #f"Val Class 1 (LUSC) Precision: {val_report['1']['precision']:.4f}"
             )
 
-            torch.save(model.state_dict(), f'model_fold_{fold + 1}.pth')
+            torch.save(model.state_dict(), f'{config.tumor}_model_fold_{fold + 1}.pth')
             logging.info("--- Found and saved a better model! ---\n")
 
         if early_stopping_counter > 20:
@@ -302,12 +416,14 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
             early_stopping_counter += 1
 
     # best model found in this fold tested on the fixed evaluate set
-    model.load_state_dict(torch.load(f'model_fold_{fold + 1}.pth'))
-    fold_test_metrics, test_report = evaluate(model, test_loader)
+    model.load_state_dict(torch.load(f'{config.tumor}_model_fold_{fold + 1}.pth'))
+    fold_test_metrics, test_report, all_targets, all_preds = evaluate(model, test_loader)
     fold_results.append(fold_test_metrics)
+    cumulative_targets.extend(all_targets)
+    cumulative_preds.extend(all_preds)
 
     logging.info(
-        f"Fold {fold + 1} Test Acc: {fold_test_metrics['acc']:.4f} | AUC: {fold_test_metrics['auc']:.4f} | AUPRC: {fold_test_metrics['auprc']:.4f}\n"
+        f"Fold {fold + 1} Test Acc: {fold_test_metrics['acc']:.4f} | AUC: {fold_test_metrics['auc']:.4f}\n"
         f"Precision: {fold_test_metrics['precision']:.4f} | Recall: {fold_test_metrics['recall']:.4f}\n"
         #f"Class 0 (LUAD) Precision: {test_report['0']['precision']:.4f} | "
         #f"Class 1 (LUSC) Precision: {test_report['1']['precision']:.4f}\n"
@@ -319,15 +435,9 @@ avg_f1 = np.mean([metrics['f1'] for metrics in fold_results])
 avg_auc = np.mean([metrics['auc'] for metrics in fold_results])
 avg_precision = np.mean([metrics['precision'] for metrics in fold_results])
 avg_recall = np.mean([metrics['recall'] for metrics in fold_results])
-avg_auprc = np.mean([metrics['auprc'] for metrics in fold_results])
-total_tn = np.sum([metrics['tn'] for metrics in fold_results])
-total_fp = np.sum([metrics['fp'] for metrics in fold_results])
-total_fn = np.sum([metrics['fn'] for metrics in fold_results])
-total_tp = np.sum([metrics['tp'] for metrics in fold_results])
 
 logging.info(f"Mean Test Accuracy: {avg_acc:.4f} +/- {dev_std:.4f}")
-logging.info(f"F1: {avg_f1:.4f}, AUC: {avg_auc:.4f}, AUPRC: {avg_auprc:.4f}, Precision: {avg_precision:.4f}, Recall: {avg_recall:.4f}")
-logging.info(f"Global Confusion Matrix -> TP: {total_tp}, TN: {total_tn}, FP: {total_fp}, FN: {total_fn}")
+logging.info(f"F1: {avg_f1:.4f}, AUC: {avg_auc:.4f}, Precision: {avg_precision:.4f}, Recall: {avg_recall:.4f}")
 
 results_for_csv = []
 
@@ -339,11 +449,6 @@ for i, res in enumerate(fold_results):
         'recall': res['recall'],
         'f1_score': res['f1'],
         'auc_roc': res['auc'],
-        'auprc': res['auprc'],
-        'true_positive': res['tp'],
-        'true_negative': res['tn'],
-        'false_positive': res['fp'],
-        'false_negative': res['fn']
     }
     results_for_csv.append(row)
 
@@ -357,13 +462,13 @@ std_row = df_results.iloc[:-1].std(numeric_only=True).to_dict()
 std_row['fold'] = 'STD_DEV'
 df_results = pd.concat([df_results, pd.DataFrame([std_row])], ignore_index=True)
 
-if not os.path.exists("models/final_metrics_k_fold"):
-    os.mkdir('models/final_metrics_k_fold')
+if not os.path.exists(f"models/final_metrics_k_fold/{config.tumor}"):
+    os.mkdir(f'models/final_metrics_k_fold/{config.tumor}')
 
-csv_filename = f'models/final_metrics_k_fold/{model._get_name()}_final_metrics_comparison.csv'
+csv_filename = f'models/final_metrics_k_fold/{config.tumor}/{model._get_name()}_final_metrics_comparison.csv'
 
 df_results.to_csv(csv_filename, index=False)
 
 logging.info(f"Results saved in {csv_filename}\n")
 
-plot_final_confusion_matrix(fold_results, model)
+plot_final_confusion_matrix(model, cumulative_targets, cumulative_preds)
