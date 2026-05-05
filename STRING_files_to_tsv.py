@@ -1,11 +1,29 @@
 import pandas as pd
+import os
+import argparse
+
+def parse_args():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description="Create STRING mapping files"
+    )
+
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Recreate output files even if they already exist"
+    )
+
+    return parser.parse_args()
 
 def main():
-    create_gene_aliases_proteins_ids_mapping_file()  # COMMENT AFTER DOING ONCE
+    args = parse_args()
+
+    create_gene_aliases_proteins_ids_mapping_file(args.force)
     create_genes_id_mapping_file()
 
 
-def create_gene_aliases_proteins_ids_mapping_file():
+def create_gene_aliases_proteins_ids_mapping_file(force=False):
     """Run to re-create the 9606.protein.aliases.gene tsv file with protein_id, gene_name and gene_id (retrieved using
     mygene lib) mapping, excluding data not useful.
     Original STRING file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens and then first 9606.protein.aliases file under INTERACTION DATA. The txt extracted must be put into original_dataset/
@@ -15,6 +33,10 @@ def create_gene_aliases_proteins_ids_mapping_file():
     import mygene
 
     output_filepath = "STRING_downloaded_files/9606.protein.aliases.gene.tsv"
+
+    if not force and os.path.exists(output_filepath):
+        print(f"Skipping already existing file: {output_filepath}")
+        return
 
     def map_symbols_to_ensg(gene_symbols):
         mg = mygene.MyGeneInfo()
@@ -73,6 +95,7 @@ def create_gene_aliases_proteins_ids_mapping_file():
 
     # save to file
     protein_aliases_df.to_csv(output_filepath, sep="\t", index=False)
+    print("Saved: " + output_filepath)
 
 
 def create_genes_id_mapping_file():
@@ -98,6 +121,7 @@ def create_genes_id_mapping_file():
     # save to file
     genes_id_mapping_df.to_csv('STRING_downloaded_files/gene_ids_mapped.tsv', sep="\t", index=False)
 
+    print("Saved: STRING_downloaded_files/gene_ids_mapped.tsv")
 
 if __name__ == "__main__":
     main()

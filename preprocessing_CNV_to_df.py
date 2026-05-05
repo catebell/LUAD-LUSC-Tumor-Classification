@@ -1,11 +1,13 @@
 import time
 import pandas as pd
+import config
+import os
 
 pd.set_option('display.max_colwidth', None)
 
 # ISOLATED EXECUTION
 def main():
-    file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
+    file_mapping_df = pd.read_csv(f'{config.FILES}/{config.tumor}/clinical/file_case_mapping.tsv', sep='\t')
     example_case_id = file_mapping_df['case_id'][0]
 
     # GENES ALIASES WITH PROTEINS AND GENE IDS MAPPING
@@ -17,7 +19,7 @@ def main():
     print(cnv.head(3))
 
 
-def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df: pd.DataFrame):
+def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df: pd.DataFrame, dataset: str):
     """
     Computes and returns a pd.Dataframe with CNV filtered data for the specified patient (case_id).
     :param case_id:
@@ -30,7 +32,9 @@ def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
 
     start_time = time.time()
 
-    df_cnv = pd.read_csv(f"files/CNV/{file_mapping_df[
+    dataset_path = os.path.join(config.FILES, dataset)
+
+    df_cnv = pd.read_csv(f"{dataset_path}/CNV/{file_mapping_df[
         (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'CNV')
         ]['filename'].to_string(index=False)}", sep='\t', usecols=['gene_id','gene_name','copy_number',
                                                                    'min_copy_number','max_copy_number'])

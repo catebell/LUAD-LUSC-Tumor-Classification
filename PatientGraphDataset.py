@@ -1,6 +1,6 @@
 import os
 import time
-
+import config
 import numpy as np
 import torch
 import pandas as pd
@@ -57,7 +57,7 @@ def create_graph(node_features_df, network_df, node_map):
     # we need to consider in x every possible gene, so the edge index will have the correct numbers (pos. in x = gene id)
     num_nodes = len(node_map)
 
-    # only the rows corresponding to this specific patient genes are filled (non-zero), with gene_id_mapped as index
+    # only the rows corresponding to these specific patient genes are filled (non-zero), with gene_id_mapped as index
     x_df = node_features_df.reindex(np.arange(0, num_nodes))
     x = torch.tensor(x_df.loc[x_df.index, features_cols].fillna(0).values.astype(float), dtype=torch.float)
 
@@ -74,18 +74,19 @@ def create_graph(node_features_df, network_df, node_map):
 
 
 class PatientGraphDataset(Dataset):
-    def __init__(self, root, file_mapping_df: pd.DataFrame, transform=None, pre_transform=None):
+    def __init__(self, root, file_mapping_df: pd.DataFrame, dataset=None, transform=None, pre_transform=None):
         """
-        Class for the LUAD/LUSC cancer patient graphs Dataset.
+        Class for the cancer patient graphs Dataset.
         :param root: directory where to save and retrieve processed data.
         :param file_mapping_df: df of data portions to consider.
         """
         self.file_mapping_df = file_mapping_df
+        self.dataset = dataset
 
         # case_id list
         self.patient_list = self.file_mapping_df.groupby('case_id').agg(case_id=('case_id', 'first'),
                                                                    num_omics_present=('filename', 'count'))
-        # drop patient with incorrect number if omic files (should be 3)
+        # drop patients with incorrect number of omic files (should be 3)
         self.patient_list.drop(self.patient_list[self.patient_list['num_omics_present'] != 3].index, inplace=True)
         self.patient_list = self.patient_list['case_id'].to_list()
 
@@ -132,7 +133,8 @@ class PatientGraphDataset(Dataset):
         genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv',
                                        sep='\t')  # proteins-genes mapping df
 
-        clinical_features_df = pd.read_csv('files/clinical/features_encoded.tsv', sep='\t')
+        # clinical_features_df = pd.read_csv('files/clinical/features_encoded.tsv', sep='\t')
+        clinical_features_df = pd.read_csv(f'{config.FILES}/{self.dataset}/clinical/features_encoded.tsv', sep='\t')
 
         node_map_df = pd.read_csv('STRING_downloaded_files/gene_ids_mapped.tsv', sep='\t')
         node_map = dict(zip(node_map_df.gene_id, node_map_df.gene_id_mapped))
@@ -159,14 +161,14 @@ class PatientGraphDataset(Dataset):
         meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 
         for case_id in self.patient_list:
-            df_rna, network_df = create_rna_df(case_id, self.file_mapping_df, genes_mapping_df, protein_links_df)
+            df_rna, network_df = create_rna_df(case_id, self.file_mapping_df, genes_mapping_df, protein_links_df, self.dataset)
             df_rna['gene_id_mapped'] = df_rna['gene_id'].map(node_map)
 
-            df_cnv = create_cnv_df(case_id, self.file_mapping_df, genes_mapping_df)
+            df_cnv = create_cnv_df(case_id, self.file_mapping_df, genes_mapping_df, self.dataset)
 
             node_features_df = pd.merge(df_rna, df_cnv, how='left', on=['gene_id'])
 
-            df_meth = create_meth_df(case_id, self.file_mapping_df, genes_mapping_df, meth_manifest_df)
+            df_meth = create_meth_df(case_id, self.file_mapping_df, genes_mapping_df, meth_manifest_df, self.dataset)
             node_features_df = pd.merge(node_features_df, df_meth, how='left', on=['gene_id'])
 
             node_features_df[['copy_number', 'cnv_min_max_diff', 'weighted_beta_value']] = node_features_df[
@@ -177,14 +179,14 @@ class PatientGraphDataset(Dataset):
 
             data = create_graph(node_features_df, network_df, node_map)
 
-            labels_dict = dict(zip(clinical_features_df['case_id'], clinical_features_df['project_id']))
+            labels_dict = dict(zip(clinical_features_df['cases.case_id'], clinical_features_df['project.project_id']))
 
             data.y = torch.tensor([labels_dict[case_id]], dtype=torch.long)
 
             data = self.standard_transform(data)
 
             # ADD CLINICAL FEATURES TENSOR
-            clinical_values = clinical_features_df[clinical_features_df['case_id'] == case_id].iloc[:, 2:]
+            clinical_values = clinical_features_df[clinical_features_df['cases.case_id'] == case_id].iloc[:, 2:]
             # (first 2 cols are not features to be considered --> project_id and case_id)
             data.clinical = torch.tensor(clinical_values.values.astype(float), dtype=torch.float).view(1,-1)
 

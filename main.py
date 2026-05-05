@@ -1,10 +1,13 @@
 import os
 import argparse
 import config
-
+import torch
 from files_extraction_and_mapping import process_dataset
 from preprocessing_clinical_features_to_file import build_features_considered, build_features_encoded
 from train_test_val_patients_split import build_patient_split_cleaned
+from STRING_files_to_tsv import create_gene_aliases_proteins_ids_mapping_file, create_genes_id_mapping_file
+from methylation_manifest_to_tsv import create_meth_manifest
+from graph_classification import load_model, train_and_save_model
 
 def get_available_datasets():
     """Read folders inside original_dataset/ to know the dataset available"""
@@ -78,13 +81,20 @@ def parse_args():
     parser.add_argument(
         "--model-name",
         type=str,
-        required=False,
-        choices=models if models else None,
-        default=None,
+        default=config.model,
+        choices=models,
         help=f"Choose model: {', '.join(models)}" if models else "No models found"
     )
 
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Recreate files even if already existing"
+    )
+
     return parser.parse_args()
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def main():
 
@@ -95,11 +105,17 @@ def main():
     print(f"\nSelected dataset: {args.dataset}")
     print(f"Input path : {dataset_dir}")
     print(f"Output path: {files_dir}")
+    print(f"Force mode : {args.force}")
 
     process_dataset(dataset_dir, files_dir)
     build_features_considered(args.dataset)
     build_features_encoded(args.dataset)
     build_patient_split_cleaned(args.dataset)
+    create_gene_aliases_proteins_ids_mapping_file(args.force)
+    create_genes_id_mapping_file()
+    create_meth_manifest()
+    model = load_model(args.model_name, device)
+    train_and_save_model(args.dataset, model, args.model_name)
 
     if args.model_name:
         print(f"\nSelected model: {args.model_name}")

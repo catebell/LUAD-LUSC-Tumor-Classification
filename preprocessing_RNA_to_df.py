@@ -1,11 +1,13 @@
 import pandas as pd
 import time
+import config
+import os
 
 pd.set_option('display.max_colwidth', None)
 
 # ISOLATED EXECUTION
 def main():
-    file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t')
+    file_mapping_df = pd.read_csv(f'{config.FILES}/{config.tumor}/clinical/file_case_mapping.tsv', sep='\t')
 
     example_case_id = file_mapping_df['case_id'][0]  # example
     ppi_score_threshold = 0.7  # minimum interaction probability score to create edges
@@ -36,7 +38,7 @@ def main():
     print(network.head(3))
 
 
-def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df: pd.DataFrame, protein_links_df: pd.DataFrame):
+def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df: pd.DataFrame, protein_links_df: pd.DataFrame, dataset: str):
     """
     Computes and returns a pd.Dataframe with RNA filtered data and a pd.Dataframe of protein-protein interactions for
     the specified patient (case_id) using only protein-coding genes.
@@ -52,7 +54,9 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
 
     start_time = time.time()
 
-    df_rna = pd.read_csv(f"files/RNA/{file_mapping_df[
+    dataset_path = os.path.join(config.FILES, dataset)
+
+    df_rna = pd.read_csv(f"{dataset_path}/RNA/{file_mapping_df[
         (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'RNA')
         ]['filename'].to_string(index=False)}", sep='\t', dtype=str, usecols=['gene_id','gene_name','gene_type',
                                                                               'tpm_unstranded'], comment='#')  # 'comment=' to ignore the first line in RNA files

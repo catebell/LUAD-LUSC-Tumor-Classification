@@ -15,21 +15,23 @@ df_meth27_manifest.dropna(subset=["cpg_IlmnID", "gene_symbol"], inplace=True)
 df_meth27_manifest.to_csv(r"methylation_manifests/methylation_manifest27.tsv", sep="\t", index=False)
 '''
 
-cols = ['IlmnID','CHR','Strand','UCSC_RefGene_Name','UCSC_RefGene_Group','Relation_to_UCSC_CpG_Island']
-df_meth450_manifest = pd.read_csv('methylation_manifests/originals_downloaded/humanmethylation450_15017482_v1-2.csv',
-                                  comment='#', usecols=cols, dtype=str)
-df_meth450_manifest.rename(columns={"IlmnID": "cpg_IlmnID", "CHR": "gene_chr", "Strand":"gene_strand", "UCSC_RefGene_Name":"gene_symbol", "Relation_to_UCSC_CpG_Island":"cpg_position", "UCSC_RefGene_Group":"cpg_region"}, inplace=True)
-# drop rows not about 'cg...'
-df_meth450_manifest.drop(df_meth450_manifest[df_meth450_manifest['cpg_IlmnID'].str.startswith('cg') == False].index, inplace=True)
-# drop rows with no cpg_IlmnID or no gene_symbol (not useful)
-df_meth450_manifest.dropna(subset=["cpg_IlmnID", "gene_symbol"], inplace=True)
-# remap gene_strand F/R to +/-
-mapping = {
-    'F': '+',
-    'R': '-'
-}
-df_meth450_manifest['gene_strand'] = df_meth450_manifest['gene_strand'].map(mapping)
-df_meth450_manifest.to_csv(r"methylation_manifests/methylation_manifest450.tsv", sep="\t", index=False)
+def create_meth_manifest():
+    cols = ['IlmnID','CHR','Strand','UCSC_RefGene_Name','UCSC_RefGene_Group','Relation_to_UCSC_CpG_Island']
+    df_meth450_manifest = pd.read_csv('methylation_manifests/originals_downloaded/humanmethylation450_15017482_v1-2.csv',
+                                      comment='#', usecols=cols, dtype=str)
+    df_meth450_manifest.rename(columns={"IlmnID": "cpg_IlmnID", "CHR": "gene_chr", "Strand":"gene_strand", "UCSC_RefGene_Name":"gene_symbol", "Relation_to_UCSC_CpG_Island":"cpg_position", "UCSC_RefGene_Group":"cpg_region"}, inplace=True)
+    # drop rows not about 'cg...'
+    df_meth450_manifest.drop(df_meth450_manifest[df_meth450_manifest['cpg_IlmnID'].str.startswith('cg') == False].index, inplace=True)
+    # drop rows with no cpg_IlmnID or no gene_symbol (not useful)
+    df_meth450_manifest.dropna(subset=["cpg_IlmnID", "gene_symbol"], inplace=True)
+    # remap gene_strand F/R to +/-
+    mapping = {
+        'F': '+',
+        'R': '-'
+    }
+    df_meth450_manifest['gene_strand'] = df_meth450_manifest['gene_strand'].map(mapping)
+    df_meth450_manifest.to_csv(r"methylation_manifests/methylation_manifest450.tsv", sep="\t", index=False)
+    print("Saved: methylation_manifests/methylation_manifest450.tsv")
 
 # probably not useful, 450k is enough
 '''
@@ -58,23 +60,28 @@ df_methEPICb5_manifest.to_csv(r"methylation_manifests/methylation_manifestEPICb5
 
 # EXAMPLE TO SEE VALUES
 
-pd.set_option('display.max_colwidth', None) # or else it can't take whole filename from file_case_mapping.tsv
+def see_example_values():
 
-file_mapping_df = pd.read_csv('files/clinical/file_case_mapping.tsv', sep='\t', dtype=str)
+    pd.set_option('display.max_colwidth', None) # or else it can't take whole filename from file_case_mapping.tsv
 
-case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb' # for example
+    file_mapping_df = pd.read_csv('files/lung/clinical/file_case_mapping.tsv', sep='\t', dtype=str)
 
-df_meth = pd.read_csv(f"files/methylation/{file_mapping_df[
-    (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'methylation')
-    ]['filename'].to_string(index=False)}", sep='\t', names=['cpg_IlmnID', 'beta_value'], dtype=str)
+    case_id = 'fd5c44ef-ea50-4fba-9e8d-e371cf34ebdb' # for example
 
-
-df_meth_manifest450 = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
-df_meth = pd.merge(df_meth, df_meth_manifest450[['cpg_IlmnID', 'gene_symbol']], on='cpg_IlmnID', how='left')
-print("Added symbols from methylation_manifest450.tsv")
-print("Correspondences cpgIDs-symbols missing with only 450k: " + str(df_meth.iloc[:,-1].isna().sum()))
+    df_meth = pd.read_csv(f"files/lung/methylation/{file_mapping_df[
+        (file_mapping_df['case_id'] == case_id) & (file_mapping_df['omic'] == 'methylation')
+        ]['filename'].to_string(index=False)}", sep='\t', names=['cpg_IlmnID', 'beta_value'], dtype=str)
 
 
-# EXAMPLE TO SEE COLUMN CPG_POSITION
-print("Values in cpg_position: ", df_meth450_manifest['cpg_position'].unique())
+    df_meth_manifest450 = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
+    df_meth = pd.merge(df_meth, df_meth_manifest450[['cpg_IlmnID', 'gene_symbol']], on='cpg_IlmnID', how='left')
+    print("Added symbols from methylation_manifest450.tsv")
+    print("Correspondences cpgIDs-symbols missing with only 450k: " + str(df_meth.iloc[:,-1].isna().sum()))
 
+
+    # EXAMPLE TO SEE COLUMN CPG_POSITION
+    print("Values in cpg_position: ", df_meth_manifest450['cpg_position'].unique())
+
+if __name__ == '__main__':
+    create_meth_manifest()
+    see_example_values()
