@@ -1,8 +1,11 @@
 '''
-Change the tumor name here
+Change the tumor name and the model name here
 '''
 tumor = "lung"
 # tumor = "kidney"
+
+model = "MultiModalGNN"
+# model = "GAT_graph_branch"
 
 '''
 Predefined paths
