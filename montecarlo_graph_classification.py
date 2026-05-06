@@ -30,6 +30,16 @@ import config
 
 warnings.filterwarnings("ignore")
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(f"execution_{MODEL_TYPE}.log", mode="w"),
+        logging.StreamHandler(sys.stdout)
+    ],
+    force=True
+)
+
 MONTE_CARLO_ITER = 30
 TEST_SIZE = 0.2
 EPOCHS = 100
@@ -48,38 +58,33 @@ def set_seed(seed):
 
 set_seed(SEED)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(f"execution_{MODEL_TYPE}.log", mode="w"),
-        logging.StreamHandler(sys.stdout)
-    ],
-    force=True
-)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logging.info(f"Device: {device}")
 
 
-def build_model():
+def build_model(n_classes):
+    clinical_df = pd.read_csv(f'files/{config.tumor}/clinical/features_considered.tsv', sep='\t')
+    num_patient_features = len(clinical_df.columns.tolist()[2:])
+
     if MODEL_TYPE == "GAT":
-        model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64)
+        model = GAT(num_node_features=5, num_edge_features=3, num_classes=n_classes, hidden_channels=64)
     elif MODEL_TYPE == "MLP":
-        model = MLP(num_patient_features=53, num_classes=2)
+        model = MLP(num_patient_features=num_patient_features, num_classes=n_classes)
     elif MODEL_TYPE == "MultiModalGNN":
         model = MultiModalGNN(
             num_node_features=5,
             num_edge_features=3,
-            clinical_input_dim=53,
+            clinical_input_dim=num_patient_features,
             hidden_channels=64,
-            num_classes=2
+            num_classes=n_classes
         )
 
     return model.to(device)
 
 
 def load_dataset():
+    logging.info("Loading dataset...")
     file_mapping_df = pd.read_csv(f'files/{config.tumor}/clinical/file_case_mapping.tsv', sep='\t').dropna()
     patient_split_df = pd.read_csv(f'files/{config.tumor}/clinical/patient_split_cleaned.csv')
 
@@ -99,11 +104,20 @@ def load_dataset():
     val_dataset = PatientGraphDataset(f'data_graphs_processed/{config.tumor}/data_graphs_processed_validation', val_df)
     test_dataset = PatientGraphDataset(f'data_graphs_processed/{config.tumor}/data_graphs_processed_test', test_df)
 
+    y_labels = []
+    for i in range(len(train_dataset)):
+        y_labels.append(train_dataset[i].y.item())
+    y_labels = np.array(y_labels)
+
+    unique_labels = np.unique(y_labels)
+    logging.info(f"Unique labels found in dataset: {unique_labels}")
+    num_classes = len(unique_labels)
+
     full_dataset = train_dataset + val_dataset + test_dataset
 
     logging.info(f"Dataset size: {len(full_dataset)}")
 
-    return full_dataset
+    return full_dataset, num_classes
 
 
 def train_epoch(model, loader, optimizer, criterion):
@@ -176,7 +190,7 @@ def evaluate(model, loader):
 
 
 def run_montecarlo():
-    dataset = load_dataset()
+    dataset, num_classes = load_dataset()
     y_labels = np.array([dataset[i].y.item() for i in range(len(dataset))])
 
     splitter = StratifiedShuffleSplit(
@@ -208,7 +222,7 @@ def run_montecarlo():
             pin_memory=True
         )
 
-        model = build_model()
+        model = build_model(num_classes)
 
         train_labels = y_labels[train_idx]
         counts = Counter(train_labels)

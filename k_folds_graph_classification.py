@@ -5,6 +5,7 @@ import importlib
 import numpy as np
 import pandas as pd
 import torch
+from pathlib import Path
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, classification_report, average_precision_score, confusion_matrix
@@ -462,10 +463,9 @@ std_row = df_results.iloc[:-1].std(numeric_only=True).to_dict()
 std_row['fold'] = 'STD_DEV'
 df_results = pd.concat([df_results, pd.DataFrame([std_row])], ignore_index=True)
 
-if not os.path.exists(f"models/final_metrics_k_fold/{config.tumor}"):
-    os.mkdir(f'models/final_metrics_k_fold/{config.tumor}')
-
-csv_filename = f'models/final_metrics_k_fold/{config.tumor}/{model._get_name()}_final_metrics_comparison.csv'
+path = Path(f"models/final_metrics_k_fold/{config.tumor}")
+path.mkdir(parents=True, exist_ok=True)
+csv_filename = f'{path}/{model._get_name()}_final_metrics_comparison.csv'
 
 df_results.to_csv(csv_filename, index=False)
 
