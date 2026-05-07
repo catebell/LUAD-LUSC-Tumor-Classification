@@ -1,17 +1,17 @@
 import torch.nn as nn
 
 class MLP(nn.Module):
-    def __init__(self, num_patient_features, num_classes):
+    def __init__(self, num_patient_features, hidden_channels, num_classes):
         super().__init__()
 
         self.mlp = nn.Sequential(
             nn.Dropout(0.2),
-            nn.Linear(num_patient_features, 64),
-            nn.LayerNorm(64),
+            nn.Linear(num_patient_features, hidden_channels),
+            nn.LayerNorm(hidden_channels),
             nn.SiLU(),
             nn.Dropout(0.5),
 
-            nn.Linear(64, 8),
+            nn.Linear(hidden_channels, 8),
             nn.LayerNorm(8),
             nn.SiLU(),
             nn.Dropout(0.2)

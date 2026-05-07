@@ -264,7 +264,6 @@ def encode_stage(value):
 
 def build_features_encoded(dataset):
     """Build the features_encoded file starting from features_considered"""
-
     dataset_dir = os.path.join(config.DATASET, dataset)
     output_dir = os.path.join(config.FILES, dataset, "clinical")
 
@@ -282,13 +281,13 @@ def build_features_encoded(dataset):
         classes = sorted(features_df["project.project_id"].dropna().unique())
 
         # for project.project_id, remap tumor class to numbers
-        mapping = {label: i for i, label in enumerate(classes)}
+        class_mapping = {label: i for i, label in enumerate(classes)}
 
         features_df["project.project_id"] = (
-            features_df["project.project_id"].map(mapping)
+            features_df["project.project_id"].map(class_mapping)
         )
 
-        print("Target mapping:", mapping)
+        print("Target mapping:", class_mapping)
 
     if "exposures.tobacco_smoker" in features_df.columns:
 

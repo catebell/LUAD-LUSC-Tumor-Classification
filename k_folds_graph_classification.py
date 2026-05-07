@@ -99,15 +99,15 @@ def load_model(model_name, num_classes, device):
     module = importlib.import_module(f"models.{model_name}")
     model_class = getattr(module, model_name)
 
-    clinical_df = pd.read_csv(f'files/{config.tumor}/clinical/features_considered.tsv', sep='\t')
+    clinical_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/features_considered.tsv', sep='\t')
     num_patient_features = len(clinical_df.columns.tolist()[2:])
 
     if model_name in ["GINEConvGNN", "GAT"]:
         model = model_class(num_node_features=5, num_edge_features=3, hidden_channels=64, num_classes=num_classes)
     elif model_name == "MLP":
-        model = model_class(num_patient_features=num_patient_features, num_classes=num_classes)
-    elif model_name == "MultiModalGNN":  #TODO cambia 53
-        model = model_class(num_node_features=5, num_edge_features=3, clinical_input_dim=53,
+        model = model_class(num_patient_features=num_patient_features, hidden_channels = 64, num_classes=num_classes)
+    elif model_name == "MultiModalGNN":
+        model = model_class(num_node_features=5, num_edge_features=3, clinical_input_dim=num_patient_features,
                             hidden_channels=64, num_classes=num_classes)
     else:
         model = model_class()
@@ -115,14 +115,12 @@ def load_model(model_name, num_classes, device):
     return model.to(device)
 
 
-#args = parse_args()
-#model_name = args.model_name
-#tumor = args.tumor
-model_name = config.model
-# TODO fare parse e modificare il file di config invece? poi ovunque è chiamato con config.tumor o .model
+args = parse_args()
+model_name = args.model_name
+dataset_name = args.dataset
 
-file_mapping_df = pd.read_csv(f'files/{config.tumor}/clinical/file_case_mapping.tsv', sep='\t').dropna()
-patient_split_df = pd.read_csv(f'files/{config.tumor}/clinical/patient_split_cleaned.csv')
+file_mapping_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/file_case_mapping.tsv', sep='\t').dropna()
+patient_split_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/patient_split_cleaned.csv')
 
 file_mapping_df_train = file_mapping_df[file_mapping_df['case_id'].isin(
     patient_split_df[patient_split_df['split'] == 'train']['cases.case_id'])]
@@ -135,11 +133,11 @@ file_mapping_df_val = file_mapping_df[file_mapping_df['case_id'].isin(
 
 # graph dataset initialization; if not exists, it gets created
 logging.info("Train Dataset init...")
-train_dataset = PatientGraphDataset(root=f'data_graphs_processed/{config.tumor}/data_graphs_processed_train', file_mapping_df=file_mapping_df_train)
+train_dataset = PatientGraphDataset(root=f'data_graphs_processed/{dataset_name}/data_graphs_processed_train', file_mapping_df=file_mapping_df_train)
 logging.info("Test Dataset init...")
-test_dataset = PatientGraphDataset(root=f'data_graphs_processed/{config.tumor}/data_graphs_processed_test', file_mapping_df=file_mapping_df_test)
+test_dataset = PatientGraphDataset(root=f'data_graphs_processed/{dataset_name}/data_graphs_processed_test', file_mapping_df=file_mapping_df_test)
 logging.info("Val Dataset init...")
-val_dataset = PatientGraphDataset(root=f'data_graphs_processed/{config.tumor}/data_graphs_processed_validation', file_mapping_df=file_mapping_df_val)
+val_dataset = PatientGraphDataset(root=f'data_graphs_processed/{dataset_name}/data_graphs_processed_validation', file_mapping_df=file_mapping_df_val)
 
 full_train_dataset = train_dataset + val_dataset
 
@@ -221,21 +219,22 @@ def validate(model, loader, criterion):
         data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
         data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
-        if model.__class__ == GINEConvGNN or model.__class__ == GAT:
-            out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
-        elif model.__class__ == GNN:
-            out = model(data_copy.x, data_copy.edge_index, data_copy.batch)
-        elif model.__class__ == MLP:
-            # out = model(data_copy.clinical)  # just clinical features
-            # need to aggregate graph nodes
-            x_pooled = global_mean_pool(data_copy.x, data_copy.batch)
-            out = model(x_pooled)
-        else:  # MultiModalGNN
-            out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.clinical,
-                        data_copy.batch)  # both
+        with torch.no_grad():
+            if model.__class__ == GINEConvGNN or model.__class__ == GAT:
+                out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
+            elif model.__class__ == GNN:
+                out = model(data_copy.x, data_copy.edge_index, data_copy.batch)
+            elif model.__class__ == MLP:
+                # out = model(data_copy.clinical)  # just clinical features
+                # need to aggregate graph nodes
+                x_pooled = global_mean_pool(data_copy.x, data_copy.batch)
+                out = model(x_pooled)
+            else:  # MultiModalGNN
+                out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.clinical,
+                            data_copy.batch)  # both
 
-        loss = criterion(out, data_copy.y)
-        total_loss += loss.item() * data_copy.num_graphs
+            loss = criterion(out, data_copy.y)
+            total_loss += loss.item() * data_copy.num_graphs
     return total_loss / len(loader.dataset)
 
 
@@ -299,7 +298,10 @@ def evaluate(model, loader):
 
 
 def plot_final_confusion_matrix(model, all_targets, all_preds):
-    from preprocessing_clinical_features_to_file import class_mapping
+    features_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/features_considered.tsv', sep='\t')
+    classes = sorted(features_df["project.project_id"].dropna().unique())
+    # for project.project_id, remap tumor class to numbers
+    class_mapping = {label: i for i, label in enumerate(classes)}
     class_mapping_inv = {v: k for k, v in class_mapping.items()}
 
     filename = f'confusion_matrix_{model._get_name()}.png'
@@ -316,7 +318,7 @@ def plot_final_confusion_matrix(model, all_targets, all_preds):
     plt.ylabel('Real Label')
     plt.xlabel('Model Prediction')
 
-    plt.savefig(f'models/final_metrics_k_fold/{config.tumor}/{filename}', bbox_inches='tight', dpi=300)
+    plt.savefig(f'models/final_metrics_k_fold/{dataset_name}/{filename}', bbox_inches='tight', dpi=300)
     plt.show()
     logging.info(f"Confusion Matrix saved.")
 
@@ -337,13 +339,6 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
 
     # re-initialization for current fold
     model = load_model(model_name, len(unique_labels), device)
-    #TODO remove
-    #model = GNN(num_node_features=5, num_classes=len(unique_labels), hidden_channels=64).to(device)
-    #model = GINEConvGNN(num_node_features=5, num_edge_features=3, hidden_channels=64).to(device)
-    #model = GAT(num_node_features=5, num_edge_features=3, num_classes=len(unique_labels), hidden_channels=64).to(device)
-    #model = MLP(num_patient_features=53, num_classes=len(unique_labels)).to(device)
-    #model = MLP(num_patient_features=5, num_classes=len(unique_labels)).to(device)
-    #model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=len(unique_labels)).to(device)
     logging.info(model)
 
     # optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
@@ -407,7 +402,7 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
                 #f"Val Class 1 (LUSC) Precision: {val_report['1']['precision']:.4f}"
             )
 
-            torch.save(model.state_dict(), f'{config.tumor}_model_fold_{fold + 1}.pth')
+            torch.save(model.state_dict(), f'{dataset_name}_{model_name}_model_fold_{fold + 1}.pth')
             logging.info("--- Found and saved a better model! ---\n")
 
         if early_stopping_counter > 20:
@@ -417,7 +412,7 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
             early_stopping_counter += 1
 
     # best model found in this fold tested on the fixed evaluate set
-    model.load_state_dict(torch.load(f'{config.tumor}_model_fold_{fold + 1}.pth'))
+    model.load_state_dict(torch.load(f'{dataset_name}_model_fold_{fold + 1}.pth'))
     fold_test_metrics, test_report, all_targets, all_preds = evaluate(model, test_loader)
     fold_results.append(fold_test_metrics)
     cumulative_targets.extend(all_targets)
@@ -463,7 +458,7 @@ std_row = df_results.iloc[:-1].std(numeric_only=True).to_dict()
 std_row['fold'] = 'STD_DEV'
 df_results = pd.concat([df_results, pd.DataFrame([std_row])], ignore_index=True)
 
-path = Path(f"models/final_metrics_k_fold/{config.tumor}")
+path = Path(f"models/final_metrics_k_fold/{dataset_name}")
 path.mkdir(parents=True, exist_ok=True)
 csv_filename = f'{path}/{model._get_name()}_final_metrics_comparison.csv'
 

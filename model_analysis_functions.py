@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 import torch
 
-from graph_classification import test, clinical_mean, clinical_std, x_mean, x_std, e_min, e_max, device, \
+from graph_classification_grid_search import test, clinical_mean, clinical_std, x_mean, x_std, e_min, e_max, device, \
     test_loader
 
 from models.GAT import GAT
@@ -366,10 +366,11 @@ def plot_boxplot(df, genes, i, filename = None):
 
 logging.info("--- Feature Importance analysis (Best Model Saved) ---\n")
 
-model.load_state_dict(torch.load('examples/example1_model_with_analysis/best_k_fold_gnn.pth', map_location=device))  # currently model_fold_3.pth
+#model.load_state_dict(torch.load('examples/example1_model_with_analysis/best_k_fold_gnn.pth', map_location=device))  # currently model_fold_3.pth
 #model.load_state_dict(torch.load('example2_model_with_analysis/model_fold_2.pth', map_location=device))  # currently model_fold_3.pth
+model.load_state_dict(torch.load('example3_analysis_MultiModal/best_MultiModalGNN_lung_val_0.94.pth', map_location=device))
 
-features_encoded_df = pd.read_csv(f'files/{config.tumor}/clinical/features_encoded.tsv', sep='\t')
+features_encoded_df = pd.read_csv(f'{config.FILES}/{config.tumor}/clinical/features_encoded.tsv', sep='\t')
 
 clinical_names = features_encoded_df.columns.values.tolist()[2:]
 node_map_inv = {v: k for k, v in node_map.items()}
@@ -379,13 +380,12 @@ gene_alias = gene_alias.groupby('gene_id')['alias'].apply(list).reset_index(name
 gene_alias['gene_id_mapped'] = gene_alias['gene_id'].map(node_map)
 gene_alias.set_index('gene_id_mapped', inplace=True)
 
-clinical_imp = explain_clinical_importance(model, device, test_loader, clinical_names)
+#clinical_imp = explain_clinical_importance(model, device, test_loader, clinical_names)
 
-edge_features_importance = explain_edge_features_importance(model, device, test_loader)
+#edge_features_importance = explain_edge_features_importance(model, device, test_loader)
 
 #gene_imp, edges_imp = get_genes_and_edges_attention_weights(model, device, test_loader, node_map_inv)  # (GAT Attention)
 
-'''
 gene_sal = get_gene_saliency(model, device, test_loader, node_map_inv)
 
 top_genes = {}
@@ -412,4 +412,4 @@ for i in range(0,4):
     }
     df_plot = collect_gene_data(test_loader, top_genes, node_map, i)
     plot_boxplot(df_plot, top_genes, i, f"genes_{feature_dict.get(i)}_boxplot.png")
-'''
+

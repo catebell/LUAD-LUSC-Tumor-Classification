@@ -64,7 +64,7 @@ logging.info(f"Device: {device}")
 
 
 def build_model(n_classes):
-    clinical_df = pd.read_csv(f'files/{config.tumor}/clinical/features_considered.tsv', sep='\t')
+    clinical_df = pd.read_csv(f'{config.FILES}/{config.tumor}/clinical/features_considered.tsv', sep='\t')
     num_patient_features = len(clinical_df.columns.tolist()[2:])
 
     if MODEL_TYPE == "GAT":
@@ -85,8 +85,8 @@ def build_model(n_classes):
 
 def load_dataset():
     logging.info("Loading dataset...")
-    file_mapping_df = pd.read_csv(f'files/{config.tumor}/clinical/file_case_mapping.tsv', sep='\t').dropna()
-    patient_split_df = pd.read_csv(f'files/{config.tumor}/clinical/patient_split_cleaned.csv')
+    file_mapping_df = pd.read_csv(f'{config.FILES}/{config.tumor}/clinical/file_case_mapping.tsv', sep='\t').dropna()
+    patient_split_df = pd.read_csv(f'{config.FILES}/{config.tumor}/clinical/patient_split_cleaned.csv')
 
     node_map_df = pd.read_csv('STRING_downloaded_files/gene_ids_mapped.tsv', sep='\t')
     node_map = dict(zip(node_map_df.gene_id, node_map_df.gene_id_mapped))
@@ -258,7 +258,11 @@ def save_iteration_results(results):
     df = pd.DataFrame(results)
     df["model"] = MODEL_TYPE
     df["evaluation"] = "montecarlo"
-    df.to_csv(f"metrics/montecarlo_{MODEL_TYPE}_iteration_results.csv", index=False)
+
+    path = Path(f"metrics/{config.tumor}")
+    path.mkdir(parents=True, exist_ok=True)
+
+    df.to_csv(f"{path}/montecarlo_{MODEL_TYPE}_iteration_results.csv", index=False)
 
 
 def summarize_results(results):
@@ -282,7 +286,7 @@ def summarize_results(results):
         })
 
     summary_df = pd.DataFrame(rows)
-    summary_df.to_csv(f"metrics/montecarlo_{MODEL_TYPE}_summary_results.csv", index=False)
+    summary_df.to_csv(f"metrics/{config.tumor}/montecarlo_{MODEL_TYPE}_summary_results.csv", index=False)
 
     logging.info("\n===== FINAL RESULTS =====")
     logging.info(summary_df)
