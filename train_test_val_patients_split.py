@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 import config
 
 def get_available_datasets():
-    """Return all subfolders inside original_dataset/ so the dataset available"""
+    """Return all subfolders inside {config.DATASET}/ so the dataset available"""
     if not os.path.isdir(config.DATASET):
         return []
 

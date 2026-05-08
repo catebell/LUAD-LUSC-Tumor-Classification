@@ -6,11 +6,11 @@ import seaborn as sns
 
 from utility_but_useless_scripts.multiomics_graph_creation import ppi_score_threshold
 
-CNV_DIR = "../../files/CNV"
+CNV_DIR = f"../../{config.FILES}/{config.tumor}/CNV"
 OUTPUT_DIR = "weight_edges/CNV"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-SPLIT_FILE = "../../files/clinical/patient_split_cleaned.csv"
+SPLIT_FILE = f"../../{config.FILES}/{config.tumor}/clinical/patient_split_cleaned.csv"
 
 STRING_EDGES_FILE = "../../STRING_downloaded_files/9606.protein.links.v12.0.txt"
 
@@ -28,7 +28,7 @@ print("Reading protein-aliases-gene file...")
 genes_mapping_df = pd.read_csv('../../STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 genes_mapping_df.rename(columns={"alias": "gene_name"}, inplace=True)
 
-file_mapping_df = pd.read_csv("../../files/clinical/file_case_mapping.tsv", sep="\t")
+file_mapping_df = pd.read_csv(f"../../{config.FILES}/{config.tumor}/clinical/file_case_mapping.tsv", sep="\t")
 split_df = pd.read_csv(SPLIT_FILE)
 train_case_ids = split_df.loc[split_df["split"]=="train", "cases.case_id"].astype(str).unique()
 

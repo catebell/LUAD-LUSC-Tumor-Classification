@@ -19,7 +19,7 @@ def main():
 
     # PROTEINS LINKS
     # file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
-    # --> 9606.protein.links file under INTERACTION DATA, place the .txt extracted into original_dataset/
+    # --> 9606.protein.links file under INTERACTION DATA, place the .txt extracted into {config.DATASET}/
     print("Reading protein-links file...")
     protein_links_df = pd.read_csv('STRING_downloaded_files/9606.protein.links.v12.0.txt', sep=' ')
 

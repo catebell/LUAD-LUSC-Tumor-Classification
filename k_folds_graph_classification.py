@@ -17,7 +17,7 @@ import seaborn as sns
 from torch_geometric.nn import global_mean_pool
 
 from PatientGraphDataset import PatientGraphDataset
-from models.BasicGraphConvGNN import GNN
+from models.BasicGraphConvGNN import BasicGraphConvGNN
 from models.GINEConvGNN import GINEConvGNN
 from models.GAT import GAT
 from models.MLP import MLP
@@ -42,7 +42,7 @@ torch.cuda.empty_cache()
 
 
 def get_available_datasets():
-    """Return all subfolders inside original_dataset/ so the dataset available"""
+    """Return all subfolders inside {config.DATASET}/ so the dataset available"""
     if not os.path.isdir(config.DATASET):
         return []
 
@@ -104,8 +104,11 @@ def load_model(model_name, num_classes, device):
 
     if model_name in ["GINEConvGNN", "GAT"]:
         model = model_class(num_node_features=5, num_edge_features=3, hidden_channels=64, num_classes=num_classes)
+    elif model_name == "BasicGraphConvGNN":
+        model = model_class(num_node_features=5, hidden_channels=64, num_classes=num_classes)
     elif model_name == "MLP":
-        model = model_class(num_patient_features=num_patient_features, hidden_channels = 64, num_classes=num_classes)
+        #model = model_class(num_patient_features=num_patient_features, hidden_channels = 64, num_classes=num_classes)
+        model = model_class(num_patient_features=5, hidden_channels=64, num_classes=num_classes)
     elif model_name == "MultiModalGNN":
         model = model_class(num_node_features=5, num_edge_features=3, clinical_input_dim=num_patient_features,
                             hidden_channels=64, num_classes=num_classes)
@@ -190,7 +193,7 @@ def train(model, loader, optimizer, criterion):
 
         if model.__class__ == GINEConvGNN or model.__class__ == GAT:
             out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
-        elif model.__class__ == GNN:
+        elif model.__class__ == BasicGraphConvGNN:
             out = model(data_copy.x, data_copy.edge_index, data_copy.batch)
         elif model.__class__ == MLP:
             # out = model(data_copy.clinical)  # just clinical features
@@ -222,7 +225,7 @@ def validate(model, loader, criterion):
         with torch.no_grad():
             if model.__class__ == GINEConvGNN or model.__class__ == GAT:
                 out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
-            elif model.__class__ == GNN:
+            elif model.__class__ == BasicGraphConvGNN:
                 out = model(data_copy.x, data_copy.edge_index, data_copy.batch)
             elif model.__class__ == MLP:
                 # out = model(data_copy.clinical)  # just clinical features
@@ -254,7 +257,7 @@ def evaluate(model, loader):
 
             if model.__class__ == GINEConvGNN or model.__class__ == GAT:
                 out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
-            elif model.__class__ == GNN:
+            elif model.__class__ == BasicGraphConvGNN:
                 out = model(data_copy.x, data_copy.edge_index, data_copy.batch)
             elif model.__class__ == MLP:
                 #out = model(data_copy.clinical)  # just clinical features
@@ -402,7 +405,7 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
                 #f"Val Class 1 (LUSC) Precision: {val_report['1']['precision']:.4f}"
             )
 
-            torch.save(model.state_dict(), f'{dataset_name}_{model_name}_model_fold_{fold + 1}.pth')
+            torch.save(model.state_dict(), f'{dataset_name}_{model_name}_fold_{fold + 1}.pth')
             logging.info("--- Found and saved a better model! ---\n")
 
         if early_stopping_counter > 20:
@@ -412,7 +415,7 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
             early_stopping_counter += 1
 
     # best model found in this fold tested on the fixed evaluate set
-    model.load_state_dict(torch.load(f'{dataset_name}_model_fold_{fold + 1}.pth'))
+    model.load_state_dict(torch.load(f'{dataset_name}_{model_name}_fold_{fold + 1}.pth'))
     fold_test_metrics, test_report, all_targets, all_preds = evaluate(model, test_loader)
     fold_results.append(fold_test_metrics)
     cumulative_targets.extend(all_targets)

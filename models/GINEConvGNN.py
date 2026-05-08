@@ -4,8 +4,8 @@ import torch.nn.functional as F
 
 
 class GINEConvGNN(torch.nn.Module):
-    def __init__(self, num_node_features, num_edge_features, hidden_channels):
-        super(CancerGNN, self).__init__()
+    def __init__(self, num_node_features, num_edge_features, hidden_channels, num_classes):
+        super(GINEConvGNN, self).__init__()
 
         # Layer 1
         nn1 = torch.nn.Sequential(
@@ -25,7 +25,7 @@ class GINEConvGNN(torch.nn.Module):
         self.conv2 = GINEConv(nn2, edge_dim=num_edge_features)
         self.bn2 = BatchNorm(hidden_channels)
 
-        self.classifier = torch.nn.Linear(hidden_channels, 2)
+        self.classifier = torch.nn.Linear(hidden_channels, num_classes)
 
     def forward(self, x, edge_index, edge_attr, batch):
         # Primo passaggio

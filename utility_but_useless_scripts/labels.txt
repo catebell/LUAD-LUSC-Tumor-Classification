@@ -22,7 +22,7 @@ dataset/
     RNA/
         757 patients folders
 
---> we will use files extracted into files/
+--> we will use files extracted into {config.FILES}/
 
 SORT IN CLASSES LUAD/LUSC AND FILE EXTRACTION/CREATION:
    - Extract all files from the directories CNV, RNA and methylation

@@ -10,7 +10,7 @@ from methylation_manifest_to_tsv import create_meth_manifest
 from graph_classification import load_model, train_and_save_model
 
 def get_available_datasets():
-    """Read folders inside original_dataset/ to know the dataset available"""
+    """Read folders inside {config.DATASET}/ to know the dataset available"""
 
     if not os.path.isdir(config.DATASET):
         return []

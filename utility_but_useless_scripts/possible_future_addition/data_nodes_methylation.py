@@ -8,7 +8,7 @@ from utility_but_useless_scripts.multiomics_graph_creation import ppi_score_thre
 # CONFIGURAZIONE (meno restrittiva)
 # ===============================
 
-METHYLATION_DIR = "../../files/methylation"
+METHYLATION_DIR = f"../../{config.FILES}/{config.tumor}/methylation"
 OUTPUT_DIR = "weight_edges/methylation"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 

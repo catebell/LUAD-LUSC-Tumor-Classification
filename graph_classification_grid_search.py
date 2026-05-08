@@ -9,6 +9,7 @@ import importlib
 import itertools
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from torch_geometric.loader import DataLoader
+from torch_geometric.nn import global_mean_pool
 from PatientGraphDataset import PatientGraphDataset
 
 import warnings
@@ -31,7 +32,7 @@ max_epochs = 100
 
 # params grid for GridSearch
 params_grid = {
-    'lr': [0.001, 0.0001],
+    'lr': [0.01, 0.001, 0.0001],
     'hidden_channels': [32, 64, 128],
     #'batch_size': [4, 8],
 }
@@ -41,7 +42,7 @@ keys, values = zip(*params_grid.items())
 combinations = [dict(zip(keys, v)) for v in itertools.product(*values)]
 
 def get_available_datasets():
-    """Return all subfolders inside original_dataset/ so the dataset available"""
+    """Return all subfolders inside {config.DATASET}/ so the dataset available"""
     if not os.path.isdir(config.DATASET):
         return []
 
@@ -133,16 +134,20 @@ def load_model(model_name, device, params):
     model_class = getattr(module, model_name)
 
     clinical_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/features_considered.tsv', sep='\t')
-    num_patient_features = len(clinical_df.columns.tolist()[2:])
+    #num_patient_features = len(clinical_df.columns.tolist()[2:]) TODO change here
+    num_patient_features = 53
 
     hidden_channels = params.get('hidden_channels', 64)
 
     if model_name in ["GINEConvGNN", "GAT"]:
         model = model_class(num_node_features=5, num_edge_features=3, hidden_channels=hidden_channels, num_classes=num_classes)
+    elif model_name == "BasicGraphConvGNN":
+        model = model_class(num_node_features=5, hidden_channels=hidden_channels, num_classes=num_classes)
     elif model_name == "MLP":
-        model = model_class(num_patient_features=num_patient_features, hidden_channels= hidden_channels, num_classes=num_classes)
-    elif model_name == "MultiModalGNN": #TODO change 53 in num_patient_features
-        model = model_class(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=hidden_channels, num_classes=num_classes)
+        #model = model_class(num_patient_features=num_patient_features, hidden_channels= hidden_channels, num_classes=num_classes)
+        model = model_class(num_patient_features=5, hidden_channels=64, num_classes=num_classes)
+    elif model_name == "MultiModalGNN":
+        model = model_class(num_node_features=5, num_edge_features=3, clinical_input_dim=num_patient_features, hidden_channels=hidden_channels, num_classes=num_classes)
     else:
         model = model_class()
 
@@ -255,8 +260,13 @@ def train(model, optimizer):
         # perform a single forward pass
         if model_name in ["GINEConvGNN", "GAT"]:
             out = model(data.x, data.edge_index, data.edge_attr, data.batch)  # just graph
+        elif model_name == "BasicGraphConvGNN":
+            out = model(data.x, data.edge_index, data.batch)
         elif model_name == "MLP":
-            out = model(data.clinical) # just clinical features
+            # out = model(data.clinical)  # just clinical features
+            # need to aggregate graph nodes
+            x_pooled = global_mean_pool(data.x, data.batch)
+            out = model(x_pooled)
         else:  # MultiModalGNN
             out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch) # both
 
@@ -283,8 +293,13 @@ def validate(model):
         with torch.no_grad():
             if model_name in ["GINEConvGNN", "GAT"]:
                 out = model(data.x, data.edge_index, data.edge_attr, data.batch)  # just graph
+            elif model_name == "BasicGraphConvGNN":
+                out = model(data.x, data.edge_index, data.batch)
             elif model_name == "MLP":
-                out = model(data.clinical)  # just clinical features
+                # out = model(data.clinical)  # just clinical features
+                # need to aggregate graph nodes
+                x_pooled = global_mean_pool(data.x, data.batch)
+                out = model(x_pooled)
             else:  # MultiModalGNN
                 out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)  # both
 
@@ -307,8 +322,13 @@ def test(model, loader):
          with torch.no_grad():
              if model_name in ["GINEConvGNN", "GAT"]:
                  out = model(data.x, data.edge_index, data.edge_attr, data.batch)  # just graph
+             elif model_name == "BasicGraphConvGNN":
+                 out = model(data.x, data.edge_index, data.batch)
              elif model_name == "MLP":
-                 out = model(data.clinical)  # just clinical features
+                 # out = model(data.clinical)  # just clinical features
+                 # need to aggregate graph nodes
+                 x_pooled = global_mean_pool(data.x, data.batch)
+                 out = model(x_pooled)
              else:  # MultiModalGNN
                  out = model(data.x, data.edge_index, data.edge_attr, data.clinical, data.batch)  # both
 

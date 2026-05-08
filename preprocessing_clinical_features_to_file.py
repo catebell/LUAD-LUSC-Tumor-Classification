@@ -43,7 +43,7 @@ EXCLUDED_EXPOSURE = [
 ]
 
 def get_available_datasets():
-    """Return subfolders inside original_dataset/"""
+    """Return subfolders inside {config.DATASET}/"""
     if not os.path.isdir(config.DATASET):
         return []
 

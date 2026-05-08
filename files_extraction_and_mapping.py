@@ -6,7 +6,7 @@ import pandas as pd
 import argparse
 import config
 
-""" Extract files from original_dataset/<dataset>/ into files/<dataset>/ """
+""" Extract files from {config.DATASET}/<dataset>/ (es. original_dataset/lung/) into {config.FILES}/<dataset>/ (es. files/lung/)"""
 
 def build_paths(dataset_name):
     """Build the paths for the dataset and the files"""
@@ -16,7 +16,7 @@ def build_paths(dataset_name):
     return dataset_dir, files_dir
 
 def get_available_datasets():
-    """Return all subfolders inside original_dataset/ so the dataset available"""
+    """Return all subfolders inside {config.DATASET}/ so the dataset available"""
     if not os.path.isdir(config.DATASET):
         return []
 

@@ -39,9 +39,9 @@ logging.basicConfig(
 
 ppi_score_threshold = 0.7  # minimum interaction probability score to create edges
 
-file_mapping_df = pd.read_csv('../files/clinical/file_case_mapping.tsv', sep='\t').dropna()
+file_mapping_df = pd.read_csv(f'../{config.FILES}/{config.tumor}/clinical/file_case_mapping.tsv', sep='\t').dropna()
 
-clinical_features_df = pd.read_csv('../files/clinical/features_encoded.tsv', sep='\t')
+clinical_features_df = pd.read_csv(f'../{config.FILES}/{config.tumor}/clinical/features_encoded.tsv', sep='\t')
 # map {case_id --> tumor class (LUAD-LUSC)}
 labels_dict = dict(zip(clinical_features_df['case_id'], clinical_features_df['project_id'].astype(int)))
 
@@ -57,7 +57,7 @@ node_map = {node: i for i, node in enumerate(unique_nodes)}  # TODO maybe with a
 
 # PROTEINS LINKS
 # file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
-# --> 9606.protein.links file under INTERACTION DATA, place the .txt extracted into original_dataset/
+# --> 9606.protein.links file under INTERACTION DATA, place the .txt extracted into STRING_downloaded_files/
 logging.info("Reading protein-links file...")
 protein_links_df = pd.read_csv('../STRING_downloaded_files/9606.protein.links.v12.0.txt', sep=' ')
 

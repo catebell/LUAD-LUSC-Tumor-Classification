@@ -14,7 +14,6 @@ from sklearn.metrics import (
     roc_auc_score,
     precision_score,
     recall_score,
-    average_precision_score,
     confusion_matrix
 )
 
@@ -29,6 +28,8 @@ from models.MultiModalGNN import MultiModalGNN
 import config
 
 warnings.filterwarnings("ignore")
+
+MODEL_TYPE = "GAT"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,8 +47,6 @@ EPOCHS = 100
 BATCH_SIZE = 4
 LR = 0.001
 SEED = 42
-
-MODEL_TYPE = "MultiModalGNN"
 
 
 def set_seed(seed):
@@ -68,9 +67,9 @@ def build_model(n_classes):
     num_patient_features = len(clinical_df.columns.tolist()[2:])
 
     if MODEL_TYPE == "GAT":
-        model = GAT(num_node_features=5, num_edge_features=3, num_classes=n_classes, hidden_channels=64)
+        model = GAT(num_node_features=5, num_edge_features=3, hidden_channels=64, num_classes=n_classes)
     elif MODEL_TYPE == "MLP":
-        model = MLP(num_patient_features=num_patient_features, num_classes=n_classes)
+        model = MLP(num_patient_features=num_patient_features, hidden_channels= 64, num_classes=n_classes)
     elif MODEL_TYPE == "MultiModalGNN":
         model = MultiModalGNN(
             num_node_features=5,

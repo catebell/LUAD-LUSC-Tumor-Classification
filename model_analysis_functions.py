@@ -3,12 +3,13 @@ import os
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import torch
 
+import config
 from graph_classification_grid_search import test, clinical_mean, clinical_std, x_mean, x_std, e_min, e_max, device, \
-    test_loader
-
+    test_loader, unique_labels
 from models.GAT import GAT
 from models.MLP import MLP
 from models.MultiModalGNN import MultiModalGNN
@@ -17,10 +18,12 @@ from models.MultiModalGNN import MultiModalGNN
 Functions suggested by Gemini.
 '''
 
+dataset_name = config.tumor
+
 #model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
 model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
 
-node_map = pd.read_csv('string_downloaded_files/gene_ids_mapped.tsv', sep='\t')
+node_map = pd.read_csv('STRING_downloaded_files/gene_ids_mapped.tsv', sep='\t')
 node_map = dict(zip(node_map['gene_id'], node_map['gene_id_mapped']))
 
 def explain_clinical_importance(model, device, loader, clinical_features_names):
@@ -32,7 +35,7 @@ def explain_clinical_importance(model, device, loader, clinical_features_names):
     baseline_acc = test(model, loader)
     feature_importances = {}
 
-    features_df = pd.read_csv(f'files/{config.tumor}/clinical/features_considered.tsv', sep='\t')
+    features_df = pd.read_csv(f'{config.FILES}/{config.tumor}/clinical/features_considered.tsv', sep='\t')
 
     features = features_df.columns.values[2:]
 
@@ -329,7 +332,9 @@ def collect_gene_data(loader, target_dict, ensg_to_idx, feature_idx):
                 patient_data[ensg] = np.nan
         rows.append(patient_data)
 
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    df['label'] = df['label'].astype(int)  # Forza il tipo intero per le classi
+    return df
 
 
 def plot_boxplot(df, genes, i, filename = None):
@@ -340,6 +345,12 @@ def plot_boxplot(df, genes, i, filename = None):
         3: 'B-VALUE'
     }
 
+    features_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/features_considered.tsv', sep='\t')
+    classes = sorted(features_df["project.project_id"].dropna().unique())
+    # for project.project_id, remap tumor class to numbers
+    class_mapping = {label: i for i, label in enumerate(classes)}
+    class_mapping_inv = {v: k for k, v in class_mapping.items()}
+
     plt.figure(figsize=(20, 7))
     plt.rc('font', size=13)
     for j, (ensg, name) in enumerate(genes.items(), 1):
@@ -347,11 +358,11 @@ def plot_boxplot(df, genes, i, filename = None):
         sns.boxplot(x='label', y=ensg, data=df, palette=['#e74c3c', '#3498db'])
         sns.stripplot(x='label', y=ensg, data=df, color='black', size=2, alpha=0.3)
         plt.title(f"{ensg}", size=16)
-        plt.xlabel("LUAD vs LUSC", size=16)
+        plt.xticks(ticks=unique_labels, labels=[str(class_mapping_inv.get(l)) for l in unique_labels])
         plt.ylabel(f"{features.get(i)}", size=16)
 
     plt.tight_layout()
-    plt.legend(['LUAD', 'LUSC'])
+    plt.legend([str(class_mapping_inv.get(l)) for l in unique_labels])
     if filename is not None:
         if not os.path.exists("analysis_plots"):
             os.mkdir('analysis_plots')
@@ -362,13 +373,14 @@ def plot_boxplot(df, genes, i, filename = None):
         plt.savefig(f'analysis_plots/{filename}')
     else:
         plt.show()
+    logging.info("DONE\n\n")
 
 
 logging.info("--- Feature Importance analysis (Best Model Saved) ---\n")
 
-#model.load_state_dict(torch.load('examples/example1_model_with_analysis/best_k_fold_gnn.pth', map_location=device))  # currently model_fold_3.pth
-#model.load_state_dict(torch.load('example2_model_with_analysis/model_fold_2.pth', map_location=device))  # currently model_fold_3.pth
-model.load_state_dict(torch.load('example3_analysis_MultiModal/best_MultiModalGNN_lung_val_0.94.pth', map_location=device))
+#model.load_state_dict(torch.load('examples/example1_model_with_analysis/model_fold_3.pth', map_location=device))
+#model.load_state_dict(torch.load('examples/example2_model_with_analysis/model_fold_2.pth', map_location=device))
+model.load_state_dict(torch.load('examples/example3_analysis_MultiModal/best_MultiModalGNN_lung_val_0.94.pth', map_location=device))
 
 features_encoded_df = pd.read_csv(f'{config.FILES}/{config.tumor}/clinical/features_encoded.tsv', sep='\t')
 
@@ -385,7 +397,7 @@ gene_alias.set_index('gene_id_mapped', inplace=True)
 #edge_features_importance = explain_edge_features_importance(model, device, test_loader)
 
 #gene_imp, edges_imp = get_genes_and_edges_attention_weights(model, device, test_loader, node_map_inv)  # (GAT Attention)
-
+'''
 gene_sal = get_gene_saliency(model, device, test_loader, node_map_inv)
 
 top_genes = {}
@@ -393,14 +405,14 @@ top_genes = {}
 for gene_id, score in gene_sal[:5]:
     names = gene_alias[gene_alias['gene_id'] == gene_id]['names'].iloc[0]
     top_genes[gene_id] = names    
-
-# top 5 genes for saliency (retrieved for speed)
+'''
+# some arbitrary genes to plot (for speed)
 genes_to_plot = {
-    'ENSG00000185201',
-    'ENSG00000205420',
-    'ENSG00000011600',
-    'ENSG00000173599',
-    'ENSG00000019582',
+    'ENSG00000185201': 'geneA',
+    'ENSG00000205420': 'geneB',
+    'ENSG00000011600': 'geneC',
+    'ENSG00000173599': 'geneD',
+    'ENSG00000019582': 'geneE',
 }
 
 for i in range(0,4):
@@ -410,6 +422,5 @@ for i in range(0,4):
         2: 'cnv_min_max_diff',
         3: 'beta_value'
     }
-    df_plot = collect_gene_data(test_loader, top_genes, node_map, i)
-    plot_boxplot(df_plot, top_genes, i, f"genes_{feature_dict.get(i)}_boxplot.png")
-
+    df_plot = collect_gene_data(test_loader, genes_to_plot, node_map, i)
+    plot_boxplot(df_plot, genes_to_plot, i, f"genes_{feature_dict.get(i)}_boxplot.png")

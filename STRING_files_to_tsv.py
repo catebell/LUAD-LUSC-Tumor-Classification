@@ -26,7 +26,7 @@ def main():
 def create_gene_aliases_proteins_ids_mapping_file(force=False):
     """Run to re-create the 9606.protein.aliases.gene tsv file with protein_id, gene_name and gene_id (retrieved using
     mygene lib) mapping, excluding data not useful.
-    Original STRING file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens and then first 9606.protein.aliases file under INTERACTION DATA. The txt extracted must be put into original_dataset/
+    Original STRING file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens and then first 9606.protein.aliases file under INTERACTION DATA. The txt extracted must be put into {config.DATASET}/
     Output will be saved in 'STRING_downloaded_files/9606.protein.aliases.gene.tsv'.
     Takes a lot of time."""
 
@@ -71,7 +71,7 @@ def create_gene_aliases_proteins_ids_mapping_file(force=False):
 
     # PROTEINS ALIASES
     # file downloaded from https://string-db.org/cgi/download.pl selecting organism = Homo sapiens
-    # --> 9606.protein.aliases file under ACCESSORY DATA, place the .txt extracted into original_dataset/
+    # --> 9606.protein.aliases file under ACCESSORY DATA, place the .txt extracted into {config.DATASET}/
     print("Reading protein-aliases file...")
     df_iter = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.v12.0.txt', sep='\t',
                           usecols=['#string_protein_id', 'alias'], chunksize=10000)  # Process 50000 rows at a time
