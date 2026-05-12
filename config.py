@@ -9,6 +9,7 @@ model = "MultiModalGNN"
 #model = "BasicGraphConvGNN"
 #model = "GINEConvGNN"
 #model = "MLP"
+#model = "MoAGNN"
 
 '''
 Predefined paths, name of the directories referenced through the code 
