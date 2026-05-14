@@ -23,6 +23,7 @@ from models.GAT import GAT
 from models.MLP import MLP
 from models.GCN import GCN
 from models.MultiModalGNN import MultiModalGNN
+from models.MoAGNN import MoAGNN
 import config
 
 import warnings
@@ -117,6 +118,19 @@ def load_model(model_name, num_classes, device):
     elif model_name == "MultiModalGNN":
         model = model_class(num_node_features=5, num_edge_features=3, clinical_input_dim=num_patient_features,
                             hidden_channels=64, num_classes=num_classes)
+    elif model_name == "MoAGNN":
+        # create an empty class Args
+        class Args:
+            pass
+
+        args = Args()
+        args.num_features = 5
+        args.nhid = 128
+        args.num_classes = num_classes
+        args.pooling_ratio = 0.5
+        args.dropout_ratio = 0.0
+
+        model = model_class(args)
     else:
         model = model_class()
 
@@ -190,9 +204,10 @@ def train(model, loader, optimizer, criterion):
 
         # StandardScale: (x - mean) / std
         data_copy.x[:, :-1] = (data_copy.x[:, :-1] - x_mean) / (x_std + 1e-6)
-        #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
-        # MinMaxScaler: (x - min) / (max - min)
-        data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
+        if model.__class__ != MoAGNN:
+            #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+            # MinMaxScaler: (x - min) / (max - min)
+            data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
         optimizer.zero_grad()
 
@@ -205,6 +220,8 @@ def train(model, loader, optimizer, criterion):
             # need to aggregate graph nodes
             x_pooled = global_mean_pool(data_copy.x, data_copy.batch)
             out = model(x_pooled)
+        elif model.__class__ == MoAGNN:
+            out = model(data_copy)
         else:  # MultiModalGNN
             out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.clinical,
                         data_copy.batch)  # both
@@ -224,8 +241,10 @@ def validate(model, loader, criterion):
         data_copy = data_copy.to(device)
 
         data_copy.x[:, :-1] = (data_copy.x[:, :-1] - x_mean) / (x_std + 1e-6)
-        #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
-        data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
+        if model.__class__ != MoAGNN:
+            #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+            data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
+        data_copy.x[:, :-1] = (data_copy.x[:, :-1] - x_mean) / (x_std + 1e-6)
 
         with torch.no_grad():
             if model.__class__ == GINEConvGNN or model.__class__ == GAT:
@@ -237,6 +256,8 @@ def validate(model, loader, criterion):
                 # need to aggregate graph nodes
                 x_pooled = global_mean_pool(data_copy.x, data_copy.batch)
                 out = model(x_pooled)
+            elif model.__class__ == MoAGNN:
+                out = model(data_copy)
             else:  # MultiModalGNN
                 out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.clinical,
                             data_copy.batch)  # both
@@ -257,8 +278,9 @@ def evaluate(model, loader):
             data_copy = data.clone().to(device)
 
             data_copy.x[:, :-1] = (data_copy.x[:, :-1] - x_mean) / (x_std + 1e-6)
-            #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
-            data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
+            if model.__class__ != MoAGNN:
+                #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+                data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
             if model.__class__ == GINEConvGNN or model.__class__ == GAT:
                 out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
@@ -269,11 +291,16 @@ def evaluate(model, loader):
                 # need to aggregate graph nodes
                 x_pooled = global_mean_pool(data_copy.x, data_copy.batch)
                 out = model(x_pooled)
+            elif model.__class__ == MoAGNN:
+                out = model(data_copy)
             else:  # MultiModalGNN
                 out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.clinical,
                             data_copy.batch)  # both
 
-            probs = torch.softmax(out, dim=1)
+            if model.__class__ == MoAGNN:
+                probs = torch.exp(out)
+            else:
+                probs = torch.softmax(out, dim=1)
             pred = out.argmax(dim=1)  # use the class with the highest probability
 
             all_targets.extend(data_copy.y.cpu().numpy())
@@ -350,23 +377,28 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
     model = load_model(model_name, len(unique_labels), device)
     logging.info(model)
 
-    # optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
-    optimizer = get_optimizer(model, 0.001, 1e-4)
+    if model.__class__ == MoAGNN:
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.0005, weight_decay=1e-4)
+    else:
+        optimizer = get_optimizer(model, 0.001, 1e-4)
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
 
     # different weights to classes based on number of samples
-    
-    #train_labels = [data.y.item() for data in train_dataset]
-    #counts = Counter(train_labels)
-    #weights = [0] * len(counts)
-    #for i in range(len(counts)):
-    #    # N_tot / (N_classes * N_elem_of_class_n)
-    #    weights[i] = len(train_labels) / (len(counts) * counts[i])
-    #weights = torch.tensor(weights, dtype=torch.float).to(device)
-    #criterion = torch.nn.CrossEntropyLoss(weight=weights, label_smoothing=0.1)
-    
-    criterion = torch.nn.CrossEntropyLoss()
+    '''
+    train_labels = [data.y.item() for data in train_dataset]
+    counts = Counter(train_labels)
+    weights = [0] * len(counts)
+    for i in range(len(counts)):
+        # N_tot / (N_classes * N_elem_of_class_n)
+        weights[i] = len(train_labels) / (len(counts) * counts[i])
+    weights = torch.tensor(weights, dtype=torch.float).to(device)
+    criterion = torch.nn.CrossEntropyLoss(weight=weights, label_smoothing=0.1)
+    '''
+    if model.__class__ == MoAGNN:
+        criterion = torch.nn.NLLLoss()
+    else:
+        criterion = torch.nn.CrossEntropyLoss()
 
     node_feat_scaler = StandardScaler()
     edge_attr_scaler = MinMaxScaler()
@@ -374,7 +406,7 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
 
     # scalers fitted only on evaluate data
     for data in train_loader:
-        node_feat_scaler.partial_fit(data.x[:, :-1].numpy())  # only first 4 cols (5 is binary mask)
+        node_feat_scaler.partial_fit(data.x[:, :4].numpy())  # only first 4 cols (5 is binary mask)
         edge_attr_scaler.partial_fit(data.edge_attr[:, 2].numpy().reshape(-1, 1))  # only cols of number of links
         #clinical_feat_scaler.partial_fit(data.clinical[:, :3].numpy())  # only numerical feature
 
