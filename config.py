@@ -1,5 +1,5 @@
 """
-Change the tumor name and the model name here
+Change the tumor name, the model name, and the training mode here
 """
 tumor = "lung"
 #tumor = "kidney"
@@ -10,6 +10,10 @@ model = "MultiModalGNN"
 #model = "GINEConvGNN"
 #model = "MLP"
 #model = "MoAGNN"
+
+mode = "kfold"
+#mode = "gridsearch"
+#mode = "montecarlo"
 
 '''
 Predefined paths, name of the directories referenced through the code 

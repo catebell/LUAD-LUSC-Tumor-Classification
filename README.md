@@ -1,6 +1,6 @@
-→ [Paper](https://drive.google.com/file/d/1ZrWtH_-e9zchFOfaYtB87EtBTR5CzmDU/view?usp=drive_link)
-- [click here](https://drive.google.com/file/d/1T_uj8j4KXscNW_96eOw5EVnfU75Fwzr9/view?usp=drive_link) to download our original dataset retrieved from GCD Data Portal
-- [click here](https://drive.google.com/file/d/1mIzf35TOcNY9JKtysnPBZnZqJvtpP_q_/view?usp=drive_link) to download the three folders [train/val/test] of our processed graphs Dataset
+→ [Paper]()
+- [click here]() to download our original dataset retrieved from GCD Data Portal
+- [click here](https://drive.google.com/file/d/1vup2z04FoucfkQkzjX4i5d7ChMva69Ag/view?usp=drive_link) to download our processed graphs Dataset
 
 ## Architecture
 
@@ -13,7 +13,6 @@
 </p>
 
 ## Explainability
-
 [model_analysis_functions.py](model_analysis_functions.py) provides functions for the interpretation of the learned models decisional processes and what features they focus on:
 
 - Graph branch attention scores (get_gene_attention_weights()) retrieves the attention scores given to each gene by the GAT-GNN layers, with higher scores to the genes that the model learned to monitor more closely.
@@ -50,11 +49,11 @@
 
 Expression (RNA) values | Other biomarkers
 :-------------------------:|:-------------------------:
-![expr1](https://github.com/catebell/LUAD-LUSC-Tumor-Classification/blob/master/example1_model_with_analysis/analysis_plots/genes_expression_boxplot.png)  |  ![expr2](https://github.com/user-attachments/assets/9f1a3287-5033-4d3e-ad9a-bb44c68503bb)
+![expr1](images/genes_expression_boxplot.png)  |  ![expr2](images/expressions_boxplot.png)
 
 CNV values | Methylation values
 :-------------------------:|:-------------------------:
-![cnv](https://github.com/catebell/LUAD-LUSC-Tumor-Classification/blob/master/example1_model_with_analysis/analysis_plots/genes_cnv_boxplot.png)  |  ![](https://github.com/catebell/LUAD-LUSC-Tumor-Classification/blob/master/example1_model_with_analysis/analysis_plots/genes_beta_value_boxplot.png)
+![cnv](images/genes_cnv_boxplot.png)  |  ![meth](images/genes_expression_boxplot.png)
 
 </p>
 
@@ -74,124 +73,189 @@ CNV values | Methylation values
 
 ## How to execute
 
+### Running the Script
+To run the script [main.py](main.py) it's possible to use or the command-line arguments or a configuration file.
+
+#### With a Configuration File
+The [config.py](config.py) file defines the main global settings used throughout the project, including dataset selection, model choice, training mode and directory paths.
+The settings can be modified by editing the file:
+- `tumor`, specifies the type of tumor to analyze. Only one value should be active at a time (uncomment the desired option).
+
+- `model`, defines the model architecture used for training. Only one value should be active at a time (uncomment the desired option).
+
+- `mode`, sets the execution strategy of the pipeline:
+  - `kfold`, k-fold cross-validation
+  - `gridsearch`, graph classification using grid search
+  - `montecarlo`, Monte Carlo evaluation
+
+The path configuration are defined in the `PATHS` dictionary: 
+- `DATASET`, path to the folder containing the original dataset.
+
+- `FILES`, path where processed files are saved and loaded during execution.
+
+> ⚠️ Changes here affect the entire pipeline execution.
+
+#### With Command-Line Arguments
+Use a terminal and execute the following command:
+```bash
+python .\main.py --dataset <dataset_name> --model-name <model_name> --mode <mode> [--force]
+```
+Where the arguments are:
+- `--dataset`, specifies the dataset to be used for the pipeline (example: lung or kidney). The available options are automatically detected from the **config.DATASET/** directory at runtime.
+
+- `--model-name`, defines which model will be used for training and evaluation. The list of available models is dynamically loaded from the **models/** directory (each **.py** file represents a model).
+
+- `--mode`, sets the execution strategy of the pipeline:
+  - `kfold`: performs k-fold cross-validation
+  - `gridsearch`: runs graph classification using grid search
+  - `montecarlo`: performs Monte Carlo-based evaluation
+
+- `--force`, it's a boolean flag. If enabled, forces the regeneration of the file **STRING_downloaded_files/9606.protein.aliases.gene.tsv** even if it already exists
+
+> 🆘 With the help option you can display all available arguments and their descriptions using:
+>
+> ```bash
+> python .\main.py --help
+> ```
+
+> ⚠️ If you don't use the command-line arguments, the default values defined in the [config.py](config.py) file will be used.
+
 ### Get the data
 
-1) The dataset must be downloaded from the desired source and saved in a folder named **original_dataset/**. For example, our data (click [here](https://drive.google.com/file/d/1T_uj8j4KXscNW_96eOw5EVnfU75Fwzr9/view?usp=drive_link) to download) was originally in this form:
+1) The dataset must be downloaded from the desired source, like GDC Data Portal (https://portal.gdc.cancer.gov/), and saved in a folder named as the tumor selected. This folder must be put inside a folder called **original_dataset/**, see the variable **DATASET** inside the [config.py](config.py). For example, our data for the Lung and the Kidney tumor (click [here]() to download) was originally in this form:
 
-```
-original_dataset/
-    clinical/
-        clinical.tsv
-        exposure.tsv
-        LUAD_LUSC_metadata.json : file mapping, necessary to map exposure and clinical to CNV,RNA and methylation data (different file_id)
-    CNV/
-        722 patients folders
-    methylation/
-        758 patients folders
-    RNA/
-        757 patients folders
-```
+    ```
+    original_dataset/
+        lung/
+            clinical/
+                clinical.tsv
+                exposure.tsv
+                LUAD_LUSC_metadata.json : file mapping, necessary to map exposure and clinical to CNV,RNA and methylation data (different file_id)
+            CNV/
+                722 patients folders
+            methylation/
+                758 patients folders
+            RNA/
+                757 patients folders
+        kidney/
+            clinical/
+                clinical.tsv
+                exposure.tsv
+                KIRC_KIRP_KICH_metadata.json : file mapping, necessary to map exposure and clinical to CNV,RNA and methylation data (different file_id)
+            CNV/
+                2781 patients folders
+            methylation/
+                665 patients folders
+            RNA/
+                1028 patients folders
+    ```
 
-2) Extract the correctly formatted files in a new **files/** folder by executing [files_extraction_and_mapping.py](files_extraction_and_mapping.py). This will be our new reference folder:
+2) By executing the script [main.py](main.py) it's possible to:
 
-```
-files/
-    clinical/
-        file_case_mapping.tsv
-        omics_files.tsv
-    CNV/
-        extracted patients .tsv files
-    methylation/
-        extracted patients .txt files
-    RNA/
-        extracted patients .tsv files
-```
+   1) Extract the correctly formatted files in a new **files/** folder, see the variable **FILES** inside the [config.py](config.py), using the `process_dataset` function, located in [files_extraction_and_mapping.py](files_extraction_and_mapping.py). This will be our new reference folder:
+      
+        ```
+        files/
+            lung/
+                clinical/
+                    file_case_mapping.tsv
+                    omics_files.tsv
+                CNV/
+                    extracted patients .tsv files
+                methylation/
+                    extracted patients .txt files
+                RNA/
+                    extracted patients .tsv files
+            kidney/
+                clinical/
+                    file_case_mapping.tsv
+                    omics_files.tsv
+                CNV/
+                    extracted patients .tsv files
+                methylation/
+                    extracted patients .txt files
+                RNA/
+                    extracted patients .tsv files
+        ```
+   2) We downloaded from the [STRING](https://string-db.org/cgi/download?sessionId=bUEKUGQV7g5H&species_text=Homo+sapiens&settings_expanded=0&min_download_score=0&filter_redundant_pairs=0&delimiter_type=txt) database the following files, used later on to retrieve genes properties and build the graphs based on their codified proteins (click to start the download):
+         - [9606.protein.aliases.v12.0.txt](https://stringdb-downloads.org/download/protein.links.v12.0/9606.protein.links.v12.0.txt.gz) 
+         - [9606.protein.links.v12.0.txt](https://stringdb-downloads.org/download/protein.aliases.v12.0/9606.protein.aliases.v12.0.txt.gz)
+   
+      → Put them in a new **STRING_downloaded_files/** folder and using the functions located in [STRING_files_to_tsv.py](STRING_files_to_tsv.py):
+         - 'create_gene_aliases_proteins_ids_mapping_file', creates **STRING_downloaded_files/9606.protein.aliases.gene.tsv**
+         - 'create_genes_id_mapping_file', creates **STRING_downloaded_files/gene_ids_mapped.tsv**.
+      > ⚠️ The execution of the first function can take a few hours. If the file already exists, it will be skipped.
+   
+   3) We need also a methylation manifest for the preprocessing of methylation data; we downloaded from the relative [Illumina support page](https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html) the one relative to the Illumina “450 K array” technology (click [here](https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv) to start the download). 
+    
+      → Put it in **methylation_manifests/originals_downloaded/** and using the function 'create_meth_manifest', located in [methylation_manifest_to_tsv.py](methylation_manifest_to_tsv.py), to extract only the necessary information correctly formatted.
 
-3) We downloaded from the [STRING](https://string-db.org/cgi/download?sessionId=bUEKUGQV7g5H&species_text=Homo+sapiens&settings_expanded=0&min_download_score=0&filter_redundant_pairs=0&delimiter_type=txt) database the following files, used later on to retrieve genes properties and build the graphs based on their codified proteins (click to start the download):
-- [9606.protein.aliases.v12.0.txt](https://stringdb-downloads.org/download/protein.links.v12.0/9606.protein.links.v12.0.txt.gz) 
-- [9606.protein.links.v12.0.txt](https://stringdb-downloads.org/download/protein.aliases.v12.0/9606.protein.aliases.v12.0.txt.gz)
 
-→ Put them in a new **STRING_downloaded_files/** folder and run [STRING_files_to_tsv.py](STRING_files_to_tsv.py): the first function creates **STRING_downloaded_files/9606.protein.aliases.gene.tsv**, the second one creates **STRING_downloaded_files/gene_ids_mapped.tsv**.
-> ⚠️ The execution of the first function can take a few hours.
+### Preprocessing and running the model
 
-4) We need also a methylation manifest for the preprocessing of methylation data; we downloaded from the relative [Illumina support page](https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html) the one relative to the Illumina “450 K array” technology (click [here](https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv) to start the download).
+Continue the execution of [main.py] (main.py) to preprocess the data:
 
-→ Put it in **methylation_manifests/originals_downloaded/** and run [methylation_manifest_to_tsv.py](methylation_manifest_to_tsv.py) to extract only the needed information correctly formatted.
+1) Use the functions 'build_features_considered' and 'build_features_encoded', located in [preprocessing_clinical_features_to_file.py](preprocessing_clinical_features_to_file.py), to obtain the following files:
+   ```
+   files/
+      lung/
+          clinical/
+              features_considered.tsv  ←
+              features_encoded.tsv  ←
+              file_case_mapping.tsv
+              omics_files.tsv
+      kidney/
+          clinical/
+              features_considered.tsv  ←
+              features_encoded.tsv  ←
+              file_case_mapping.tsv
+              omics_files.tsv
+   ```
 
+2) Use the function 'build_patient_split_cleaned', located in [train_test_patients_split.py](train_test_patients_split.py), to assign to each patient (case_id) a label [*train, val, test*]:
 
-### Preprocessing
+   ```
+   files/
+      lung/
+         clinical/
+            features_considered.tsv
+            features_encoded.tsv
+            file_case_mapping.tsv
+            omics_files.tsv
+            patient_split_cleaned.csv  ←
+      kidney/
+         clinical/
+            features_considered.tsv
+            features_encoded.tsv
+            file_case_mapping.tsv
+            omics_file.tsv
+            patient_split_cleaned.csv  ←
+   ```
+   
+3) Independently of the mode select, one of the following files [k_folds_graph_classification.py](k_folds_graph_classification.py), [graph_classification_grid_search.py](graph_classification_grid_search.py) or [montecarlo_graph_classification.py](montecarlo_graph_classification.py) will be run to create the patients graphs Dataset (if the folders do not already exist). The result will be this structure:
 
-1) Run [preprocessing_clinical_features_to_file.py](preprocessing_clinical_features_to_file.py) to obtain the following files:
+   ```
+   data_graphs_processed/
+       lung/
+          data_graphs_processed_test/
+          data_graphs_processed_train/
+          data_graphs_processed_validation/
+       kidney/
+          data_graphs_processed_test/
+          data_graphs_processed_train/
+          data_graphs_processed_validation/
+   ```
+   
+   > ⚠️ The first execution can take a few hours. It will not start again unless the folders get deleted or renamed.
+   ###### Click [here](https://drive.google.com/file/d/1vup2z04FoucfkQkzjX4i5d7ChMva69Ag/view?usp=drive_link) to download the this structure of our processed graphs Dataset for both the tumors.
 
-```
-files/
-    clinical/
-        features_considered.tsv  ←
-        features_encoded.tsv  ←
-        file_case_mapping.tsv
-        omics_files.tsv
-```
+   Then automatically the model will be trained and evaluated.   
+   > ⚠️ Training the model can take many hours depending on the hardware configuration, especially if you are using a device without a GPU.
 
-2) Run [train_test_patients_split.py](train_test_patients_split.py) to assign to each patient (case_id) a label [*train, val, test*]:
-
-```
-files/
-    clinical/
-        features_considered.tsv
-        features_encoded.tsv
-        file_case_mapping.tsv
-        omics_files.tsv
-        patient_split_cleaned.csv  ←
-```
-
-3) Run [graph_classification.py](graph_classification.py) to create the patients graphs Dataset (if the folders do not already exist). You will then see three new folders:
-- **data_graphs_processed_test/**
-- **data_graphs_processed_train/**
-- **data_graphs_processed_validation/**
-> ⚠️ The first execution can take a few hours. It will not start again unless the folders get deleted or renamed.
-###### Click [here](https://drive.google.com/file/d/1mIzf35TOcNY9JKtysnPBZnZqJvtpP_q_/view?usp=drive_link) to download the three folders [train/val/test] of our processed graphs Dataset
+## Results
+All our results are available in our [paper]().
 
 ## Try with different tumor classes
+You can try with different tumor classes by changing the value of the variable **tumor** in the [config.py](config.py) file.
 
-If needed, this model can be adapted to classify different tumor types (given the same kind of biological data).
-
-In [preprocessing_clinical_features_to_file.py](preprocessing_clinical_features_to_file.py) change this mapping:
-<p></p>
-
-```
-# for project.project_id, remap tumor class to 0-1
-mapping = {
-    'TCGA-LUAD': 0,
-    'TCGA-LUSC': 1
-}
-features_df['project.project_id'] = features_df['project.project_id'].map(mapping)
-```
-
-#### If you want to use the default [models/MultiModalGNN](models/MultiModalGNN.py) and consider both graphs and clinical features: 
-1) Change the content of [preprocessing_clinical_features_to_file.py](preprocessing_clinical_features_to_file.py) with respect to the clinical data you have.
-2) Change the number of clinical features and/or the number of classes in every model initialization:
-   <p></p>
-   
-   ```
-   model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
-   ```
-
-#### If you don't want to consider the clinical features, use only [models/GAT](models/GAT.py):
-1) Change the model initialization in [graph_classification.py](graph_classification.py) and/or other files where it is needed:
-   <p></p>
-   
-   ```
-   → #model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
-   #model = MLP(num_patient_features=53, num_classes=2).to(device)
-   → model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
-   ```
-   ```
-   → model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
-   #model = MLP(num_patient_features=53, num_classes=2).to(device)
-   → #model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
-   ```
-
-When the graph Dataset is created, class labels are automatically stored, so no need to modify [PatientGraphDataset.py](PatientGraphDataset.py):
-```
-data.y = torch.tensor([self.labels_dict[case_id]], dtype=torch.long)
-```
+The classification task can be done for multi-class tumor subtypes.
