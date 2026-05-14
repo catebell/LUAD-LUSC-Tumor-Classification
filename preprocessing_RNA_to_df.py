@@ -33,7 +33,7 @@ def main():
     protein_links_df.reset_index(inplace=True, drop=True)
 
 
-    rna, network = create_rna_df(example_case_id, file_mapping_df, genes_mapping_df, protein_links_df)
+    rna, network = create_rna_df(example_case_id, file_mapping_df, genes_mapping_df, protein_links_df, config.tumor)
     print(rna.head(3))
     print(network.head(3))
 
@@ -46,6 +46,7 @@ def create_rna_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     :param file_mapping_df:
     :param genes_mapping_df:
     :param protein_links_df:
+    :param dataset:
     :return torch_geometric.data.Data:
     :return pd.DataFrame:
     """

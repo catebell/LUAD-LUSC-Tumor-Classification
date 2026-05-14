@@ -15,7 +15,7 @@ def main():
     print("Reading protein-aliases-gene file...")
     genes_mapping_df = pd.read_csv('STRING_downloaded_files/9606.protein.aliases.gene.tsv', sep='\t')
 
-    cnv = create_cnv_df(example_case_id, file_mapping_df, genes_mapping_df)
+    cnv = create_cnv_df(example_case_id, file_mapping_df, genes_mapping_df, config.tumor)
     print(cnv.head(3))
 
 
@@ -25,6 +25,7 @@ def create_cnv_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df:
     :param case_id:
     :param file_mapping_df:
     :param genes_mapping_df:
+    :param dataset:
     :return pd.DataFrame:
     """
 

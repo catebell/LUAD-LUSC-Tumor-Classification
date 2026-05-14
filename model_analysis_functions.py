@@ -8,8 +8,8 @@ import seaborn as sns
 import torch
 
 import config
-from graph_classification_grid_search import test, clinical_mean, clinical_std, x_mean, x_std, e_min, e_max, device, \
-    test_loader, unique_labels
+from graph_classification_grid_search import test, x_mean, x_std, e_min, e_max, device, \
+    test_loader, unique_labels #, clinical_mean, clinical_std
 from models.GAT import GAT
 from models.MLP import MLP
 from models.MultiModalGNN import MultiModalGNN
@@ -20,8 +20,19 @@ Functions suggested by Gemini.
 
 dataset_name = config.tumor
 
-#model = GAT(num_node_features=5, num_edge_features=3, num_classes=2, hidden_channels=64).to(device)
-model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=53, hidden_channels=64, num_classes=2).to(device)
+df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/features_considered.tsv', sep='\t')
+
+features_encoded_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/features_encoded.tsv', sep='\t')
+num_patient_features = len(features_encoded_df.columns.tolist()[2:])
+num_classes = test_loader.dataset.num_classes
+
+#model = GAT(num_node_features=5, num_edge_features=3, num_classes=num_classes, hidden_channels=64).to(device)
+model = MultiModalGNN(num_node_features=5, num_edge_features=3, clinical_input_dim=num_patient_features, hidden_channels=64, num_classes=num_classes).to(device)
+
+#model.load_state_dict(torch.load('examples/example1_analysis_lung_MultiModalGNN/best_MultiModalGNN_lung_val_0.94.pth', map_location=device))
+#model.load_state_dict(torch.load('examples/example2_analysis_kidney_MultiModalGNN/kidney_MultiModalGNN_fold_5.pth', map_location=device))
+#model.load_state_dict(torch.load('examples/2kidney_MultiModalGNN_fold_4.pth', map_location=device))
+model.load_state_dict(torch.load('examples/3lung_MultiModalGNN_fold_2.pth', map_location=device))
 
 node_map = pd.read_csv('STRING_downloaded_files/gene_ids_mapped.tsv', sep='\t')
 node_map = dict(zip(node_map['gene_id'], node_map['gene_id_mapped']))
@@ -48,9 +59,12 @@ def explain_clinical_importance(model, device, loader, clinical_features_names):
         country_of_residence_at_enrollment_Switzerland
         will all be found by contains.('country_of_residence_at_enrollment')
         '''
+        target_feat = target_feat.split('.')[1]
+
         col_indices = []
         for i, col_name in enumerate(clinical_features_names):
-            if col_name == target_feat or col_name.startswith(target_feat + "_"):
+            #if col_name == target_feat or col_name.startswith(target_feat + "_"):
+            if target_feat in col_name:
                 col_indices.append(i)
 
         correct = 0
@@ -59,8 +73,8 @@ def explain_clinical_importance(model, device, loader, clinical_features_names):
         for data in loader:
             data_copy = data.clone().to(device)
 
-            data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
-            data_copy.x[:, :4] = (data_copy.x[:, :4] - x_mean) / (x_std + 1e-6)
+            #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+            data_copy.x[:, :-1] = (data_copy.x[:, :-1] - x_mean) / (x_std + 1e-6)
             data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
             perm = torch.randperm(data_copy.clinical.size(0))
@@ -112,8 +126,8 @@ def explain_edge_features_importance(model, device, loader):
         for data in loader:
             data_copy = data.clone().to(device)
 
-            data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
-            data_copy.x[:, :4] = (data_copy.x[:, :4] - x_mean) / (x_std + 1e-6)
+            #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+            data_copy.x[:, :-1] = (data_copy.x[:, :-1] - x_mean) / (x_std + 1e-6)
             data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
             perm = torch.randperm(data_copy.edge_attr.size(0))
@@ -163,8 +177,8 @@ def get_genes_and_edges_attention_weights(model, device, loader, node_map_inv):
 
     for data in loader:
         data_copy = data.clone().to(device)
-        data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
-        data_copy.x[:, :4] = (data_copy.x[:, :4] - x_mean) / (x_std + 1e-6)
+        #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+        data_copy.x[:, :-1] = (data_copy.x[:, :-1] - x_mean) / (x_std + 1e-6)
         data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
         with torch.no_grad():
@@ -254,9 +268,9 @@ def get_gene_saliency(model, device, loader, node_map_inv):
 
     for data in loader:
         data_copy = data.clone().to(device)
-        data_copy.x[:, :4] = (data_copy.x[:, :4] - x_mean) / (x_std + 1e-6)
+        data_copy.x[:, :-1] = (data_copy.x[:, :-1] - x_mean) / (x_std + 1e-6)
         data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
-        data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+        #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
 
         data_copy.x.requires_grad = True  # to trace operations on the tensor and accumulate grads in x.grad attribute
 
@@ -355,9 +369,9 @@ def plot_boxplot(df, genes, i, filename = None):
     plt.rc('font', size=13)
     for j, (ensg, name) in enumerate(genes.items(), 1):
         plt.subplot(1, len(genes.items()), j)
-        sns.boxplot(x='label', y=ensg, data=df, palette=['#e74c3c', '#3498db'])
+        sns.boxplot(x='label', y=ensg, data=df, palette='coolwarm_r') #['#e74c3c', '#3498db'])
         sns.stripplot(x='label', y=ensg, data=df, color='black', size=2, alpha=0.3)
-        plt.title(f"{ensg}", size=16)
+        plt.title(f"{ensg}\n{name[0]}", size=16)
         plt.xticks(ticks=unique_labels, labels=[str(class_mapping_inv.get(l)) for l in unique_labels])
         plt.ylabel(f"{features.get(i)}", size=16)
 
@@ -378,12 +392,6 @@ def plot_boxplot(df, genes, i, filename = None):
 
 logging.info("--- Feature Importance analysis (Best Model Saved) ---\n")
 
-#model.load_state_dict(torch.load('examples/example1_model_with_analysis/model_fold_3.pth', map_location=device))
-#model.load_state_dict(torch.load('examples/example2_model_with_analysis/model_fold_2.pth', map_location=device))
-model.load_state_dict(torch.load('examples/example3_analysis_MultiModal/best_MultiModalGNN_lung_val_0.94.pth', map_location=device))
-
-features_encoded_df = pd.read_csv(f'{config.FILES}/{config.tumor}/clinical/features_encoded.tsv', sep='\t')
-
 clinical_names = features_encoded_df.columns.values.tolist()[2:]
 node_map_inv = {v: k for k, v in node_map.items()}
 
@@ -392,12 +400,13 @@ gene_alias = gene_alias.groupby('gene_id')['alias'].apply(list).reset_index(name
 gene_alias['gene_id_mapped'] = gene_alias['gene_id'].map(node_map)
 gene_alias.set_index('gene_id_mapped', inplace=True)
 
-#clinical_imp = explain_clinical_importance(model, device, test_loader, clinical_names)
+if model.__class__ == MultiModalGNN:
+    clinical_imp = explain_clinical_importance(model, device, test_loader, clinical_names)
 
-#edge_features_importance = explain_edge_features_importance(model, device, test_loader)
+edge_features_importance = explain_edge_features_importance(model, device, test_loader)
 
-#gene_imp, edges_imp = get_genes_and_edges_attention_weights(model, device, test_loader, node_map_inv)  # (GAT Attention)
-'''
+gene_imp, edges_imp = get_genes_and_edges_attention_weights(model, device, test_loader, node_map_inv)  # (GAT Attention)
+
 gene_sal = get_gene_saliency(model, device, test_loader, node_map_inv)
 
 top_genes = {}
@@ -405,7 +414,7 @@ top_genes = {}
 for gene_id, score in gene_sal[:5]:
     names = gene_alias[gene_alias['gene_id'] == gene_id]['names'].iloc[0]
     top_genes[gene_id] = names    
-'''
+
 # some arbitrary genes to plot (for speed)
 genes_to_plot = {
     'ENSG00000185201': 'geneA',
@@ -422,5 +431,5 @@ for i in range(0,4):
         2: 'cnv_min_max_diff',
         3: 'beta_value'
     }
-    df_plot = collect_gene_data(test_loader, genes_to_plot, node_map, i)
-    plot_boxplot(df_plot, genes_to_plot, i, f"genes_{feature_dict.get(i)}_boxplot.png")
+    df_plot = collect_gene_data(test_loader, top_genes, node_map, i)
+    plot_boxplot(df_plot, top_genes, i, f"genes_{feature_dict.get(i)}_boxplot.png")

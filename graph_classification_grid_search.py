@@ -32,7 +32,7 @@ max_epochs = 100
 
 # params grid for GridSearch
 params_grid = {
-    'lr': [0.01, 0.001, 0.0001],
+    'lr': [0.001, 0.0001],
     'hidden_channels': [32, 64, 128],
     #'batch_size': [4, 8],
 }
@@ -93,7 +93,6 @@ def parse_args():
     return parser.parse_args()
 
 
-
 def prepare_datasets(dataset_name):
     file_mapping_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/file_case_mapping.tsv', sep='\t').dropna()
     patient_split_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/patient_split_cleaned.csv')
@@ -110,19 +109,19 @@ def prepare_datasets(dataset_name):
     # graph dataset initialization; if not exists, it gets created
     logging.info("Train Dataset init...")
     train_dataset = PatientGraphDataset(
-        root=os.path.join('data_graphs_processed', dataset_name, 'data_graphs_processed_train'),
+        root=os.path.join('data_graphs_processed', dataset_name, 'train'),
         file_mapping_df=file_mapping_df_train,
         dataset=dataset_name
     )
     logging.info("Test Dataset init...")
     test_dataset = PatientGraphDataset(
-        root=os.path.join('data_graphs_processed', dataset_name, 'data_graphs_processed_test'),
+        root=os.path.join('data_graphs_processed', dataset_name, 'test'),
         file_mapping_df=file_mapping_df_test,
         dataset=dataset_name
     )
     logging.info("Val Dataset init...")
     val_dataset = PatientGraphDataset(
-        root=os.path.join('data_graphs_processed', dataset_name, 'data_graphs_processed_validation'),
+        root=os.path.join('data_graphs_processed', dataset_name, 'validation'),
         file_mapping_df=file_mapping_df_val,
         dataset=dataset_name
     )
@@ -133,19 +132,20 @@ def load_model(model_name, device, params):
     module = importlib.import_module(f"models.{model_name}")
     model_class = getattr(module, model_name)
 
-    clinical_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/features_considered.tsv', sep='\t')
-    #num_patient_features = len(clinical_df.columns.tolist()[2:]) TODO change here
-    num_patient_features = 53
+    clinical_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/features_encoded.tsv', sep='\t')
+    num_patient_features = len(clinical_df.columns.tolist()[2:])
 
     hidden_channels = params.get('hidden_channels', 64)
 
     if model_name in ["GINEConvGNN", "GAT"]:
         model = model_class(num_node_features=5, num_edge_features=3, hidden_channels=hidden_channels, num_classes=num_classes)
-    elif model_name == "BasicGraphConvGNN":
+    elif model_name in ["BasicGraphConvGNN", "GCN"]:
         model = model_class(num_node_features=5, hidden_channels=hidden_channels, num_classes=num_classes)
     elif model_name == "MLP":
-        #model = model_class(num_patient_features=num_patient_features, hidden_channels= hidden_channels, num_classes=num_classes)
-        model = model_class(num_patient_features=5, hidden_channels=64, num_classes=num_classes)
+        # just clinical features:
+        # model = model_class(num_patient_features=num_patient_features, hidden_channels = hidden_channels, num_classes=num_classes)
+        # aggregating nodes features:
+        model = model_class(num_patient_features=5, hidden_channels=hidden_channels, num_classes=num_classes)
     elif model_name == "MultiModalGNN":
         model = model_class(num_node_features=5, num_edge_features=3, clinical_input_dim=num_patient_features, hidden_channels=hidden_channels, num_classes=num_classes)
     else:
@@ -192,17 +192,17 @@ clinical_feat_scaler = StandardScaler()
 
 # scalers fitted only on test data
 for data in train_loader:
-    node_feat_scaler.partial_fit(data.x[:,:4].numpy())  # only first 4 cols (5 is binary mask)
+    node_feat_scaler.partial_fit(data.x[:,:-1].numpy())  # only first 4 cols (5 is binary mask)
     edge_attr_scaler.partial_fit(data.edge_attr[:,2].numpy().reshape(-1,1))  # only cols of number of links
-    clinical_feat_scaler.partial_fit(data.clinical[:,:3].numpy()) # only pack_years_smoked, tobacco_years, age_at_index
+    #clinical_feat_scaler.partial_fit(data.clinical[:,:3].numpy()) # only cols with values > 1.0
 
 # to make things faster by applying scaler transformations manually:
 x_mean = torch.tensor(node_feat_scaler.mean_, dtype=torch.float, device=device)
 x_std = torch.tensor(node_feat_scaler.scale_, dtype=torch.float, device=device)
 e_min = torch.tensor(edge_attr_scaler.data_min_, dtype=torch.float, device=device)
 e_max = torch.tensor(edge_attr_scaler.data_max_, dtype=torch.float, device=device)
-clinical_mean = torch.tensor(clinical_feat_scaler.mean_, dtype=torch.float, device=device)
-clinical_std = torch.tensor(clinical_feat_scaler.scale_, dtype=torch.float, device=device)
+#clinical_mean = torch.tensor(clinical_feat_scaler.mean_, dtype=torch.float, device=device)
+#clinical_std = torch.tensor(clinical_feat_scaler.scale_, dtype=torch.float, device=device)
 
 criterion = torch.nn.CrossEntropyLoss()
 
@@ -252,15 +252,15 @@ def train(model, optimizer):
         data = data.to(device)
 
         # StandardScale: (x - mean) / std
-        data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
-        data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+        data.x[:, :-1] = (data.x[:, :-1] - x_mean) / (x_std + 1e-6)
+        #data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
         # MinMaxScaler: (x - min) / (max - min)
         data.edge_attr[:,2] = (data.edge_attr[:,2] - e_min) / (e_max - e_min + 1e-6)
 
         # perform a single forward pass
         if model_name in ["GINEConvGNN", "GAT"]:
             out = model(data.x, data.edge_index, data.edge_attr, data.batch)  # just graph
-        elif model_name == "BasicGraphConvGNN":
+        elif model_name in ["BasicGraphConvGNN", "GCN"]:
             out = model(data.x, data.edge_index, data.batch)
         elif model_name == "MLP":
             # out = model(data.clinical)  # just clinical features
@@ -286,14 +286,14 @@ def validate(model):
     for og in val_loader:
         data = og.clone()
         data = data.to(device)
-        data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
-        data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+        data.x[:, :-1] = (data.x[:, :-1] - x_mean) / (x_std + 1e-6)
+        #data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
         data.edge_attr[:, 2] = (data.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
         with torch.no_grad():
             if model_name in ["GINEConvGNN", "GAT"]:
                 out = model(data.x, data.edge_index, data.edge_attr, data.batch)  # just graph
-            elif model_name == "BasicGraphConvGNN":
+            elif model_name in ["BasicGraphConvGNN", "GCN"]:
                 out = model(data.x, data.edge_index, data.batch)
             elif model_name == "MLP":
                 # out = model(data.clinical)  # just clinical features
@@ -315,14 +315,14 @@ def test(model, loader):
      for og in loader:  # iterate in batches over the training/test dataset.
          data = og.clone()
          data = data.to(device)
-         data.x[:, :4] = (data.x[:, :4] - x_mean) / (x_std + 1e-6)
-         data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+         data.x[:, :-1] = (data.x[:, :-1] - x_mean) / (x_std + 1e-6)
+         #data.clinical[:, :3] = (data.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
          data.edge_attr[:, 2] = (data.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
          with torch.no_grad():
              if model_name in ["GINEConvGNN", "GAT"]:
                  out = model(data.x, data.edge_index, data.edge_attr, data.batch)  # just graph
-             elif model_name == "BasicGraphConvGNN":
+             elif model_name in ["BasicGraphConvGNN", "GCN"]:
                  out = model(data.x, data.edge_index, data.batch)
              elif model_name == "MLP":
                  # out = model(data.clinical)  # just clinical features
@@ -362,7 +362,7 @@ def train_and_save_model(dataset_name, model_name, params):
         scheduler.step(val_loss)  # update learning rate
 
         #logging.info(f'Epoch: {epoch:03d}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, Train Acc: {train_acc:.4f},'
-        #             f' Val Acc: {val_acc:.4f}, Test Acc: {test_acc:.4f}')
+        #               f' Val Acc: {val_acc:.4f}, Test Acc: {test_acc:.4f}')
 
         #save best model based on Val Loss
         if val_loss < best_val_loss:
@@ -374,7 +374,7 @@ def train_and_save_model(dataset_name, model_name, params):
                 f'Epoch: {epoch:03d}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, Train Acc: {train_acc:.4f},'
                 f' Val Acc: {val_acc:.4f}, Test Acc: {test_acc:.4f}')
 
-            torch.save(model.state_dict(), f'best_{model_name}_{dataset_name}_val_{val_acc:.2f}.pth')
+            torch.save(model.state_dict(), f'best_{model_name}_{dataset_name}_{params}.pth')
             logging.info("--- Found and saved a better model! ---\n")
 
         if early_stopping_counter > 20:

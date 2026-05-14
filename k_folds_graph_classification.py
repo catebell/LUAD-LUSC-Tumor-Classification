@@ -21,6 +21,7 @@ from models.BasicGraphConvGNN import BasicGraphConvGNN
 from models.GINEConvGNN import GINEConvGNN
 from models.GAT import GAT
 from models.MLP import MLP
+from models.GCN import GCN
 from models.MultiModalGNN import MultiModalGNN
 import config
 
@@ -99,15 +100,19 @@ def load_model(model_name, num_classes, device):
     module = importlib.import_module(f"models.{model_name}")
     model_class = getattr(module, model_name)
 
-    clinical_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/features_considered.tsv', sep='\t')
+    clinical_df = pd.read_csv(f'{config.FILES}/{dataset_name}/clinical/features_encoded.tsv', sep='\t')
+
     num_patient_features = len(clinical_df.columns.tolist()[2:])
+    logging.info(f"Num Clinical Features found : {num_patient_features}")
 
     if model_name in ["GINEConvGNN", "GAT"]:
         model = model_class(num_node_features=5, num_edge_features=3, hidden_channels=64, num_classes=num_classes)
-    elif model_name == "BasicGraphConvGNN":
+    elif model_name in ["BasicGraphConvGNN", "GCN"]:
         model = model_class(num_node_features=5, hidden_channels=64, num_classes=num_classes)
     elif model_name == "MLP":
+        # just clinical features:
         #model = model_class(num_patient_features=num_patient_features, hidden_channels = 64, num_classes=num_classes)
+        # aggregating nodes features:
         model = model_class(num_patient_features=5, hidden_channels=64, num_classes=num_classes)
     elif model_name == "MultiModalGNN":
         model = model_class(num_node_features=5, num_edge_features=3, clinical_input_dim=num_patient_features,
@@ -136,11 +141,11 @@ file_mapping_df_val = file_mapping_df[file_mapping_df['case_id'].isin(
 
 # graph dataset initialization; if not exists, it gets created
 logging.info("Train Dataset init...")
-train_dataset = PatientGraphDataset(root=f'data_graphs_processed/{dataset_name}/data_graphs_processed_train', file_mapping_df=file_mapping_df_train)
+train_dataset = PatientGraphDataset(root=f'data_graphs_processed/{dataset_name}/train', file_mapping_df=file_mapping_df_train, dataset=dataset_name)
 logging.info("Test Dataset init...")
-test_dataset = PatientGraphDataset(root=f'data_graphs_processed/{dataset_name}/data_graphs_processed_test', file_mapping_df=file_mapping_df_test)
+test_dataset = PatientGraphDataset(root=f'data_graphs_processed/{dataset_name}/test', file_mapping_df=file_mapping_df_test, dataset=dataset_name)
 logging.info("Val Dataset init...")
-val_dataset = PatientGraphDataset(root=f'data_graphs_processed/{dataset_name}/data_graphs_processed_validation', file_mapping_df=file_mapping_df_val)
+val_dataset = PatientGraphDataset(root=f'data_graphs_processed/{dataset_name}/validation', file_mapping_df=file_mapping_df_val, dataset=dataset_name)
 
 full_train_dataset = train_dataset + val_dataset
 
@@ -184,8 +189,8 @@ def train(model, loader, optimizer, criterion):
         data_copy = data_copy.to(device)
 
         # StandardScale: (x - mean) / std
-        data_copy.x[:, :4] = (data_copy.x[:, :4] - x_mean) / (x_std + 1e-6)
-        data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+        data_copy.x[:, :-1] = (data_copy.x[:, :-1] - x_mean) / (x_std + 1e-6)
+        #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
         # MinMaxScaler: (x - min) / (max - min)
         data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
@@ -193,7 +198,7 @@ def train(model, loader, optimizer, criterion):
 
         if model.__class__ == GINEConvGNN or model.__class__ == GAT:
             out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
-        elif model.__class__ == BasicGraphConvGNN:
+        elif model.__class__ == BasicGraphConvGNN or model.__class__ == GCN:
             out = model(data_copy.x, data_copy.edge_index, data_copy.batch)
         elif model.__class__ == MLP:
             # out = model(data_copy.clinical)  # just clinical features
@@ -218,14 +223,14 @@ def validate(model, loader, criterion):
         data_copy = data.clone()
         data_copy = data_copy.to(device)
 
-        data_copy.x[:, :4] = (data_copy.x[:, :4] - x_mean) / (x_std + 1e-6)
-        data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+        data_copy.x[:, :-1] = (data_copy.x[:, :-1] - x_mean) / (x_std + 1e-6)
+        #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
         data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
         with torch.no_grad():
             if model.__class__ == GINEConvGNN or model.__class__ == GAT:
                 out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
-            elif model.__class__ == BasicGraphConvGNN:
+            elif model.__class__ == BasicGraphConvGNN or model.__class__ == GCN:
                 out = model(data_copy.x, data_copy.edge_index, data_copy.batch)
             elif model.__class__ == MLP:
                 # out = model(data_copy.clinical)  # just clinical features
@@ -251,13 +256,13 @@ def evaluate(model, loader):
         for data in loader:  # iterate in batches.
             data_copy = data.clone().to(device)
 
-            data_copy.x[:, :4] = (data_copy.x[:, :4] - x_mean) / (x_std + 1e-6)
-            data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
+            data_copy.x[:, :-1] = (data_copy.x[:, :-1] - x_mean) / (x_std + 1e-6)
+            #data_copy.clinical[:, :3] = (data_copy.clinical[:, :3] - clinical_mean) / (clinical_std + 1e-6)
             data_copy.edge_attr[:, 2] = (data_copy.edge_attr[:, 2] - e_min) / (e_max - e_min + 1e-6)
 
             if model.__class__ == GINEConvGNN or model.__class__ == GAT:
                 out = model(data_copy.x, data_copy.edge_index, data_copy.edge_attr, data_copy.batch)  # just graph
-            elif model.__class__ == BasicGraphConvGNN:
+            elif model.__class__ == BasicGraphConvGNN or model.__class__ == GCN:
                 out = model(data_copy.x, data_copy.edge_index, data_copy.batch)
             elif model.__class__ == MLP:
                 #out = model(data_copy.clinical)  # just clinical features
@@ -325,6 +330,7 @@ def plot_final_confusion_matrix(model, all_targets, all_preds):
     plt.show()
     logging.info(f"Confusion Matrix saved.")
 
+
 max_epochs = 100
 cumulative_targets = []
 cumulative_preds = []
@@ -350,16 +356,16 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
 
     # different weights to classes based on number of samples
-    '''
-    train_labels = [data.y.item() for data in train_dataset]
-    counts = Counter(train_labels)
-    weights = [0] * len(counts)
-    for i in range(len(counts)):
-        # N_tot / (N_classes * N_elem_of_class_n)
-        weights[i] = len(train_labels) / (len(counts) * counts[i])
-    weights = torch.tensor(weights, dtype=torch.float).to(device)
-    criterion = torch.nn.CrossEntropyLoss(weight=weights, label_smoothing=0.1)
-    '''
+    
+    #train_labels = [data.y.item() for data in train_dataset]
+    #counts = Counter(train_labels)
+    #weights = [0] * len(counts)
+    #for i in range(len(counts)):
+    #    # N_tot / (N_classes * N_elem_of_class_n)
+    #    weights[i] = len(train_labels) / (len(counts) * counts[i])
+    #weights = torch.tensor(weights, dtype=torch.float).to(device)
+    #criterion = torch.nn.CrossEntropyLoss(weight=weights, label_smoothing=0.1)
+    
     criterion = torch.nn.CrossEntropyLoss()
 
     node_feat_scaler = StandardScaler()
@@ -368,18 +374,17 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(y_labels)), y
 
     # scalers fitted only on evaluate data
     for data in train_loader:
-        node_feat_scaler.partial_fit(data.x[:, :4].numpy())  # only first 4 cols (5 is binary mask)
+        node_feat_scaler.partial_fit(data.x[:, :-1].numpy())  # only first 4 cols (5 is binary mask)
         edge_attr_scaler.partial_fit(data.edge_attr[:, 2].numpy().reshape(-1, 1))  # only cols of number of links
-        clinical_feat_scaler.partial_fit(
-            data.clinical[:, :3].numpy())  # only pack_years_smoked, tobacco_years, age_at_index
+        #clinical_feat_scaler.partial_fit(data.clinical[:, :3].numpy())  # only numerical feature
 
     # to make things faster by applying scaler transformations manually:
     x_mean = torch.tensor(node_feat_scaler.mean_, dtype=torch.float, device=device)
     x_std = torch.tensor(node_feat_scaler.scale_, dtype=torch.float, device=device)
     e_min = torch.tensor(edge_attr_scaler.data_min_, dtype=torch.float, device=device)
     e_max = torch.tensor(edge_attr_scaler.data_max_, dtype=torch.float, device=device)
-    clinical_mean = torch.tensor(clinical_feat_scaler.mean_, dtype=torch.float, device=device)
-    clinical_std = torch.tensor(clinical_feat_scaler.scale_, dtype=torch.float, device=device)
+    #clinical_mean = torch.tensor(clinical_feat_scaler.mean_, dtype=torch.float, device=device)
+    #clinical_std = torch.tensor(clinical_feat_scaler.scale_, dtype=torch.float, device=device)
 
     best_fold_val_loss = float('inf')
     early_stopping_counter = 0

@@ -171,8 +171,7 @@ class PatientGraphDataset(Dataset):
             df_meth = create_meth_df(case_id, self.file_mapping_df, genes_mapping_df, meth_manifest_df, self.dataset)
             node_features_df = pd.merge(node_features_df, df_meth, how='left', on=['gene_id'])
 
-            node_features_df[['copy_number', 'cnv_min_max_diff', 'weighted_beta_value']] = node_features_df[
-                ['copy_number', 'cnv_min_max_diff', 'weighted_beta_value']].fillna(0)
+            node_features_df.fillna(0, inplace=True)
 
             node_features_df['meth_data_present'] = np.where(node_features_df['weighted_beta_value'] > 0, 1, 0)
             # so the net should learn that when meth_data_present = 0 beta_value doesn't matter

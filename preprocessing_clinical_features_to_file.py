@@ -31,6 +31,7 @@ EXCLUDED_CLINICAL = [
     "diagnoses.submitter_id",
     "diagnoses.synchronous_malignancy",
     "diagnoses.year_of_diagnosis",
+    "diagnoses.icd_10_code",
     "treatments.submitter_id",
     "treatments.treatment_id",
     "treatments.treatment_intent_type",

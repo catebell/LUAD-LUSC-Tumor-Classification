@@ -23,7 +23,7 @@ def main():
     # place .csv file into methylation_manifests/originals_downloaded, then run methylation_manifest_to_tsv.py
     meth_manifest_df = pd.read_csv("methylation_manifests/methylation_manifest450.tsv", sep='\t', dtype=str)
 
-    meth = create_meth_df(example_case_id, file_mapping_df, genes_mapping_df, meth_manifest_df)
+    meth = create_meth_df(example_case_id, file_mapping_df, genes_mapping_df, meth_manifest_df, config.tumor)
     print(meth.head(3))
 
 
@@ -34,6 +34,7 @@ def create_meth_df(case_id: str, file_mapping_df: pd.DataFrame, genes_mapping_df
     :param file_mapping_df:
     :param genes_mapping_df:
     :param meth_manifest_df:
+    :param dataset:
     :return pd.DataFrame:
     """
 
