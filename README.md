@@ -1,5 +1,5 @@
 → [Paper]()
-- [click here]() to download our original dataset retrieved from GCD Data Portal
+- [click here](https://drive.google.com/file/d/1fAwKPWR0kBsjv7-1tGSWkcCTuvHEl0yN/view?usp=drive_link) to download our original dataset retrieved from GCD Data Portal
 - [click here](https://drive.google.com/file/d/1vup2z04FoucfkQkzjX4i5d7ChMva69Ag/view?usp=drive_link) to download our processed graphs Dataset
 
 ## Architecture
@@ -15,7 +15,7 @@
 ## Explainability
 [model_analysis_functions.py](model_analysis_functions.py) provides functions for the interpretation of the learned models decisional processes and what features they focus on:
 
-- Graph branch attention scores (get_gene_attention_weights()) retrieves the attention scores given to each gene by the GAT-GNN layers, with higher scores to the genes that the model learned to monitor more closely.
+- Graph branch attention scores (`get_gene_attention_weights` function) retrieves the attention scores given to each gene by the GAT-GNN layers, with higher scores to the genes that the model learned to monitor more closely.
 
 ```
 2026-04-09 11:56:00,592 - INFO - Genes with attention importance = 1.000:
@@ -27,7 +27,7 @@
 ...
 ```
 
-- Saliency (get_gene_saliency()) computes which genes influence the model's decision by having more relevance in the gradient computation.
+- Saliency (`get_gene_saliency` function) computes which genes influence the model's decision by having more relevance in the gradient computation.
 
 ```
 2026-04-09 17:10:59,946 - INFO - Top 100 Genes saliency:
@@ -57,7 +57,7 @@ CNV values | Methylation values
 
 </p>
 
-- Clinical importance (explain_clinical_importance()) explains which clinical features, if any, most influence the prediction accuracy.
+- Clinical importance (`explain_clinical_importance` function) explains which clinical features, if any, most influence the prediction accuracy.
 
 ```
 2026-04-01 15:12:34,071 - INFO - Clinical Features importance:
@@ -122,7 +122,7 @@ Where the arguments are:
 
 ### Get the data
 
-1) The dataset must be downloaded from the desired source, like GDC Data Portal (https://portal.gdc.cancer.gov/), and saved in a folder named as the tumor selected. This folder must be put inside a folder called **original_dataset/**, see the variable **DATASET** inside the [config.py](config.py). For example, our data for the Lung and the Kidney tumor (click [here]() to download) was originally in this form:
+1) The dataset must be downloaded from the desired source, like GDC Data Portal (https://portal.gdc.cancer.gov/), and saved in a folder named as the tumor selected. This folder must be put inside a folder called **original_dataset/**, see the variable **DATASET** inside the [config.py](config.py). For example, our data for the Lung and the Kidney tumor (click [here](https://drive.google.com/file/d/1fAwKPWR0kBsjv7-1tGSWkcCTuvHEl0yN/view?usp=drive_link) to download) was originally in this form:
 
     ```
     original_dataset/
@@ -182,20 +182,20 @@ Where the arguments are:
          - [9606.protein.links.v12.0.txt](https://stringdb-downloads.org/download/protein.aliases.v12.0/9606.protein.aliases.v12.0.txt.gz)
    
       → Put them in a new **STRING_downloaded_files/** folder and using the functions located in [STRING_files_to_tsv.py](STRING_files_to_tsv.py):
-         - 'create_gene_aliases_proteins_ids_mapping_file', creates **STRING_downloaded_files/9606.protein.aliases.gene.tsv**
-         - 'create_genes_id_mapping_file', creates **STRING_downloaded_files/gene_ids_mapped.tsv**.
+         - `create_gene_aliases_proteins_ids_mapping_file`, creates **STRING_downloaded_files/9606.protein.aliases.gene.tsv**
+         - `create_genes_id_mapping_file`, creates **STRING_downloaded_files/gene_ids_mapped.tsv**.
       > ⚠️ The execution of the first function can take a few hours. If the file already exists, it will be skipped.
    
    3) We need also a methylation manifest for the preprocessing of methylation data; we downloaded from the relative [Illumina support page](https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html) the one relative to the Illumina “450 K array” technology (click [here](https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv) to start the download). 
     
-      → Put it in **methylation_manifests/originals_downloaded/** and using the function 'create_meth_manifest', located in [methylation_manifest_to_tsv.py](methylation_manifest_to_tsv.py), to extract only the necessary information correctly formatted.
+      → Put it in **methylation_manifests/originals_downloaded/** and using the function `create_meth_manifest`, located in [methylation_manifest_to_tsv.py](methylation_manifest_to_tsv.py), to extract only the necessary information correctly formatted.
 
 
 ### Preprocessing and running the model
 
 Continue the execution of [main.py] (main.py) to preprocess the data:
 
-1) Use the functions 'build_features_considered' and 'build_features_encoded', located in [preprocessing_clinical_features_to_file.py](preprocessing_clinical_features_to_file.py), to obtain the following files:
+1) Use the functions `build_features_considered` and `build_features_encoded`, located in [preprocessing_clinical_features_to_file.py](preprocessing_clinical_features_to_file.py), to obtain the following files:
    ```
    files/
       lung/
@@ -212,7 +212,7 @@ Continue the execution of [main.py] (main.py) to preprocess the data:
               omics_files.tsv
    ```
 
-2) Use the function 'build_patient_split_cleaned', located in [train_test_patients_split.py](train_test_patients_split.py), to assign to each patient (case_id) a label [*train, val, test*]:
+2) Use the function `build_patient_split_cleaned`, located in [train_test_patients_split.py](train_test_patients_split.py), to assign to each patient (case_id) a label [*train, val, test*]:
 
    ```
    files/
