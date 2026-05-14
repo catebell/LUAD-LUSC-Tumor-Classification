@@ -69,13 +69,12 @@ CNV values | Methylation values
 
 ```
 2026-04-01 15:12:34,071 - INFO - Clinical Features importance:
+2026-04-01 15:12:34,071 - INFO - tumor_grade: 0.0556
+2026-04-01 15:12:34,071 - INFO - tobacco_smoking_status: 0.0333
+2026-04-01 15:12:34,071 - INFO - gender: 0.0070
 2026-04-01 15:12:34,071 - INFO - age_at_index: 0.0070
 2026-04-01 15:12:34,071 - INFO - country_of_residence_at_enrollment: 0.0070
-2026-04-01 15:12:34,071 - INFO - gender: 0.0070
-2026-04-01 15:12:34,071 - INFO - ajcc_pathologic_n: 0.0070
-2026-04-01 15:12:34,072 - INFO - tissue_or_organ_of_origin: 0.0070
 2026-04-01 15:12:34,072 - INFO - ethnicity: 0.0000
-2026-04-01 15:12:34,072 - INFO - race: 0.0000
 ...
 ```
 
