@@ -245,13 +245,13 @@ Continue the execution of [main.py] (main.py) to preprocess the data:
    ```
    data_graphs_processed/
        lung/
-          data_graphs_processed_test/
-          data_graphs_processed_train/
-          data_graphs_processed_validation/
+          test/
+          train/
+          validation/
        kidney/
-          data_graphs_processed_test/
-          data_graphs_processed_train/
-          data_graphs_processed_validation/
+          test/
+          train/
+          validation/
    ```
    
    > ⚠️ The first execution can take a few hours. It will not start again unless the folders get deleted or renamed.
