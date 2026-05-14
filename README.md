@@ -9,7 +9,15 @@
   <img src="images/architecture-dark.png#gh-dark-mode-only" width="100%" alt="Project Architecture">
 </p>
 <p align="center">
-  <strong>Figure 1.</strong> High-level overview of the project architecture.
+  <strong>Figure 1.</strong> High-level overview of the project architecture for the lung dataset.
+</p>
+
+<p align="center">
+  <img src="images/architecture-kidney-light.png#gh-light-mode-only" width="100%" alt="Project Architecture">
+  <img src="images/architecture-kidney-dark.png#gh-dark-mode-only" width="100%" alt="Project Architecture">
+</p>
+<p align="center">
+  <strong>Figure 2.</strong> High-level overview of the project architecture for the kidney dataset.
 </p>
 
 ## Explainability
