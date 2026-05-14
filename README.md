@@ -1,4 +1,4 @@
-→ [Paper]()
+→ [Paper](https://github.com/user-attachments/files/27761394/LUAD_LUSC_Classification.pdf)
 - [click here](https://drive.google.com/file/d/1fAwKPWR0kBsjv7-1tGSWkcCTuvHEl0yN/view?usp=drive_link) to download our original dataset retrieved from GCD Data Portal
 - [click here](https://drive.google.com/file/d/1vup2z04FoucfkQkzjX4i5d7ChMva69Ag/view?usp=drive_link) to download our processed graphs Dataset
 
@@ -87,8 +87,17 @@ To run the script [main.py](main.py) it's possible to use or the command-line ar
 The [config.py](config.py) file defines the main global settings used throughout the project, including dataset selection, model choice, training mode and directory paths.
 The settings can be modified by editing the file:
 - `tumor`, specifies the type of tumor to analyze. Only one value should be active at a time (uncomment the desired option).
+  - `lung`, *example*
+  - `kidney`, *example*
 
 - `model`, defines the model architecture used for training. Only one value should be active at a time (uncomment the desired option).
+  - `MultiModalGNN`
+  - `GAT`
+  - `MoAGNN`
+  - `BasicGraphConvGNN`
+  - `GINEConvGNN`
+  - `GCN`
+  - `MLP`
 
 - `mode`, sets the execution strategy of the pipeline:
   - `kfold`, k-fold cross-validation
@@ -195,12 +204,12 @@ Where the arguments are:
    
    3) We need also a methylation manifest for the preprocessing of methylation data; we downloaded from the relative [Illumina support page](https://support.illumina.com/downloads/infinium_humanmethylation450_product_files.html) the one relative to the Illumina “450 K array” technology (click [here](https://webdata.illumina.com/downloads/productfiles/humanmethylation450/humanmethylation450_15017482_v1-2.csv) to start the download). 
     
-      → Put it in **methylation_manifests/originals_downloaded/** and using the function `create_meth_manifest`, located in [methylation_manifest_to_tsv.py](methylation_manifest_to_tsv.py), to extract only the necessary information correctly formatted.
+      → Put it in **methylation_manifests/originals_downloaded/** and use the function `create_meth_manifest`, located in [methylation_manifest_to_tsv.py](methylation_manifest_to_tsv.py), to extract only the necessary information correctly formatted.
 
 
 ### Preprocessing and running the model
 
-Continue the execution of [main.py] (main.py) to preprocess the data:
+Continue the execution of [main.py](main.py) to preprocess the data:
 
 1) Use the functions `build_features_considered` and `build_features_encoded`, located in [preprocessing_clinical_features_to_file.py](preprocessing_clinical_features_to_file.py), to obtain the following files:
    ```
@@ -254,13 +263,13 @@ Continue the execution of [main.py] (main.py) to preprocess the data:
    ```
    
    > ⚠️ The first execution can take a few hours. It will not start again unless the folders get deleted or renamed.
-   ###### Click [here](https://drive.google.com/file/d/1vup2z04FoucfkQkzjX4i5d7ChMva69Ag/view?usp=drive_link) to download the this structure of our processed graphs Dataset for both the tumors.
+   ###### Click [here](https://drive.google.com/file/d/1vup2z04FoucfkQkzjX4i5d7ChMva69Ag/view?usp=drive_link) to download the structure of our processed graphs Dataset for both the tumors.
 
    Then automatically the model will be trained and evaluated.   
-   > ⚠️ Training the model can take many hours depending on the hardware configuration, especially if you are using a device without a GPU.
+   > ⚠️ Training the model can take many hours depending on the hardware configuration, especially if you are not using a GPU.
 
 ## Results
-All our results are available in our [paper]().
+All our results are available in our [paper](https://github.com/user-attachments/files/27761332/LUAD_LUSC_Classification.pdf).
 
 ## Try with different tumor classes
 You can try with different tumor classes by changing the value of the variable **tumor** in the [config.py](config.py) file.
