@@ -8,6 +8,7 @@ model = "MultiModalGNN"
 #model = "GAT"
 #model = "BasicGraphConvGNN"
 #model = "GINEConvGNN"
+#model = "GCN"
 #model = "MLP"
 #model = "MoAGNN"
 

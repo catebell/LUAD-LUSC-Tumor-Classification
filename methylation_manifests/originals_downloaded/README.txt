@@ -1,0 +1,1 @@
+*Add your downloaded Illumina manifests in this folder*
