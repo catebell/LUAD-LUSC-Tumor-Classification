@@ -259,7 +259,7 @@ def process_dataset(dataset_dir, files_dir):
     extract_file_id(FILES_DIR=files_dir)
     extract_file_id_case_id(FILES_DIR=files_dir, DATASET_DIR=dataset_dir)
 
-    print("Completed")
+    print("Completed.")
 
 def parse_args():
     """Parse the command line arguments"""
@@ -290,3 +290,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    print("DONE")
