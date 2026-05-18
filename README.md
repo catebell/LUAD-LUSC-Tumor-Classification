@@ -1,4 +1,7 @@
 → [Paper](https://github.com/user-attachments/files/27761394/LUAD_LUSC_Classification.pdf)
+
+→ [Presentation](https://github.com/user-attachments/files/27973542/LUAD-LUSC-Tumor-Classification.pptx.pdf)
+
 - [click here](https://drive.google.com/file/d/1fAwKPWR0kBsjv7-1tGSWkcCTuvHEl0yN/view?usp=drive_link) to download our original dataset retrieved from GCD Data Portal
 - [click here](https://drive.google.com/file/d/1vup2z04FoucfkQkzjX4i5d7ChMva69Ag/view?usp=drive_link) to download our processed graphs Dataset
 
