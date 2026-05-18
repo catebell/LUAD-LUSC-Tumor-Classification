@@ -224,7 +224,7 @@ def extract_file_id_case_id(DATASET_DIR, FILES_DIR):
 
     df["case_id"] = df.apply(get_case_id, axis=1)
 
-    df_out = df[["file_id", "case_id", "omic", "filename"]]
+    df_out = df[["file_id", "case_id", "omic", "filename"]].copy()
 
     print("\n=== Null check per columns ===")
     print(df_out.isnull().sum())
@@ -237,6 +237,7 @@ def extract_file_id_case_id(DATASET_DIR, FILES_DIR):
     out_file = os.path.join(FILES_DIR, "clinical", "file_case_mapping.tsv")
     os.makedirs(os.path.dirname(out_file), exist_ok=True)
 
+    df_out.drop(df_out[(df_out["omic"] == "CNV") & (df_out["filename"].str.contains("TCGA") == False)].index, inplace=True)
     df_out.to_csv(out_file, sep="\t", index=False)
 
     print(f"\nFile TSV created: {out_file}")
