@@ -130,27 +130,28 @@ def main():
 
     ## Get the data
 
-    # files_extraction_and_mapping
+    print("\nFiles extraction and mapping:")
     process_dataset(dataset_dir, files_dir)
 
-    # STRING_files_to_tsv
+    print("\nCreate tsv files using the STRING downloaded files:")
     create_gene_aliases_proteins_ids_mapping_file(args.force)
     create_genes_id_mapping_file()
 
-    # methylation_manifest_to_tsv
+    print("\nCreate methylation manifest tsv file:")
     create_meth_manifest()
 
     ## Preprocessing
 
-    # preprocessing_clinical_features_to_file
+    print("\nPreprocessing features:")
     build_features_considered(args.dataset)
     build_features_encoded(args.dataset)
 
-    # train_test_val_patients_split
+    print("\nSplit patients into train, val and test:")
     build_patient_split_cleaned(args.dataset)
 
     ## Run the model
 
+    print("\nRunning the model:")
     if args.model_name:
         print(f"\nSelected model: {args.model_name}")
 
